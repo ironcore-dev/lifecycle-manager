@@ -5,6 +5,7 @@ linters:
   enable:
     - ineffassign
     - misspell
+    - gocyclo
     - goimports
     - govet
     - gofmt
