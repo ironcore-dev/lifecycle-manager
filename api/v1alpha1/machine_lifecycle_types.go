@@ -1,20 +1,10 @@
-// Copyright 2023 T-Systems International GmbH, SAP SE or an SAP affiliate company. All right reserved
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and IronCore contributors
+// SPDX-License-Identifier: Apache-2.0
 
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -22,10 +12,35 @@ import (
 
 // MachineLifecycleSpec contains desired configuration of machine lifecycle.
 type MachineLifecycleSpec struct {
+	// MachineTypeRef contain reference to MachineType object.
+	// +kubebuilder:validation:Required
+	MachineTypeRef corev1.LocalObjectReference `json:"machineTypeRef"`
+
+	// OOBMachineRef contains reference to OOB machine object.
+	// +kubebuilder:validation:Required
+	OOBMachineRef corev1.LocalObjectReference `json:"oobMachineRef"`
+
+	// ScanPeriod defines the interval between scans.
+	// +kubebuilder:validation:Required
+	ScanPeriod string `json:"scanPeriod"`
 }
+
+// +kubebuilder:object:generate=true
 
 // MachineLifecycleStatus contains observed state of MachineLifecycle object.
 type MachineLifecycleStatus struct {
+	// LastScanTime reflects the timestamp when the last scan of available packages was done.
+	// +kubebuilder:validation:Optional
+	LastScanTime metav1.Time `json:"lastScanTime"`
+
+	// LastScanResult reflects the state of the last scan.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=Success;Failure
+	LastScanResult string `json:"lastScanResult"`
+
+	// InstalledPackages contains the list of references to FirmwarePackage objects.
+	// +kubebuilder:validation:Optional
+	InstalledPackages []corev1.LocalObjectReference `json:"installedPackages"`
 }
 
 // +kubebuilder:object:root=true

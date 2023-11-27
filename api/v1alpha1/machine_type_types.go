@@ -1,16 +1,5 @@
-// Copyright 2023 T-Systems International GmbH, SAP SE or an SAP affiliate company. All right reserved
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and IronCore contributors
+// SPDX-License-Identifier: Apache-2.0
 
 package v1alpha1
 
@@ -22,10 +11,27 @@ import (
 
 // MachineTypeSpec contains definition of concrete machine type.
 type MachineTypeSpec struct {
+	// Manufacturer refers to manufacturer, e.g. Lenovo, Dell etc.
+	// +kubebuilder:validation:Required
+	Manufacturer string `json:"manufacturer"`
+
+	// Type refers to machine type, e.g. 7z21 for Lenovo, R440 for Dell etc.
+	// +kubebuilder:validation:Required
+	Type string `json:"type"`
 }
+
+// +kubebuilder:object:generate=true
 
 // MachineTypeStatus contains observed state of machine type in part of available firmware updates.
 type MachineTypeStatus struct {
+	// LastScanTime reflects the timestamp when the last scan of available packages was done.
+	// +kubebuilder:validation:Optional
+	LastScanTime metav1.Time `json:"lastScanTime"`
+
+	// LastScanResult reflects the result of the last scan.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=Success;Failure
+	LastScanResult string `json:"lastScanResult"`
 }
 
 // +kubebuilder:object:root=true
