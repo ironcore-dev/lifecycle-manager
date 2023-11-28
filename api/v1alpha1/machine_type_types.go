@@ -18,6 +18,10 @@ type MachineTypeSpec struct {
 	// Type refers to machine type, e.g. 7z21 for Lenovo, R440 for Dell etc.
 	// +kubebuilder:validation:Required
 	Type string `json:"type"`
+
+	// ScanPeriod defines the interval between scans.
+	// +kubebuilder:validation:Required
+	ScanPeriod metav1.Duration `json:"scanPeriod"`
 }
 
 // +kubebuilder:object:generate=true
@@ -31,7 +35,7 @@ type MachineTypeStatus struct {
 	// LastScanResult reflects the result of the last scan.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=Success;Failure
-	LastScanResult string `json:"lastScanResult"`
+	LastScanResult ScanResult `json:"lastScanResult"`
 }
 
 // +kubebuilder:object:root=true

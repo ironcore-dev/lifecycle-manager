@@ -38,7 +38,7 @@ type MachineUpdateJobStatus struct {
 	// State reflects the final state of the job.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=Success;Failure
-	State string `json:"state"`
+	State UpdateJobState `json:"state"`
 
 	// Message contains verbose message related to the current State.
 	// +kubebuilder:validation:Optional

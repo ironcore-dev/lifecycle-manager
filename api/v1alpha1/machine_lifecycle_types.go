@@ -22,7 +22,7 @@ type MachineLifecycleSpec struct {
 
 	// ScanPeriod defines the interval between scans.
 	// +kubebuilder:validation:Required
-	ScanPeriod string `json:"scanPeriod"`
+	ScanPeriod metav1.Duration `json:"scanPeriod"`
 }
 
 // +kubebuilder:object:generate=true
@@ -36,7 +36,7 @@ type MachineLifecycleStatus struct {
 	// LastScanResult reflects the state of the last scan.
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Enum=Success;Failure
-	LastScanResult string `json:"lastScanResult"`
+	LastScanResult ScanResult `json:"lastScanResult"`
 
 	// InstalledPackages contains the list of references to FirmwarePackage objects.
 	// +kubebuilder:validation:Optional
