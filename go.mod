@@ -1,4 +1,4 @@
-module lifecycle-manager
+module github.com/onmetal/lifecycle-manager
 
 go 1.21.4
 
