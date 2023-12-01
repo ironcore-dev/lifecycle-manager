@@ -1,7 +1,6 @@
 CONTROLLER_TOOLS_VERSION ?= v0.13.0
 ADDLICENSE_VERSION ?= v1.1.1
 GOLANGCI_LINT_VERSION ?= v1.55.2
-COPYRIGHT ?= "T-Systems International GmbH, SAP SE or an SAP affiliate company. All right reserved"
 
 .PHONY: fmt
 fmt:
@@ -17,15 +16,15 @@ lint: golangci-lint
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(CONTROLLER_GEN) object:headerFile="hack/copyright.txt" paths="./..."
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: add-license
 add-license: addlicense ## Add license header to all .go files in project
-	@find . -name '*.go' -exec $(ADDLICENSE) -c $(COPYRIGHT) {} +
+	@find . -name '*.go' -exec $(ADDLICENSE) -f hack/license-header.txt {} +
 
 .PHONY: check-license
 check-license: addlicense ## Check license header presence in all .go files in project
-	@find . -name '*.go' -exec $(ADDLICENSE) -check {} +
+	@find . -name '*.go' -exec $(ADDLICENSE) -check -c 'IronCore authors' {} +
 
 ### AUXILIARY ###
 ADDLICENSE = $(shell pwd)/bin/addlicense
