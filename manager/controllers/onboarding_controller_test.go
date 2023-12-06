@@ -112,7 +112,7 @@ func TestOnboardingReconciler_Reconcile(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			clientOpts := []clientOption{withRuntimeObject(testCase.target)}
-			r := setupReconciler(t, schemeOpts, clientOpts)
+			r := newOnboardingReconciler(t, schemeOpts, clientOpts)
 			resp, err := r.Reconcile(context.Background(), ctrl.Request{NamespacedName: testCase.request})
 			if testCase.expectError {
 				assert.Error(t, err)
@@ -156,7 +156,6 @@ func TestOnboardingReconciler_Onboarding(t *testing.T) {
 		},
 	}
 	targetMachineType := &v1alpha1.MachineType{
-
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "MachineType",
 			APIVersion: "v1alpha1",
@@ -173,7 +172,7 @@ func TestOnboardingReconciler_Onboarding(t *testing.T) {
 	}
 
 	clientOpts := []clientOption{withRuntimeObject(targetOOB)}
-	r := setupReconciler(t, schemeOpts, clientOpts)
+	r := newOnboardingReconciler(t, schemeOpts, clientOpts)
 	_, err := r.Reconcile(context.Background(), ctrl.Request{NamespacedName: client.ObjectKeyFromObject(targetOOB)})
 	assert.NoError(t, err)
 

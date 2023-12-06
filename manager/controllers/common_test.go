@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
@@ -41,21 +42,36 @@ func setupClient(t *testing.T, scheme *runtime.Scheme, opts ...clientOption) cli
 	return cl
 }
 
-func withRuntimeObject(object runtime.Object) clientOption {
+func withRuntimeObject(object client.Object) clientOption {
 	return func(b *fake.ClientBuilder) {
 		b.WithRuntimeObjects(object)
+		b.WithStatusSubresource(object)
 	}
 }
 
-func setupReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *OnboardingReconciler {
+func setupPrerequisites(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) (client.Client, *runtime.Scheme) {
 	t.Helper()
 
-	scheme := runtime.NewScheme()
-	setupScheme(t, scheme, schemeOpts...)
-	c := setupClient(t, scheme, clientOpts...)
+	s := runtime.NewScheme()
+	setupScheme(t, s, schemeOpts...)
+	c := setupClient(t, s, clientOpts...)
+	return c, s
+}
+
+func newOnboardingReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *OnboardingReconciler {
+	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
 	return &OnboardingReconciler{
 		Client:        c,
-		Scheme:        scheme,
+		Scheme:        s,
 		RequeuePeriod: time.Second * 5,
+	}
+}
+
+func newUpdateTaskReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *UpdateTaskReconciler {
+	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
+	return &UpdateTaskReconciler{
+		Client:   c,
+		Scheme:   s,
+		Recorder: &record.FakeRecorder{},
 	}
 }

@@ -191,7 +191,7 @@ func (r *UpdateTaskReconciler) validateFirmwarePackageRef(
 	log := logr.FromContextOrDiscard(ctx)
 	firmwarePackage := &v1alpha1.FirmwarePackage{}
 	if err := r.Get(ctx, key, firmwarePackage); err != nil {
-		log.Error(err, "failed to get firmwarePackage object")
+		log.Error(err, "failed to get referenced firmwarePackage object")
 		return false, err
 	}
 	if firmwarePackage.Spec.MachineTypeRef.Name != mType {
