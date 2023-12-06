@@ -1,0 +1,19 @@
+name: Pull Request Code test
+
+on:
+  pull_request_target:
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+jobs:
+  tests:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+      - run: make test
