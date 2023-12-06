@@ -39,15 +39,21 @@ type OnboardingReconciler struct {
 // +kubebuilder:rbac:groups=metal.ironcore.dev,resources=machinetypes,verbs=get;list;create
 // +kubebuilder:rbac:groups=metal.ironcore.dev,resources=machinelifecycles,verbs=get;list;create
 // +kubebuilder:rbac:groups=onmetal.de,resources=oobs,verbs=watch;get;list
-// +kubebuilder:rbac:groups=onmetal.de,resources=oobs/status,verbs=watch;get;list
+// +kubebuilder:rbac:groups=onmetal.de,resources=oobs/status,verbs=get
 
 func (r *OnboardingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	var (
+		result ctrl.Result
+		ref    *corev1.ObjectReference
+		err    error
+	)
+
 	obj := &oobv1alpha1.OOB{}
-	if err := r.Get(ctx, req.NamespacedName, obj); err != nil {
+	if err = r.Get(ctx, req.NamespacedName, obj); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	ref, err := reference.GetReference(r.Scheme, obj)
+	ref, err = reference.GetReference(r.Scheme, obj)
 	if err != nil {
 		r.Log.WithValues("request", req.NamespacedName).Error(err, "failed to construct reference")
 		return ctrl.Result{}, err
@@ -56,7 +62,7 @@ func (r *OnboardingReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	log.V(1).Info("reconciliation started")
 
 	recCtx := logr.NewContext(ctx, log)
-	result, err := r.reconcileRequired(recCtx, obj)
+	result, err = r.reconcileRequired(recCtx, obj)
 	if err != nil {
 		log.V(1).Info("reconciliation interrupted by an error")
 	}

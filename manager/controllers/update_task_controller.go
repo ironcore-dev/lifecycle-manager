@@ -34,8 +34,15 @@ const (
 )
 
 var (
-	DanglingReferenceMessage   = "object not found by reference; kind: %s; reference: %s"
-	MachineTypeMismatchMessage = "referenced object has different MachineType; kind: %s; reference: %s"
+	danglingReferenceMessage   = "object not found by reference; kind: %s; reference: %s"
+	machineTypeMismatchMessage = "referenced object has different MachineType; kind: %s; reference: %s"
+
+	patchOpts = &client.SubResourcePatchOptions{
+		PatchOptions: client.PatchOptions{
+			Force:        pointer.Bool(true),
+			FieldManager: "lifecycle-manager",
+		},
+	}
 )
 
 // UpdateTaskReconciler reconciles UpdateTask objects.
@@ -47,17 +54,25 @@ type UpdateTaskReconciler struct {
 	Recorder record.EventRecorder
 }
 
-// +kubebuilder:rbac:groups=metal.ironcore.dev,resources=updatetasks,verbs=watch;get;list;patch;delete
-// +kubebuilder:rbac:groups=metal.ironcore.dev,resources=machineupdatejobs,verbs=watch;get;list
-// +kubebuilder:rbac:groups=metal.ironcore.dev,resources=machineupdatejobs/status,verbs=watch;get;list
+// +kubebuilder:rbac:groups=metal.ironcore.dev,resources=updatetasks,verbs=watch;get;list;patch;update
+// +kubebuilder:rbac:groups=metal.ironcore.dev,resources=updatetasks/status,verbs=get;patch;update
+// +kubebuilder:rbac:groups=metal.ironcore.dev,resources=machineupdatejobs,verbs=watch;get;list;create
+// +kubebuilder:rbac:groups=metal.ironcore.dev,resources=machineupdatejobs/status,verbs=get
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 func (r *UpdateTaskReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	var (
+		result ctrl.Result
+		ref    *corev1.ObjectReference
+		err    error
+	)
+
 	obj := &v1alpha1.UpdateTask{}
-	if err := r.Get(ctx, req.NamespacedName, obj); err != nil {
+	if err = r.Get(ctx, req.NamespacedName, obj); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	ref, err := reference.GetReference(r.Scheme, obj)
+	ref, err = reference.GetReference(r.Scheme, obj)
 	if err != nil {
 		r.Log.WithValues("request", req.NamespacedName).Error(err, "failed to construct reference")
 		return ctrl.Result{}, err
@@ -66,9 +81,14 @@ func (r *UpdateTaskReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	log.V(1).Info("reconciliation started")
 
 	recCtx := logr.NewContext(ctx, log)
-	result, err := r.reconcileRequired(recCtx, obj)
+	result, err = r.reconcileRequired(recCtx, obj)
 	if err != nil {
 		log.V(1).Info("reconciliation interrupted by an error")
+		return result, err
+	}
+	if err = r.Status().Patch(ctx, obj, client.Apply, patchOpts); err != nil {
+		log.Error(err, "failed to update object status")
+		return ctrl.Result{}, err
 	}
 	log.V(1).Info("reconciliation finished")
 	return result, err
@@ -95,14 +115,14 @@ func (r *UpdateTaskReconciler) reconcileNewTask(ctx context.Context, obj *v1alph
 		ok, err := r.validateMachineLifecycleRef(ctx, key, obj.Spec.MachineTypeRef.Name)
 		if err != nil {
 			r.Recorder.Event(obj, corev1.EventTypeWarning, DanglingReference,
-				fmt.Sprintf(DanglingReferenceMessage, "MachineLifecycle", mRef.Name))
-			log.V(2).Info(fmt.Sprintf(DanglingReferenceMessage, "MachineLifecycle", mRef.Name))
+				fmt.Sprintf(danglingReferenceMessage, "MachineLifecycle", mRef.Name))
+			log.V(2).Info(fmt.Sprintf(danglingReferenceMessage, "MachineLifecycle", mRef.Name))
 			return ctrl.Result{}, err
 		}
 		if !ok {
 			r.Recorder.Event(obj, corev1.EventTypeWarning, MachineTypeMismatch,
-				fmt.Sprintf(MachineTypeMismatchMessage, "MachineLifecycle", mRef.Name))
-			log.V(2).Info(fmt.Sprintf(MachineTypeMismatchMessage, "MachineLifecycle", mRef.Name))
+				fmt.Sprintf(machineTypeMismatchMessage, "MachineLifecycle", mRef.Name))
+			log.V(2).Info(fmt.Sprintf(machineTypeMismatchMessage, "MachineLifecycle", mRef.Name))
 			return ctrl.Result{}, nil
 		}
 		validatedMachinesRefs += 1
@@ -114,10 +134,6 @@ func (r *UpdateTaskReconciler) reconcileNewTask(ctx context.Context, obj *v1alph
 	}
 	totalJobs := validatedMachinesRefs * validatedPackagesRefs
 	obj.Status.JobsTotal = totalJobs
-	if err := r.Status().Update(ctx, obj); err != nil {
-		log.Error(err, "failed to update object status")
-		return ctrl.Result{}, err
-	}
 	log.V(1).WithValues("jobs", totalJobs).Info("object processing completed")
 	return ctrl.Result{}, nil
 }
@@ -151,14 +167,14 @@ func (r *UpdateTaskReconciler) processPackages(
 		ok, err := r.validateFirmwarePackageRef(ctx, key, obj.Spec.MachineTypeRef.Name)
 		if err != nil {
 			r.Recorder.Event(obj, corev1.EventTypeWarning, DanglingReference,
-				fmt.Sprintf(DanglingReferenceMessage, "FirmwarePackage", pRef.Name))
-			log.V(2).Info(fmt.Sprintf(DanglingReferenceMessage, "FirmwarePackage", pRef.Name))
+				fmt.Sprintf(danglingReferenceMessage, "FirmwarePackage", pRef.Name))
+			log.V(2).Info(fmt.Sprintf(danglingReferenceMessage, "FirmwarePackage", pRef.Name))
 			return 0, err
 		}
 		if !ok {
 			r.Recorder.Event(obj, corev1.EventTypeWarning, MachineTypeMismatch,
-				fmt.Sprintf(MachineTypeMismatchMessage, "FirmwarePackage", pRef.Name))
-			log.V(2).Info(fmt.Sprintf(MachineTypeMismatchMessage, "FirmwarePackage", pRef.Name))
+				fmt.Sprintf(machineTypeMismatchMessage, "FirmwarePackage", pRef.Name))
+			log.V(2).Info(fmt.Sprintf(machineTypeMismatchMessage, "FirmwarePackage", pRef.Name))
 			continue
 		}
 		validPackageRefs += 1
@@ -224,10 +240,6 @@ func (r *UpdateTaskReconciler) reconcileExistingTask(ctx context.Context, obj *v
 		if job.Status.State == v1alpha1.UpdateJobStateSuccess {
 			obj.Status.JobsSuccessful += 1
 		}
-	}
-	if err := r.Status().Update(ctx, obj); err != nil {
-		log.Error(err, "failed to update object status")
-		return ctrl.Result{}, err
 	}
 	log.V(2).
 		WithValues("jobs_failed", obj.Status.JobsFailed).
