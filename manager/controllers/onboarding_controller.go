@@ -20,7 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
-	"github.com/onmetal/lifecycle-manager/api/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/api/v1alpha1"
 )
 
 // OnboardingReconciler watches for OOB objects and creates
@@ -66,13 +66,13 @@ func (r *OnboardingReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 
 func (r *OnboardingReconciler) reconcileRequired(ctx context.Context, obj *oobv1alpha1.OOB) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	if obj.Status.Manufacturer == "" || obj.Status.SKU == "" {
-		log.V(2).Info("object is not processed yet")
-		return ctrl.Result{RequeueAfter: r.RequeuePeriod}, nil
-	}
 	if !obj.GetDeletionTimestamp().IsZero() {
 		log.V(2).Info("object is being deleted")
 		return ctrl.Result{}, nil
+	}
+	if obj.Status.Manufacturer == "" || obj.Status.SKU == "" {
+		log.V(2).Info("object is not processed yet")
+		return ctrl.Result{RequeueAfter: r.RequeuePeriod}, nil
 	}
 	return r.reconcile(ctx, obj)
 }

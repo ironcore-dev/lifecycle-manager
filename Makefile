@@ -24,6 +24,10 @@ add-license: addlicense ## Add license header to all .go files in project
 check-license: addlicense ## Check license header presence in all .go files in project
 	@find . -name '*.go' -exec $(ADDLICENSE) -check -c 'IronCore authors' {} +
 
+.PHONY: test
+test:
+	go test ./... -coverprofile cover.out
+
 ### AUXILIARY ###
 LOCAL_BIN ?= $(shell pwd)/bin
 $(LOCAL_BIN):

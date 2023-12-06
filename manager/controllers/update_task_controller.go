@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
-	"github.com/onmetal/lifecycle-manager/api/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/api/v1alpha1"
 )
 
 const (
