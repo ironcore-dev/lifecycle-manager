@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and IronCore contributors
+// SPDX-License-Identifier: Apache-2.0
+
 package controllers
 
 import (
@@ -5,7 +8,10 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/reference"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -13,11 +19,26 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"github.com/ironcore-dev/lifecycle-manager/api/v1alpha1"
+	lcmi "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine_type/v1alpha1"
 )
+
+var lcmiScanResultToString = map[lcmi.ScanResult]v1alpha1.ScanResult{
+	lcmi.ScanResult_SCAN_RESULT_UNSPECIFIED: "",
+	lcmi.ScanResult_SCAN_RESULT_SUCCESS:     v1alpha1.ScanSuccess,
+	lcmi.ScanResult_SCAN_RESULT_FAILURE:     v1alpha1.ScanFailure,
+}
+
+var lcmiScanStateToString = map[lcmi.ScanState]v1alpha1.ScanState{
+	lcmi.ScanState_SCAN_STATE_UNSPECIFIED: "",
+	lcmi.ScanState_SCAN_STATE_SCHEDULED:   v1alpha1.ScanScheduled,
+	lcmi.ScanState_SCAN_STATE_FINISHED:    v1alpha1.ScanFinished,
+}
 
 // MachineTypeReconciler reconciles MachineType objects.
 type MachineTypeReconciler struct {
 	client.Client
+
+	MachineTypeBroker lcmi.MachineTypeBrokerServiceClient
 
 	Log     logr.Logger
 	Scheme  *runtime.Scheme
@@ -70,17 +91,24 @@ func (r *MachineTypeReconciler) reconcileRequired(ctx context.Context, obj *v1al
 	return r.reconcile(ctx, obj)
 }
 
-func (r *MachineTypeReconciler) reconcile(_ context.Context, obj *v1alpha1.MachineType) (ctrl.Result, error) {
-	// 1. discover downloader service
-	// 2. check object status
-	// 2. -> 3. if empty, then it is a brand-new machine type, so force scan required
-	// 2. -> 4. otherwise check if the last scan timestamp is in the horizon relative to current time & whether the last scan was successful
-	// 4. -> 5. if not, then request force scan
-
+func (r *MachineTypeReconciler) reconcile(ctx context.Context, obj *v1alpha1.MachineType) (ctrl.Result, error) {
+	log := logr.FromContextOrDiscard(ctx)
 	if r.scanRequired(obj) {
-		// request scan -> get response immediately if scan was performed within horizon -> update status -> return
-		// request scan -> get response that scan is scheduled -> return (wait for event spawned by downloader service)
-		return ctrl.Result{}, nil
+		resp, err := r.MachineTypeBroker.Scan(ctx, &lcmi.ScanRequest{
+			Id: "",
+		})
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				log.V(1).Info("scan result not found for current object")
+				return ctrl.Result{}, nil
+			}
+			log.Error(err, "failed to get scan result")
+			return ctrl.Result{}, err
+		}
+		if state, ok := lcmiScanStateToString[resp.State]; ok && state.IsFinished() {
+			obj.Status.LastScanResult = lcmiScanResultToString[resp.Status.LastScanResult]
+			obj.Status.LastScanTime = metav1.Time{Time: time.Unix(0, resp.Status.LastScanTime)}
+		}
 	}
 	return ctrl.Result{}, nil
 }
