@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package lcmi.api.machine_type.v1alpha1;
+
+import "lcmi/api/meta/v1alpha1/api.proto";
+
+option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine_type/v1alpha1";
+
+enum ScanResult {
+  SCAN_RESULT_UNSPECIFIED = 0;
+  SCAN_RESULT_SUCCESS = 1;
+  SCAN_RESULT_FAILURE = 2;
+}
+
+enum ScanState {
+  SCAN_STATE_UNSPECIFIED = 0;
+  SCAN_STATE_SCHEDULED = 1;
+  SCAN_STATE_FINISHED = 2;
+}
+
+message MachineType {
+  meta.v1alpha1.ObjectMetadata metadata = 1;
+  MachineTypeSpec spec = 2;
+  MachineTypeStatus status = 3;
+}
+
+message MachineTypeSpec {
+  string manufacturer = 1;
+  string type = 2;
+  string scan_period = 3;
+}
+
+message MachineTypeStatus {
+  int64 last_scan_time = 1;
+  ScanResult last_scan_result = 2;
+}
+
+message MachineTypeFilter {
+  string id = 1;
+  string manufacturer = 2;
+  string type = 3;
+  map<string, string> label_selector = 4;
+}
+
+message ListMachineTypesRequest {
+  MachineTypeFilter filter = 1;
+}
+
+message ListMachineTypesResponse {
+  repeated MachineType machine_type = 1;
+}
+
+message StatusRequest {
+  string id = 1;
+}
+
+message StatusResponse {
+  MachineTypeStatus status = 1;
+}
+
+message ScanRequest {
+  string id = 1;
+}
+
+message ScanResponse {
+  MachineTypeStatus status = 1;
+  ScanState state = 2;
+}
+
+service MachineTypeBrokerService {
+  rpc ListMachineTypes(ListMachineTypesRequest) returns (ListMachineTypesResponse) {}
+  rpc Scan(ScanRequest) returns (ScanResponse) {}
+  rpc Status(StatusRequest) returns (StatusResponse) {}
+}

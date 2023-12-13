@@ -90,6 +90,9 @@ func (r *MachineTypeReconciler) lastScanNotInHorizon(obj *v1alpha1.MachineType) 
 }
 
 func (r *MachineTypeReconciler) scanRequired(obj *v1alpha1.MachineType) bool {
+	if obj.Status.LastScanTime.IsZero() {
+		return true
+	}
 	return r.lastScanNotInHorizon(obj) || obj.Status.LastScanResult == v1alpha1.ScanFailure
 }
 
