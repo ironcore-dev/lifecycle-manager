@@ -20,6 +20,7 @@ import (
 
 	"github.com/ironcore-dev/lifecycle-manager/api/v1alpha1"
 	lcmi "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine_type/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 )
 
 var lcmiScanResultToString = map[lcmi.ScanResult]v1alpha1.ScanResult{
@@ -95,11 +96,11 @@ func (r *MachineTypeReconciler) reconcile(ctx context.Context, obj *v1alpha1.Mac
 	log := logr.FromContextOrDiscard(ctx)
 	if r.scanRequired(obj) {
 		resp, err := r.MachineTypeBroker.Scan(ctx, &lcmi.ScanRequest{
-			Id: "",
+			Id: uuidutil.UUIDFromObjectKey(client.ObjectKeyFromObject(obj)),
 		})
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
-				log.V(1).Info("scan result not found for current object")
+				log.V(1).Info(err.Error())
 				return ctrl.Result{}, nil
 			}
 			log.Error(err, "failed to get scan result")

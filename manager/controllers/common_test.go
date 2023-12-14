@@ -78,3 +78,12 @@ func newUpdateTaskReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts
 		Recorder: &record.FakeRecorder{},
 	}
 }
+
+func newMachineTypeReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *MachineTypeReconciler {
+	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
+	return &MachineTypeReconciler{
+		Client:  c,
+		Scheme:  s,
+		Horizon: time.Minute * 30,
+	}
+}
