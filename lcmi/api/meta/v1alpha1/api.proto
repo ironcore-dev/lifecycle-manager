@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package lcmi.api.meta.v1alpha1;
 
+import "lcmi/api/common/v1alpha1/api.proto";
+
 option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/meta/v1alpha1";
 
 message ObjectMetadata {
@@ -15,4 +17,13 @@ message ObjectMetadata {
 
 message LocalObjectReference {
   string name = 1;
+}
+
+message Condition {
+  common.v1alpha1.ConditionType type = 1;
+  string status = 2;
+  int64 observed_generation = 3;
+  int64 last_transition_time = 4;
+  string reason = 5;
+  string message = 6;
 }

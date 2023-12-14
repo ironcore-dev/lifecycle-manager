@@ -31,7 +31,7 @@ type UpdateTaskSpec struct {
 
 // UpdateTaskStatus contains observed state of UpdateTask object.
 type UpdateTaskStatus struct {
-	// JobsTotal reflects the total number of MachineUpdateJob objects created.
+	// JobsTotal reflects the total number of UpdateJob objects created.
 	// according to the UpdateTask definition
 	// +kubebuilder:validation:Optional
 	JobsTotal uint32 `json:"jobsTotal"`

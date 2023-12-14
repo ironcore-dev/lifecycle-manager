@@ -10,8 +10,8 @@ import (
 
 // +kubebuilder:object:generate=true
 
-// MachineUpdateJobSpec contains desired state of the update task.
-type MachineUpdateJobSpec struct {
+// UpdateJobSpec contains desired state of the update task.
+type UpdateJobSpec struct {
 	// MachineLifecycleRef contains reference to MachineLifecycle object which
 	// updates will be installed to.
 	// +kubebuilder:validation:Required
@@ -24,8 +24,8 @@ type MachineUpdateJobSpec struct {
 
 // +kubebuilder:object:generate=true
 
-// MachineUpdateJobStatus contains observed state of the MachineUpdateJob object.
-type MachineUpdateJobStatus struct {
+// UpdateJobStatus contains observed state of the UpdateJob object.
+type UpdateJobStatus struct {
 	// Conditions reflects the object state change flow.
 	// Possible condition types:
 	// - Pending
@@ -47,21 +47,21 @@ type MachineUpdateJobStatus struct {
 
 // +kubebuilder:object:root=true
 
-// MachineUpdateJob is the schema for MachineUpdateJob API object.
-type MachineUpdateJob struct {
+// UpdateJob is the schema for UpdateJob API object.
+type UpdateJob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MachineUpdateJobSpec   `json:"spec,omitempty"`
-	Status MachineUpdateJobStatus `json:"status,omitempty"`
+	Spec   UpdateJobSpec   `json:"spec,omitempty"`
+	Status UpdateJobStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// MachineUpdateJobList contains a list of MachineUpdateJob objects.
-type MachineUpdateJobList struct {
+// UpdateJobList contains a list of UpdateJob objects.
+type UpdateJobList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []MachineUpdateJob `json:"items"`
+	Items []UpdateJob `json:"items"`
 }

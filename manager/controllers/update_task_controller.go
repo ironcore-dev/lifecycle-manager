@@ -178,7 +178,7 @@ func (r *UpdateTaskReconciler) processPackages(
 			continue
 		}
 		validPackageRefs += 1
-		updateJob := &v1alpha1.MachineUpdateJob{
+		updateJob := &v1alpha1.UpdateJob{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      string(uuid.NewUUID()),
 				Namespace: obj.Namespace,
@@ -186,13 +186,13 @@ func (r *UpdateTaskReconciler) processPackages(
 					ownerRefFromTask(obj),
 				},
 			},
-			Spec: v1alpha1.MachineUpdateJobSpec{
+			Spec: v1alpha1.UpdateJobSpec{
 				MachineLifecycleRef: corev1.LocalObjectReference{Name: mRef},
 				FirmwarePackageRef:  corev1.LocalObjectReference{Name: pRef.Name},
 			},
 		}
 		if err := r.Create(ctx, updateJob); err != nil {
-			log.Error(err, "failed to create MachineUpdateJob object")
+			log.Error(err, "failed to create UpdateJob object")
 			return 0, err
 		}
 	}
@@ -218,7 +218,7 @@ func (r *UpdateTaskReconciler) validateFirmwarePackageRef(
 
 func (r *UpdateTaskReconciler) reconcileExistingTask(ctx context.Context, obj *v1alpha1.UpdateTask) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	jobs := &v1alpha1.MachineUpdateJobList{}
+	jobs := &v1alpha1.UpdateJobList{}
 	if err := r.List(ctx, jobs); err != nil {
 		log.Error(err, "failed to list machineUpdateJob objects")
 		return ctrl.Result{}, err
@@ -234,16 +234,16 @@ func (r *UpdateTaskReconciler) reconcileExistingTask(ctx context.Context, obj *v
 		if !found {
 			continue
 		}
-		if job.Status.State == v1alpha1.UpdateJobStateFailure {
+		if job.Status.State.IsFailure() {
 			obj.Status.JobsFailed += 1
 		}
-		if job.Status.State == v1alpha1.UpdateJobStateSuccess {
+		if job.Status.State.IsSuccess() {
 			obj.Status.JobsSuccessful += 1
 		}
 	}
 	log.V(2).
 		WithValues("jobs_failed", obj.Status.JobsFailed).
-		WithValues("jobs_successful", obj.Status.JobsSuccessful).
+		WithValues("jobs_succeed", obj.Status.JobsSuccessful).
 		Info("object processing completed")
 	return ctrl.Result{}, nil
 }
@@ -251,7 +251,7 @@ func (r *UpdateTaskReconciler) reconcileExistingTask(ctx context.Context, obj *v
 func (r *UpdateTaskReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.UpdateTask{}).
-		Owns(&v1alpha1.MachineUpdateJob{}, builder.WithPredicates(r.machineUpdateJobPredicates())).
+		Owns(&v1alpha1.UpdateJob{}, builder.WithPredicates(r.machineUpdateJobPredicates())).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: 10,
 		}).
@@ -265,8 +265,8 @@ func (r *UpdateTaskReconciler) machineUpdateJobPredicates() predicate.Predicate 
 }
 
 func (r *UpdateTaskReconciler) enqueueByOwner(e event.UpdateEvent) bool {
-	objOld, okOld := e.ObjectOld.(*v1alpha1.MachineUpdateJob)
-	objNew, okNew := e.ObjectNew.(*v1alpha1.MachineUpdateJob)
+	objOld, okOld := e.ObjectOld.(*v1alpha1.UpdateJob)
+	objNew, okNew := e.ObjectNew.(*v1alpha1.UpdateJob)
 	if !okOld || !okNew {
 		return false
 	}

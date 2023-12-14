@@ -163,7 +163,7 @@ var (
 			},
 		},
 	}
-	updateJobs = map[int][]*v1alpha1.MachineUpdateJob{
+	updateJobs = map[int][]*v1alpha1.UpdateJob{
 		validObjectsKey: {
 			{
 				TypeMeta: metav1.TypeMeta{
@@ -183,11 +183,11 @@ var (
 						},
 					},
 				},
-				Spec: v1alpha1.MachineUpdateJobSpec{
+				Spec: v1alpha1.UpdateJobSpec{
 					MachineLifecycleRef: corev1.LocalObjectReference{Name: "sample-lifecycle"},
 					FirmwarePackageRef:  corev1.LocalObjectReference{Name: "sample-package-BIOS"},
 				},
-				Status: v1alpha1.MachineUpdateJobStatus{
+				Status: v1alpha1.UpdateJobStatus{
 					Conditions: nil,
 					State:      "Success",
 					Message:    "",
@@ -211,11 +211,11 @@ var (
 						},
 					},
 				},
-				Spec: v1alpha1.MachineUpdateJobSpec{
+				Spec: v1alpha1.UpdateJobSpec{
 					MachineLifecycleRef: corev1.LocalObjectReference{Name: "sample-lifecycle"},
 					FirmwarePackageRef:  corev1.LocalObjectReference{Name: "sample-package-NIC"},
 				},
-				Status: v1alpha1.MachineUpdateJobStatus{
+				Status: v1alpha1.UpdateJobStatus{
 					Conditions: nil,
 					State:      "Failure",
 					Message:    "Failed to download update package from remote",

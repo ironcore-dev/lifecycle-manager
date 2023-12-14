@@ -8,6 +8,7 @@ import (
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
+	v1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -165,42 +166,141 @@ func (m *LocalObjectReference) GetName() string {
 func (*LocalObjectReference) XXX_MessageName() string {
 	return "lcmi.api.meta.v1alpha1.LocalObjectReference"
 }
+
+type Condition struct {
+	Type                 v1alpha1.ConditionType `protobuf:"varint,1,opt,name=type,proto3,enum=lcmi.api.common.v1alpha1.ConditionType" json:"type,omitempty"`
+	Status               string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	ObservedGeneration   int64                  `protobuf:"varint,3,opt,name=observed_generation,json=observedGeneration,proto3" json:"observed_generation,omitempty"`
+	LastTransitionTime   int64                  `protobuf:"varint,4,opt,name=last_transition_time,json=lastTransitionTime,proto3" json:"last_transition_time,omitempty"`
+	Reason               string                 `protobuf:"bytes,5,opt,name=reason,proto3" json:"reason,omitempty"`
+	Message              string                 `protobuf:"bytes,6,opt,name=message,proto3" json:"message,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}               `json:"-"`
+	XXX_unrecognized     []byte                 `json:"-"`
+	XXX_sizecache        int32                  `json:"-"`
+}
+
+func (m *Condition) Reset()      { *m = Condition{} }
+func (*Condition) ProtoMessage() {}
+func (*Condition) Descriptor() ([]byte, []int) {
+	return fileDescriptor_16ac4fe16e2e7b8b, []int{2}
+}
+func (m *Condition) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Condition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Condition.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Condition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Condition.Merge(m, src)
+}
+func (m *Condition) XXX_Size() int {
+	return m.Size()
+}
+func (m *Condition) XXX_DiscardUnknown() {
+	xxx_messageInfo_Condition.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Condition proto.InternalMessageInfo
+
+func (m *Condition) GetType() v1alpha1.ConditionType {
+	if m != nil {
+		return m.Type
+	}
+	return v1alpha1.ConditionType_CONDITION_TYPE_UNSPECIFIED
+}
+
+func (m *Condition) GetStatus() string {
+	if m != nil {
+		return m.Status
+	}
+	return ""
+}
+
+func (m *Condition) GetObservedGeneration() int64 {
+	if m != nil {
+		return m.ObservedGeneration
+	}
+	return 0
+}
+
+func (m *Condition) GetLastTransitionTime() int64 {
+	if m != nil {
+		return m.LastTransitionTime
+	}
+	return 0
+}
+
+func (m *Condition) GetReason() string {
+	if m != nil {
+		return m.Reason
+	}
+	return ""
+}
+
+func (m *Condition) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (*Condition) XXX_MessageName() string {
+	return "lcmi.api.meta.v1alpha1.Condition"
+}
 func init() {
 	proto.RegisterType((*ObjectMetadata)(nil), "lcmi.api.meta.v1alpha1.ObjectMetadata")
 	proto.RegisterMapType((map[string]string)(nil), "lcmi.api.meta.v1alpha1.ObjectMetadata.AnnotationsEntry")
 	proto.RegisterMapType((map[string]string)(nil), "lcmi.api.meta.v1alpha1.ObjectMetadata.LabelsEntry")
 	proto.RegisterType((*LocalObjectReference)(nil), "lcmi.api.meta.v1alpha1.LocalObjectReference")
+	proto.RegisterType((*Condition)(nil), "lcmi.api.meta.v1alpha1.Condition")
 }
 
 func init() { proto.RegisterFile("lcmi/api/meta/v1alpha1/api.proto", fileDescriptor_16ac4fe16e2e7b8b) }
 
 var fileDescriptor_16ac4fe16e2e7b8b = []byte{
-	// 389 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x3f, 0xab, 0x13, 0x41,
-	0x14, 0xc5, 0xdf, 0xec, 0xbe, 0x17, 0x78, 0x13, 0x08, 0x61, 0x08, 0xb2, 0x04, 0x1c, 0x96, 0x54,
-	0x41, 0xc8, 0x2e, 0x89, 0x85, 0x7f, 0x0a, 0x31, 0x82, 0x8d, 0x44, 0x84, 0xed, 0xb4, 0x91, 0xbb,
-	0xb3, 0x37, 0xc9, 0xe8, 0xec, 0x4c, 0x98, 0x4c, 0x02, 0xe9, 0xfc, 0x28, 0x96, 0x7e, 0x94, 0x94,
-	0x96, 0x96, 0x66, 0xd3, 0x58, 0xa6, 0xb4, 0x94, 0xfd, 0x23, 0x46, 0x49, 0xe1, 0xeb, 0xee, 0x3d,
-	0xe7, 0x9e, 0x1f, 0x33, 0x97, 0x4b, 0x43, 0x25, 0x72, 0x19, 0xc3, 0x4a, 0xc6, 0x39, 0x3a, 0x88,
-	0xb7, 0x63, 0x50, 0xab, 0x25, 0x8c, 0x4b, 0x25, 0x5a, 0x59, 0xe3, 0x0c, 0xbb, 0x57, 0x4e, 0x44,
-	0x65, 0x5f, 0x4e, 0x44, 0xbf, 0x27, 0x06, 0x9f, 0x7d, 0xda, 0x79, 0x93, 0x7e, 0x40, 0xe1, 0x5e,
-	0xa3, 0x83, 0x0c, 0x1c, 0xb0, 0x0e, 0xf5, 0x64, 0x16, 0x90, 0x90, 0x0c, 0x6f, 0x13, 0x4f, 0x66,
-	0xec, 0x2d, 0x6d, 0x83, 0xd6, 0xc6, 0x81, 0x93, 0x46, 0xaf, 0x03, 0x2f, 0xf4, 0x87, 0xed, 0xc9,
-	0xa3, 0xe8, 0x32, 0x30, 0xfa, 0x1b, 0x16, 0x4d, 0xff, 0x24, 0x5f, 0x6a, 0x67, 0x77, 0xc9, 0x39,
-	0x8b, 0xbd, 0xa2, 0x2d, 0x05, 0x29, 0xaa, 0x75, 0xe0, 0x57, 0xd4, 0xc9, 0x7f, 0x52, 0x67, 0x55,
-	0xa8, 0x06, 0x36, 0x04, 0xc6, 0x29, 0x5d, 0xa0, 0x46, 0x5b, 0xa1, 0x83, 0xeb, 0x90, 0x0c, 0xfd,
-	0xe4, 0x4c, 0x61, 0xf7, 0x29, 0x15, 0x16, 0xc1, 0x61, 0xf6, 0x1e, 0x5c, 0x70, 0x53, 0xf9, 0xb7,
-	0x8d, 0x32, 0x75, 0xa5, 0x9d, 0xa1, 0xc2, 0xc6, 0x6e, 0xd5, 0x76, 0xa3, 0x4c, 0x5d, 0xff, 0x19,
-	0xed, 0xfe, 0xfb, 0x15, 0xd6, 0xa5, 0xfe, 0x47, 0xdc, 0x35, 0x9b, 0x2a, 0x4b, 0xd6, 0xa3, 0x37,
-	0x5b, 0x50, 0x1b, 0x0c, 0xbc, 0x4a, 0xab, 0x9b, 0xa7, 0xde, 0x63, 0xd2, 0x7f, 0x42, 0xdb, 0x67,
-	0x8f, 0xbe, 0x4b, 0x74, 0xf0, 0x80, 0xf6, 0x66, 0x46, 0x80, 0xaa, 0x77, 0x90, 0xe0, 0x1c, 0x2d,
-	0x6a, 0x81, 0x8c, 0xd1, 0x6b, 0x0d, 0x39, 0x36, 0x90, 0xaa, 0x7e, 0x61, 0xbf, 0x1d, 0xf8, 0xd5,
-	0xe9, 0xc0, 0xc9, 0xcf, 0x03, 0x27, 0x9f, 0x0a, 0x4e, 0xbe, 0x14, 0x9c, 0xec, 0x0b, 0x4e, 0xbe,
-	0x16, 0x9c, 0x7c, 0x2f, 0x38, 0xf9, 0x51, 0xf0, 0xab, 0x53, 0xa9, 0x1f, 0x39, 0xd9, 0x1f, 0x39,
-	0x79, 0xf7, 0x7c, 0x21, 0xdd, 0x72, 0x93, 0x46, 0xc2, 0xe4, 0xb1, 0xb4, 0x46, 0x0b, 0x63, 0x71,
-	0x94, 0xe1, 0x36, 0x56, 0x72, 0x8e, 0x62, 0x27, 0x14, 0x8e, 0x72, 0xd0, 0xb0, 0x40, 0x1b, 0x5f,
-	0x3e, 0xb2, 0xb4, 0x55, 0x5d, 0xd8, 0xc3, 0x5f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x31, 0x82, 0x00,
-	0x42, 0x85, 0x02, 0x00, 0x00,
+	// 517 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0xcf, 0x8b, 0xd3, 0x40,
+	0x14, 0xde, 0x69, 0xba, 0x95, 0x4e, 0xa1, 0x2c, 0x63, 0x59, 0x42, 0xc1, 0xa1, 0xf4, 0x62, 0x11,
+	0x36, 0x71, 0xeb, 0xc1, 0x5f, 0x20, 0x56, 0x11, 0x41, 0x56, 0x84, 0xd0, 0x8b, 0x5e, 0xca, 0x6b,
+	0xf2, 0xb6, 0x3b, 0x9a, 0xcc, 0x94, 0xc9, 0xb4, 0x90, 0x9b, 0x7f, 0x8a, 0x47, 0xff, 0x94, 0x3d,
+	0x7a, 0xf4, 0x68, 0xb3, 0x17, 0x8f, 0x7b, 0x11, 0x3c, 0x4a, 0x26, 0xe9, 0x0f, 0xa5, 0x07, 0xf7,
+	0x96, 0xf7, 0x7d, 0xef, 0xfb, 0xde, 0xcc, 0xf7, 0x32, 0xb4, 0x17, 0x87, 0x89, 0xf0, 0x61, 0x2e,
+	0xfc, 0x04, 0x0d, 0xf8, 0xcb, 0x53, 0x88, 0xe7, 0x17, 0x70, 0x5a, 0x20, 0xde, 0x5c, 0x2b, 0xa3,
+	0xd8, 0x71, 0xd1, 0xe1, 0x15, 0x75, 0xd1, 0xe1, 0xad, 0x3b, 0xba, 0xfd, 0x8d, 0x32, 0x54, 0x49,
+	0xa2, 0xe4, 0x1e, 0x6d, 0xff, 0x8b, 0x43, 0xdb, 0xef, 0xa6, 0x1f, 0x31, 0x34, 0x6f, 0xd1, 0x40,
+	0x04, 0x06, 0x58, 0x9b, 0xd6, 0x44, 0xe4, 0x92, 0x1e, 0x19, 0x34, 0x83, 0x9a, 0x88, 0xd8, 0x7b,
+	0xda, 0x02, 0x29, 0x95, 0x01, 0x23, 0x94, 0x4c, 0xdd, 0x5a, 0xcf, 0x19, 0xb4, 0x86, 0x0f, 0xbd,
+	0xfd, 0x43, 0xbd, 0xbf, 0xcd, 0xbc, 0xd1, 0x56, 0xf9, 0x4a, 0x1a, 0x9d, 0x05, 0xbb, 0x5e, 0xec,
+	0x0d, 0x6d, 0xc4, 0x30, 0xc5, 0x38, 0x75, 0x1d, 0xeb, 0x3a, 0xfc, 0x4f, 0xd7, 0x33, 0x2b, 0x2a,
+	0x0d, 0x2b, 0x07, 0xc6, 0x29, 0x9d, 0xa1, 0x44, 0x6d, 0xad, 0xdd, 0x7a, 0x8f, 0x0c, 0x9c, 0x60,
+	0x07, 0x61, 0x77, 0x28, 0x0d, 0x35, 0x82, 0xc1, 0x68, 0x02, 0xc6, 0x3d, 0xb4, 0x7c, 0xb3, 0x42,
+	0x46, 0xa6, 0xa0, 0x23, 0x8c, 0xb1, 0xa2, 0x1b, 0x25, 0x5d, 0x21, 0x23, 0xd3, 0x7d, 0x46, 0x8f,
+	0xfe, 0xbd, 0x0a, 0x3b, 0xa2, 0xce, 0x27, 0xcc, 0xaa, 0xa4, 0x8a, 0x4f, 0xd6, 0xa1, 0x87, 0x4b,
+	0x88, 0x17, 0xe8, 0xd6, 0x2c, 0x56, 0x16, 0x4f, 0x6a, 0x8f, 0x48, 0xf7, 0x31, 0x6d, 0xed, 0x1c,
+	0xfa, 0x26, 0xd2, 0xfe, 0x3d, 0xda, 0x39, 0x53, 0x21, 0xc4, 0x65, 0x06, 0x01, 0x9e, 0xa3, 0x46,
+	0x19, 0x22, 0x63, 0xb4, 0x2e, 0x21, 0xc1, 0xca, 0xc4, 0x7e, 0xf7, 0x7f, 0x11, 0xda, 0x7c, 0xa9,
+	0x64, 0x24, 0xec, 0x95, 0x9f, 0xd2, 0xba, 0xc9, 0xe6, 0x65, 0x47, 0x7b, 0x78, 0x77, 0x1b, 0x6e,
+	0xf9, 0x3f, 0x6c, 0xe3, 0xdd, 0x48, 0xc6, 0xd9, 0x1c, 0x03, 0x2b, 0x62, 0xc7, 0xb4, 0x91, 0x1a,
+	0x30, 0x8b, 0xb4, 0x3a, 0x51, 0x55, 0x31, 0x9f, 0xde, 0x56, 0xd3, 0x14, 0xf5, 0x12, 0xa3, 0xc9,
+	0x4e, 0xe0, 0x8e, 0x4d, 0x8c, 0xad, 0xa9, 0xd7, 0xdb, 0xe0, 0xef, 0xd3, 0x4e, 0x0c, 0xa9, 0x99,
+	0x18, 0x0d, 0x32, 0xb5, 0x53, 0x26, 0x46, 0x24, 0x58, 0xad, 0x88, 0x15, 0xdc, 0x78, 0x43, 0x8d,
+	0x45, 0x62, 0x47, 0x6b, 0x84, 0x54, 0x49, 0xbb, 0xa6, 0x66, 0x50, 0x55, 0xcc, 0xa5, 0xb7, 0x12,
+	0x4c, 0x53, 0x98, 0xa1, 0x5d, 0x50, 0x33, 0x58, 0x97, 0x2f, 0xf4, 0xf7, 0x15, 0x3f, 0xb8, 0x5e,
+	0x71, 0xf2, 0x7b, 0xc5, 0xc9, 0xe7, 0x9c, 0x93, 0xaf, 0x39, 0x27, 0x97, 0x39, 0x27, 0xdf, 0x72,
+	0x4e, 0x7e, 0xe4, 0x9c, 0xfc, 0xcc, 0xf9, 0xc1, 0x75, 0x81, 0x5f, 0x71, 0x72, 0x79, 0xc5, 0xc9,
+	0x87, 0xe7, 0x33, 0x61, 0x2e, 0x16, 0xd3, 0x22, 0x0a, 0x5f, 0x68, 0x25, 0x43, 0xa5, 0xf1, 0x24,
+	0xc2, 0xa5, 0x1f, 0x8b, 0x73, 0x0c, 0xb3, 0x30, 0xc6, 0x93, 0x04, 0x24, 0xcc, 0x50, 0xfb, 0xfb,
+	0x1f, 0xe0, 0xb4, 0x61, 0x5f, 0xd0, 0x83, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xd2, 0x1d, 0xa4,
+	0x47, 0xa1, 0x03, 0x00, 0x00,
 }
 
 func (this *ObjectMetadata) Compare(that interface{}) int {
@@ -321,6 +421,72 @@ func (this *LocalObjectReference) Compare(that interface{}) int {
 	}
 	return 0
 }
+func (this *Condition) Compare(that interface{}) int {
+	if that == nil {
+		if this == nil {
+			return 0
+		}
+		return 1
+	}
+
+	that1, ok := that.(*Condition)
+	if !ok {
+		that2, ok := that.(Condition)
+		if ok {
+			that1 = &that2
+		} else {
+			return 1
+		}
+	}
+	if that1 == nil {
+		if this == nil {
+			return 0
+		}
+		return 1
+	} else if this == nil {
+		return -1
+	}
+	if this.Type != that1.Type {
+		if this.Type < that1.Type {
+			return -1
+		}
+		return 1
+	}
+	if this.Status != that1.Status {
+		if this.Status < that1.Status {
+			return -1
+		}
+		return 1
+	}
+	if this.ObservedGeneration != that1.ObservedGeneration {
+		if this.ObservedGeneration < that1.ObservedGeneration {
+			return -1
+		}
+		return 1
+	}
+	if this.LastTransitionTime != that1.LastTransitionTime {
+		if this.LastTransitionTime < that1.LastTransitionTime {
+			return -1
+		}
+		return 1
+	}
+	if this.Reason != that1.Reason {
+		if this.Reason < that1.Reason {
+			return -1
+		}
+		return 1
+	}
+	if this.Message != that1.Message {
+		if this.Message < that1.Message {
+			return -1
+		}
+		return 1
+	}
+	if c := bytes.Compare(this.XXX_unrecognized, that1.XXX_unrecognized); c != 0 {
+		return c
+	}
+	return 0
+}
 func (this *ObjectMetadata) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -400,6 +566,48 @@ func (this *LocalObjectReference) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *Condition) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Condition)
+	if !ok {
+		that2, ok := that.(Condition)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Type != that1.Type {
+		return false
+	}
+	if this.Status != that1.Status {
+		return false
+	}
+	if this.ObservedGeneration != that1.ObservedGeneration {
+		return false
+	}
+	if this.LastTransitionTime != that1.LastTransitionTime {
+		return false
+	}
+	if this.Reason != that1.Reason {
+		return false
+	}
+	if this.Message != that1.Message {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
 func (this *ObjectMetadata) GoString() string {
 	if this == nil {
 		return "nil"
@@ -449,6 +657,24 @@ func (this *LocalObjectReference) GoString() string {
 	s := make([]string, 0, 5)
 	s = append(s, "&v1alpha1.LocalObjectReference{")
 	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
+	if this.XXX_unrecognized != nil {
+		s = append(s, "XXX_unrecognized:"+fmt.Sprintf("%#v", this.XXX_unrecognized)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *Condition) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 10)
+	s = append(s, "&v1alpha1.Condition{")
+	s = append(s, "Type: "+fmt.Sprintf("%#v", this.Type)+",\n")
+	s = append(s, "Status: "+fmt.Sprintf("%#v", this.Status)+",\n")
+	s = append(s, "ObservedGeneration: "+fmt.Sprintf("%#v", this.ObservedGeneration)+",\n")
+	s = append(s, "LastTransitionTime: "+fmt.Sprintf("%#v", this.LastTransitionTime)+",\n")
+	s = append(s, "Reason: "+fmt.Sprintf("%#v", this.Reason)+",\n")
+	s = append(s, "Message: "+fmt.Sprintf("%#v", this.Message)+",\n")
 	if this.XXX_unrecognized != nil {
 		s = append(s, "XXX_unrecognized:"+fmt.Sprintf("%#v", this.XXX_unrecognized)+",\n")
 	}
@@ -584,6 +810,69 @@ func (m *LocalObjectReference) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *Condition) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Condition) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Condition) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Message) > 0 {
+		i -= len(m.Message)
+		copy(dAtA[i:], m.Message)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Message)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.Reason) > 0 {
+		i -= len(m.Reason)
+		copy(dAtA[i:], m.Reason)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Reason)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if m.LastTransitionTime != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.LastTransitionTime))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.ObservedGeneration != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.ObservedGeneration))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Status) > 0 {
+		i -= len(m.Status)
+		copy(dAtA[i:], m.Status)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Status)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Type != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.Type))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintApi(dAtA []byte, offset int, v uint64) int {
 	offset -= sovApi(v)
 	base := offset
@@ -635,6 +924,26 @@ func NewPopulatedLocalObjectReference(r randyApi, easy bool) *LocalObjectReferen
 	this.Name = string(randStringApi(r))
 	if !easy && r.Intn(10) != 0 {
 		this.XXX_unrecognized = randUnrecognizedApi(r, 2)
+	}
+	return this
+}
+
+func NewPopulatedCondition(r randyApi, easy bool) *Condition {
+	this := &Condition{}
+	this.Type = v1alpha1.ConditionType([]int32{0, 1, 2, 3, 4}[r.Intn(5)])
+	this.Status = string(randStringApi(r))
+	this.ObservedGeneration = int64(r.Int63())
+	if r.Intn(2) == 0 {
+		this.ObservedGeneration *= -1
+	}
+	this.LastTransitionTime = int64(r.Int63())
+	if r.Intn(2) == 0 {
+		this.LastTransitionTime *= -1
+	}
+	this.Reason = string(randStringApi(r))
+	this.Message = string(randStringApi(r))
+	if !easy && r.Intn(10) != 0 {
+		this.XXX_unrecognized = randUnrecognizedApi(r, 7)
 	}
 	return this
 }
@@ -768,6 +1077,39 @@ func (m *LocalObjectReference) Size() (n int) {
 	return n
 }
 
+func (m *Condition) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Type != 0 {
+		n += 1 + sovApi(uint64(m.Type))
+	}
+	l = len(m.Status)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.ObservedGeneration != 0 {
+		n += 1 + sovApi(uint64(m.ObservedGeneration))
+	}
+	if m.LastTransitionTime != 0 {
+		n += 1 + sovApi(uint64(m.LastTransitionTime))
+	}
+	l = len(m.Reason)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.Message)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
 func sovApi(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
@@ -816,6 +1158,22 @@ func (this *LocalObjectReference) String() string {
 	}
 	s := strings.Join([]string{`&LocalObjectReference{`,
 		`Name:` + fmt.Sprintf("%v", this.Name) + `,`,
+		`XXX_unrecognized:` + fmt.Sprintf("%v", this.XXX_unrecognized) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *Condition) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&Condition{`,
+		`Type:` + fmt.Sprintf("%v", this.Type) + `,`,
+		`Status:` + fmt.Sprintf("%v", this.Status) + `,`,
+		`ObservedGeneration:` + fmt.Sprintf("%v", this.ObservedGeneration) + `,`,
+		`LastTransitionTime:` + fmt.Sprintf("%v", this.LastTransitionTime) + `,`,
+		`Reason:` + fmt.Sprintf("%v", this.Reason) + `,`,
+		`Message:` + fmt.Sprintf("%v", this.Message) + `,`,
 		`XXX_unrecognized:` + fmt.Sprintf("%v", this.XXX_unrecognized) + `,`,
 		`}`,
 	}, "")
@@ -1283,6 +1641,210 @@ func (m *LocalObjectReference) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Condition) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Condition: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Condition: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= v1alpha1.ConditionType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Status = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObservedGeneration", wireType)
+			}
+			m.ObservedGeneration = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ObservedGeneration |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LastTransitionTime", wireType)
+			}
+			m.LastTransitionTime = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LastTransitionTime |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reason = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Message", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Message = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

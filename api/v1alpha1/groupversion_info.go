@@ -24,5 +24,5 @@ func init() {
 	SchemeBuilder.Register(&MachineType{}, &MachineTypeList{})
 	SchemeBuilder.Register(&FirmwarePackage{}, &FirmwarePackageList{})
 	SchemeBuilder.Register(&UpdateTask{}, &UpdateTaskList{})
-	SchemeBuilder.Register(&MachineUpdateJob{}, &MachineUpdateJobList{})
+	SchemeBuilder.Register(&UpdateJob{}, &UpdateJobList{})
 }
