@@ -93,3 +93,14 @@ func newMachineTypeReconciler(t *testing.T, schemeOpts []schemeOption, clientOpt
 		Horizon: time.Minute * 30,
 	}
 }
+
+func newMachineLifecycleReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *MachineLifecycleReconciler {
+	t.Helper()
+
+	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
+	return &MachineLifecycleReconciler{
+		Client:  c,
+		Scheme:  s,
+		Horizon: time.Minute * 30,
+	}
+}
