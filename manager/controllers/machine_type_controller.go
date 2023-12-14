@@ -19,27 +19,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"github.com/ironcore-dev/lifecycle-manager/api/v1alpha1"
-	lcmi "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine_type/v1alpha1"
+	lcmimachinetype "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine_type/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 )
-
-var lcmiScanResultToString = map[lcmi.ScanResult]v1alpha1.ScanResult{
-	lcmi.ScanResult_SCAN_RESULT_UNSPECIFIED: "",
-	lcmi.ScanResult_SCAN_RESULT_SUCCESS:     v1alpha1.ScanSuccess,
-	lcmi.ScanResult_SCAN_RESULT_FAILURE:     v1alpha1.ScanFailure,
-}
-
-var lcmiScanStateToString = map[lcmi.ScanState]v1alpha1.ScanState{
-	lcmi.ScanState_SCAN_STATE_UNSPECIFIED: "",
-	lcmi.ScanState_SCAN_STATE_SCHEDULED:   v1alpha1.ScanScheduled,
-	lcmi.ScanState_SCAN_STATE_FINISHED:    v1alpha1.ScanFinished,
-}
 
 // MachineTypeReconciler reconciles MachineType objects.
 type MachineTypeReconciler struct {
 	client.Client
 
-	MachineTypeBroker lcmi.MachineTypeBrokerServiceClient
+	MachineTypeBroker lcmimachinetype.MachineTypeBrokerServiceClient
 
 	Log     logr.Logger
 	Scheme  *runtime.Scheme
@@ -95,7 +83,7 @@ func (r *MachineTypeReconciler) reconcileRequired(ctx context.Context, obj *v1al
 func (r *MachineTypeReconciler) reconcile(ctx context.Context, obj *v1alpha1.MachineType) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	if r.scanRequired(obj) {
-		resp, err := r.MachineTypeBroker.Scan(ctx, &lcmi.ScanRequest{
+		resp, err := r.MachineTypeBroker.Scan(ctx, &lcmimachinetype.ScanRequest{
 			Id: uuidutil.UUIDFromObjectKey(client.ObjectKeyFromObject(obj)),
 		})
 		if err != nil {
@@ -106,8 +94,8 @@ func (r *MachineTypeReconciler) reconcile(ctx context.Context, obj *v1alpha1.Mac
 			log.Error(err, "failed to get scan result")
 			return ctrl.Result{}, err
 		}
-		if state, ok := lcmiScanStateToString[resp.State]; ok && state.IsFinished() {
-			obj.Status.LastScanResult = lcmiScanResultToString[resp.Status.LastScanResult]
+		if state, ok := LCMIScanStateToString[resp.State]; ok && state.IsFinished() {
+			obj.Status.LastScanResult = LCMIScanResultToString[resp.Status.LastScanResult]
 			obj.Status.LastScanTime = metav1.Time{Time: time.Unix(0, resp.Status.LastScanTime)}
 		}
 	}

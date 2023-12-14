@@ -62,6 +62,8 @@ func setupPrerequisites(t *testing.T, schemeOpts []schemeOption, clientOpts []cl
 }
 
 func newOnboardingReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *OnboardingReconciler {
+	t.Helper()
+
 	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
 	return &OnboardingReconciler{
 		Client:        c,
@@ -71,6 +73,8 @@ func newOnboardingReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts
 }
 
 func newUpdateTaskReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *UpdateTaskReconciler {
+	t.Helper()
+
 	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
 	return &UpdateTaskReconciler{
 		Client:   c,
@@ -80,6 +84,8 @@ func newUpdateTaskReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts
 }
 
 func newMachineTypeReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *MachineTypeReconciler {
+	t.Helper()
+
 	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
 	return &MachineTypeReconciler{
 		Client:  c,

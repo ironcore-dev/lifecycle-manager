@@ -11,28 +11,28 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	lcmi "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine_type/v1alpha1"
+	lcmimachinetype "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine_type/v1alpha1"
 )
 
 type MachineTypeClient struct {
 	sync.Mutex
 
-	scans map[string]*lcmi.ScanResponse
+	scans map[string]*lcmimachinetype.ScanResponse
 }
 
 func NewFakeMachineTypeClient() *MachineTypeClient {
-	return &MachineTypeClient{scans: make(map[string]*lcmi.ScanResponse)}
+	return &MachineTypeClient{scans: make(map[string]*lcmimachinetype.ScanResponse)}
 }
 
-func NewFakeMachineTypeClientWithScans(scans map[string]*lcmi.ScanResponse) *MachineTypeClient {
+func NewFakeMachineTypeClientWithScans(scans map[string]*lcmimachinetype.ScanResponse) *MachineTypeClient {
 	return &MachineTypeClient{scans: scans}
 }
 
-func (f *MachineTypeClient) ListMachineTypes(_ context.Context, _ *lcmi.ListMachineTypesRequest, _ ...grpc.CallOption) (*lcmi.ListMachineTypesResponse, error) {
+func (f *MachineTypeClient) ListMachineTypes(_ context.Context, _ *lcmimachinetype.ListMachineTypesRequest, _ ...grpc.CallOption) (*lcmimachinetype.ListMachineTypesResponse, error) {
 	return nil, nil
 }
 
-func (f *MachineTypeClient) Scan(_ context.Context, in *lcmi.ScanRequest, _ ...grpc.CallOption) (*lcmi.ScanResponse, error) {
+func (f *MachineTypeClient) Scan(_ context.Context, in *lcmimachinetype.ScanRequest, _ ...grpc.CallOption) (*lcmimachinetype.ScanResponse, error) {
 	f.Lock()
 	defer f.Unlock()
 
@@ -44,7 +44,7 @@ func (f *MachineTypeClient) Scan(_ context.Context, in *lcmi.ScanRequest, _ ...g
 	return stored, nil
 }
 
-func (f *MachineTypeClient) Status(_ context.Context, in *lcmi.StatusRequest, _ ...grpc.CallOption) (*lcmi.StatusResponse, error) {
+func (f *MachineTypeClient) Status(_ context.Context, in *lcmimachinetype.StatusRequest, _ ...grpc.CallOption) (*lcmimachinetype.StatusResponse, error) {
 	f.Lock()
 	defer f.Unlock()
 
@@ -53,7 +53,7 @@ func (f *MachineTypeClient) Status(_ context.Context, in *lcmi.StatusRequest, _ 
 		return nil, status.Error(codes.NotFound, "scan result not found")
 	}
 
-	return &lcmi.StatusResponse{
+	return &lcmimachinetype.StatusResponse{
 		Status: stored.Status,
 	}, nil
 }

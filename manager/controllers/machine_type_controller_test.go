@@ -15,7 +15,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/ironcore-dev/lifecycle-manager/api/v1alpha1"
-	lcmi "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine_type/v1alpha1"
+	lcmicommon "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
+	lcmimachinetype "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine_type/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/fake"
 	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 )
@@ -138,13 +139,13 @@ func TestMachineTypeReconciler_Reconcile(t *testing.T) {
 					LastScanResult: v1alpha1.ScanFailure,
 				},
 			},
-			brokerClient: fake.NewFakeMachineTypeClientWithScans(map[string]*lcmi.ScanResponse{
+			brokerClient: fake.NewFakeMachineTypeClientWithScans(map[string]*lcmimachinetype.ScanResponse{
 				uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: "sample-machine-type", Namespace: "metal"}): {
-					Status: &lcmi.MachineTypeStatus{
+					Status: &lcmimachinetype.MachineTypeStatus{
 						LastScanTime:   expectedLastScanTime.Unix(),
-						LastScanResult: lcmi.ScanResult_SCAN_RESULT_SUCCESS,
+						LastScanResult: lcmicommon.ScanResult_SCAN_RESULT_SUCCESS,
 					},
-					State: lcmi.ScanState_SCAN_STATE_FINISHED,
+					State: lcmicommon.ScanState_SCAN_STATE_FINISHED,
 				},
 			}),
 			request:     ctrl.Request{NamespacedName: types.NamespacedName{Name: "sample-machine-type", Namespace: "metal"}},
@@ -170,13 +171,13 @@ func TestMachineTypeReconciler_Reconcile(t *testing.T) {
 					LastScanResult: v1alpha1.ScanSuccess,
 				},
 			},
-			brokerClient: fake.NewFakeMachineTypeClientWithScans(map[string]*lcmi.ScanResponse{
+			brokerClient: fake.NewFakeMachineTypeClientWithScans(map[string]*lcmimachinetype.ScanResponse{
 				uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: "sample-machine-type", Namespace: "metal"}): {
-					Status: &lcmi.MachineTypeStatus{
+					Status: &lcmimachinetype.MachineTypeStatus{
 						LastScanTime:   time.Now().UnixNano(),
-						LastScanResult: lcmi.ScanResult_SCAN_RESULT_SUCCESS,
+						LastScanResult: lcmicommon.ScanResult_SCAN_RESULT_SUCCESS,
 					},
-					State: lcmi.ScanState_SCAN_STATE_FINISHED,
+					State: lcmicommon.ScanState_SCAN_STATE_FINISHED,
 				},
 			}),
 			request:     ctrl.Request{NamespacedName: types.NamespacedName{Name: "sample-machine-type", Namespace: "metal"}},
