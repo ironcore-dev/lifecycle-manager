@@ -142,7 +142,7 @@ func TestMachineTypeReconciler_Reconcile(t *testing.T) {
 			brokerClient: fake.NewFakeMachineTypeClientWithScans(map[string]*lcmimachinetype.ScanResponse{
 				uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: "sample-machine-type", Namespace: "metal"}): {
 					Status: &lcmimachinetype.MachineTypeStatus{
-						LastScanTime:   expectedLastScanTime.Unix(),
+						LastScanTime:   expectedLastScanTime.UnixNano(),
 						LastScanResult: lcmicommon.ScanResult_SCAN_RESULT_SUCCESS,
 					},
 					State: lcmicommon.ScanState_SCAN_STATE_FINISHED,
@@ -174,7 +174,7 @@ func TestMachineTypeReconciler_Reconcile(t *testing.T) {
 			brokerClient: fake.NewFakeMachineTypeClientWithScans(map[string]*lcmimachinetype.ScanResponse{
 				uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: "sample-machine-type", Namespace: "metal"}): {
 					Status: &lcmimachinetype.MachineTypeStatus{
-						LastScanTime:   time.Now().UnixNano(),
+						LastScanTime:   expectedLastScanTime.UnixNano(),
 						LastScanResult: lcmicommon.ScanResult_SCAN_RESULT_SUCCESS,
 					},
 					State: lcmicommon.ScanState_SCAN_STATE_FINISHED,
@@ -201,15 +201,11 @@ func TestMachineTypeReconciler_Reconcile(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Empty(t, resp)
 			switch name {
-			case "last-scan-failed":
+			case "last-scan-failed", "last-scan-not-in-horizon":
 				actualMachineType := &v1alpha1.MachineType{}
 				err = r.Get(context.Background(), client.ObjectKeyFromObject(testCase.target), actualMachineType)
 				assert.NoError(t, err)
 				assert.True(t, actualMachineType.Status.LastScanResult.IsSuccess())
-			case "last-scan-not-in-horizon":
-				actualMachineType := &v1alpha1.MachineType{}
-				err = r.Get(context.Background(), client.ObjectKeyFromObject(testCase.target), actualMachineType)
-				assert.NoError(t, err)
 				assert.Equal(t, expectedLastScanTime.Unix(), actualMachineType.Status.LastScanTime.Time.Unix())
 			}
 		})
