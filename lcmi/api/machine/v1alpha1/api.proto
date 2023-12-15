@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package lcmi.api.machine.v1alpha1;
+
+import "lcmi/api/common/v1alpha1/api.proto";
+import "lcmi/api/meta/v1alpha1/api.proto";
+
+option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1";
+
+message Machine {
+  meta.v1alpha1.ObjectMetadata metadata = 1;
+  MachineSpec spec = 2;
+  MachineStatus status = 3;
+}
+
+message MachineSpec {
+  meta.v1alpha1.LocalObjectReference machine_type_ref = 1;
+  meta.v1alpha1.LocalObjectReference oob_machine_ref = 2;
+  int64 scan_period = 3;
+}
+
+message MachineStatus {
+  int64 last_scan_time = 1;
+  common.v1alpha1.ScanResult last_scan_result = 2;
+  repeated meta.v1alpha1.LocalObjectReference installed_packages = 3;
+}
+
+message MachineFilter {
+  string id = 1;
+  map<string, string> label_selector = 2;
+}
+
+message ListMachinesRequest {
+  MachineFilter filter = 1;
+}
+
+message ListMachinesResponse {
+  repeated Machine machine = 1;
+}
+
+message StatusRequest {
+  string id = 1;
+}
+
+message StatusResponse {
+  MachineStatus status = 1;
+}
+
+message ScanRequest {
+  string id = 1;
+}
+
+message ScanResponse {
+  MachineStatus status = 1;
+  common.v1alpha1.ScanState state = 2;
+}
+
+service MachineBrokerService {
+  rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse) {}
+  rpc Scan(ScanRequest) returns (ScanResponse) {}
+  rpc Status(StatusRequest) returns (StatusResponse) {}
+}

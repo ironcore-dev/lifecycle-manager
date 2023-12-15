@@ -1,0 +1,118 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+  name: packageinstalltasks.lifecycle.ironcore.dev
+spec:
+  group: lifecycle.ironcore.dev
+  names:
+    kind: PackageInstallTask
+    listKind: PackageInstallTaskList
+    plural: packageinstalltasks
+    shortNames:
+    - pit
+    singular: packageinstalltask
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Total number of jobs created from current task
+      jsonPath: .status.jobsTotal
+      name: Jobs Total
+      type: integer
+    - description: Total number of failed jobs
+      jsonPath: .status.jobsFailed
+      name: Jobs Failed
+      type: integer
+    - description: Total number of succeeded jobs
+      jsonPath: .status.jobsSuccessful
+      name: Jobs Successful
+      type: integer
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: PackageInstallTask is the schema for PackageInstallTask API object.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PackageInstallTaskSpec contains desired configuration of
+              update approval.
+            properties:
+              machineTypeRef:
+                description: MachineTypeRef contain reference to MachineType object.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              machines:
+                description: Machines contains a list of references to Machine objects
+                  approved for packages upgrade.
+                items:
+                  description: LocalObjectReference contains enough information to
+                    let you locate the referenced object inside the same namespace.
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+              packages:
+                description: Packages contains a list of references to FirmwarePackage
+                  objects approved for installation.
+                items:
+                  description: LocalObjectReference contains enough information to
+                    let you locate the referenced object inside the same namespace.
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
+                  x-kubernetes-map-type: atomic
+                type: array
+            required:
+            - machineTypeRef
+            - machines
+            - packages
+            type: object
+          status:
+            description: PackageInstallTaskStatus contains observed state of PackageInstallTask
+              object.
+            properties:
+              jobsFailed:
+                description: JobsFailed reflects the number of failed jobs.
+                format: int32
+                type: integer
+              jobsSuccessful:
+                description: JobsSuccessful reflects the number of successfully completed
+                  jobs.
+                format: int32
+                type: integer
+              jobsTotal:
+                description: JobsTotal reflects the total number of PackageInstallJob
+                  objects created. according to the PackageInstallTask definition
+                format: int32
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

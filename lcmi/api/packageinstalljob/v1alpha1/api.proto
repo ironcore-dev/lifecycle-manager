@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package lcmi.api.packageinstalljob.v1alpha1;
+
+import "lcmi/api/common/v1alpha1/api.proto";
+import "lcmi/api/meta/v1alpha1/api.proto";
+
+option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/packageinstalljob/v1alpha1";
+
+message PackageInstallJob {
+  meta.v1alpha1.ObjectMetadata metadata = 1;
+  PackageInstallJobSpec spec = 2;
+  PackageInstallJobStatus status = 3;
+}
+
+message PackageInstallJobSpec {
+  meta.v1alpha1.LocalObjectReference machine_ref = 1;
+  meta.v1alpha1.LocalObjectReference firmware_package_ref = 2;
+}
+
+message PackageInstallJobStatus {
+  repeated meta.v1alpha1.Condition conditions = 1;
+  common.v1alpha1.UpdateJobState state = 2;
+  string message = 3;
+}
+
+message PackageInstallJobFilter {
+  string id = 1;
+  meta.v1alpha1.LocalObjectReference machine_ref = 2;
+  meta.v1alpha1.LocalObjectReference firmware_package_ref = 3;
+  map<string, string> label_selector = 4;
+}
+
+message ListPackageInstallJobsRequest {
+  PackageInstallJobFilter filter = 1;
+}
+
+message ListPackageInstallJobsResponse {
+  repeated PackageInstallJob update_job = 1;
+}
+
+message StatusRequest {
+  string id = 1;
+}
+
+message StatusResponse {
+  PackageInstallJobStatus status = 1;
+}
+
+message ExecuteRequest {
+  PackageInstallJob update_job = 1;
+}
+
+message ExecuteResponse {
+  PackageInstallJobStatus status = 2;
+}
+
+service PackageInstallJobBrokerService {
+  rpc ListPackageInstallJobs(ListPackageInstallJobsRequest) returns (ListPackageInstallJobsResponse) {}
+  rpc Status(StatusRequest) returns (StatusResponse) {}
+  rpc Execute(ExecuteRequest) returns (ExecuteResponse) {}
+}

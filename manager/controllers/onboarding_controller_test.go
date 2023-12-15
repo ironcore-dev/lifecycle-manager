@@ -185,10 +185,10 @@ func TestOnboardingReconciler_Onboarding(t *testing.T) {
 	err = r.Get(context.Background(), types.NamespacedName{Namespace: "metal", Name: "Dell-R440"}, actualMachineType)
 	assert.NoError(t, err)
 	assert.Equal(t, client.ObjectKeyFromObject(targetMachineType), client.ObjectKeyFromObject(actualMachineType))
-	actualMachineLifecycle := &v1alpha1.MachineLifecycle{}
-	err = r.Get(context.Background(), types.NamespacedName{Namespace: "metal", Name: "sample-oob"}, actualMachineLifecycle)
+	actualMachine := &v1alpha1.Machine{}
+	err = r.Get(context.Background(), types.NamespacedName{Namespace: "metal", Name: "sample-oob"}, actualMachine)
 	assert.NoError(t, err)
-	assert.Equal(t, client.ObjectKeyFromObject(targetOOB), client.ObjectKeyFromObject(actualMachineLifecycle))
-	assert.Equal(t, targetOOB.Name, actualMachineLifecycle.Spec.OOBMachineRef.Name)
-	assert.Equal(t, actualMachineType.Name, actualMachineLifecycle.Spec.MachineTypeRef.Name)
+	assert.Equal(t, client.ObjectKeyFromObject(targetOOB), client.ObjectKeyFromObject(actualMachine))
+	assert.Equal(t, targetOOB.Name, actualMachine.Spec.OOBMachineRef.Name)
+	assert.Equal(t, actualMachineType.Name, actualMachine.Spec.MachineTypeRef.Name)
 }

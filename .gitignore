@@ -5,7 +5,6 @@
 *.so
 *.dylib
 bin
-testbin/*
 
 # Test binary, build with `go test -c`
 *.test
@@ -23,8 +22,3 @@ vendor/
 *~
 .vscode/
 testbin/
-dev/
-charts/
-/local
-/metal-api.iml
-compose-dev.yaml

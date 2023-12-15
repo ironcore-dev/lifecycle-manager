@@ -8,7 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-const uuidNamespace = "metal.ironcore.dev"
+const uuidNamespace = "lifecycle.ironcore.dev"
 
 func UUIDFromObjectKey(key types.NamespacedName) string {
 	namespacedUUID := uuid.NewMD5(uuid.UUID{}, []byte(uuidNamespace))

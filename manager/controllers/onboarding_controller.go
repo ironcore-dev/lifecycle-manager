@@ -24,7 +24,7 @@ import (
 )
 
 // OnboardingReconciler watches for OOB objects and creates
-// corresponding MachineType and MachineLifecycle objects.
+// corresponding MachineType and Machine objects.
 type OnboardingReconciler struct {
 	client.Client
 
@@ -36,8 +36,8 @@ type OnboardingReconciler struct {
 	ScanPeriod    metav1.Duration
 }
 
-// +kubebuilder:rbac:groups=metal.ironcore.dev,resources=machinetypes,verbs=get;list;create
-// +kubebuilder:rbac:groups=metal.ironcore.dev,resources=machinelifecycles,verbs=get;list;create
+// +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=machinetypes,verbs=get;list;create
+// +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=machines,verbs=get;list;create
 // +kubebuilder:rbac:groups=onmetal.de,resources=oobs,verbs=watch;get;list
 // +kubebuilder:rbac:groups=onmetal.de,resources=oobs/status,verbs=get
 
@@ -90,8 +90,8 @@ func (r *OnboardingReconciler) reconcile(ctx context.Context, obj *oobv1alpha1.O
 	if err = r.onboardMachineType(ctx, obj); err != nil {
 		return ctrl.Result{}, err
 	}
-	log.V(2).Info("onboarding machineLifecycle object")
-	if err = r.onboardMachineLifecycle(ctx, obj); err != nil {
+	log.V(2).Info("onboarding machine object")
+	if err = r.onboardMachine(ctx, obj); err != nil {
 		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
@@ -124,30 +124,30 @@ func (r *OnboardingReconciler) onboardMachineType(ctx context.Context, obj *oobv
 	return nil
 }
 
-func (r *OnboardingReconciler) onboardMachineLifecycle(ctx context.Context, obj *oobv1alpha1.OOB) error {
+func (r *OnboardingReconciler) onboardMachine(ctx context.Context, obj *oobv1alpha1.OOB) error {
 	log := logr.FromContextOrDiscard(ctx)
 	manufacturer := obj.Status.Manufacturer
 	typeName := obj.Status.SKU[:4]
-	machineLifecycle := &v1alpha1.MachineLifecycle{
+	machine := &v1alpha1.Machine{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      obj.Name,
 			Namespace: obj.Namespace,
 		},
-		Spec: v1alpha1.MachineLifecycleSpec{
+		Spec: v1alpha1.MachineSpec{
 			MachineTypeRef: corev1.LocalObjectReference{Name: fmt.Sprintf("%s-%s", manufacturer, typeName)},
 			OOBMachineRef:  corev1.LocalObjectReference{Name: obj.Name},
 			ScanPeriod:     r.ScanPeriod,
 		},
 	}
-	if err := r.Create(ctx, machineLifecycle); err != nil {
+	if err := r.Create(ctx, machine); err != nil {
 		if apierrors.IsAlreadyExists(err) {
-			log.V(2).Info("machineLifecycle has been already onboarded")
+			log.V(2).Info("machine has been already onboarded")
 			return nil
 		}
-		log.Error(err, "failed to onboard machineLifecycle")
+		log.Error(err, "failed to onboard machine")
 		return err
 	}
-	log.V(1).Info("machineLifecycle onboarded successfully")
+	log.V(1).Info("machine onboarded successfully")
 	return nil
 }
 

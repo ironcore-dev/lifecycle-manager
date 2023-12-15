@@ -1,0 +1,84 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+  name: machinetypes.lifecycle.ironcore.dev
+spec:
+  group: lifecycle.ironcore.dev
+  names:
+    kind: MachineType
+    listKind: MachineTypeList
+    plural: machinetypes
+    shortNames:
+    - mt
+    singular: machinetype
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Last scan timestamp
+      jsonPath: .status.lastScanTime
+      name: Last Scan Time
+      type: string
+    - description: Last scan result
+      jsonPath: .status.lastScanResult
+      name: Last Scan Result
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: MachineType is the schema for MachineType API object.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: MachineTypeSpec contains definition of concrete machine type.
+            properties:
+              manufacturer:
+                description: Manufacturer refers to manufacturer, e.g. Lenovo, Dell
+                  etc.
+                type: string
+              scanPeriod:
+                description: ScanPeriod defines the interval between scans.
+                type: string
+              type:
+                description: Type refers to machine type, e.g. 7z21 for Lenovo, R440
+                  for Dell etc.
+                type: string
+            required:
+            - manufacturer
+            - scanPeriod
+            - type
+            type: object
+          status:
+            description: MachineTypeStatus contains observed state of machine type
+              in part of available firmware updates.
+            properties:
+              lastScanResult:
+                description: LastScanResult reflects the result of the last scan.
+                enum:
+                - Success
+                - Failure
+                type: string
+              lastScanTime:
+                description: LastScanTime reflects the timestamp when the last scan
+                  of available packages was done.
+                format: date-time
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

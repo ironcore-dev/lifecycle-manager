@@ -18,19 +18,19 @@ func (in ScanResult) IsFailure() bool {
 	return in == ScanFailure
 }
 
-type UpdateJobState string
+type PackageInstallJobState string
 
 const (
-	UpdateJobStateFailure UpdateJobState = "Failure"
-	UpdateJobStateSuccess UpdateJobState = "Success"
+	PackageInstallJobStateFailure PackageInstallJobState = "Failure"
+	PackageInstallJobStateSuccess PackageInstallJobState = "Success"
 )
 
-func (in UpdateJobState) IsSuccess() bool {
-	return in == UpdateJobStateSuccess
+func (in PackageInstallJobState) IsSuccess() bool {
+	return in == PackageInstallJobStateSuccess
 }
 
-func (in UpdateJobState) IsFailure() bool {
-	return in == UpdateJobStateFailure
+func (in PackageInstallJobState) IsFailure() bool {
+	return in == PackageInstallJobStateFailure
 }
 
 type ScanState string

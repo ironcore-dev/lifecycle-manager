@@ -1,0 +1,12 @@
+apiVersion: lifecycle.ironcore.dev/v1alpha1
+kind: FirmwarePackage
+metadata:
+  labels:
+    app.kubernetes.io/name: firmwarepackage
+    app.kubernetes.io/instance: firmwarepackage-sample
+    app.kubernetes.io/part-of: lifecycle-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: lifecycle-manager
+  name: firmwarepackage-sample
+spec:
+  # TODO(user): Add fields here

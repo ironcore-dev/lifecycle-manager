@@ -1,32 +1,40 @@
 run:
-  timeout: 5m
+  deadline: 5m
+  allow-parallel-runners: true
 
 linters:
   enable:
-    - ineffassign
-    - misspell
+    - asciicheck
+    - dogsled
+    - durationcheck
+    - dupl
+    - errcheck
+    - exportloopref
+    - forcetypeassert
+    - funlen
+    - goconst
     - gocyclo
-    - goimports
-    - govet
+    - godot
     - gofmt
     - goimports
-    - godot
-    - predeclared
-    - unconvert
-    - whitespace
-    - unused
-    - unconvert
-    - dogsled
+    - goprintffuncname
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - lll
     - misspell
+    - nakedret
     - paralleltest
     - prealloc
-    - importas
-    - asciicheck
+    - predeclared
+    - staticcheck
     - stylecheck
-    - durationcheck
+    - typecheck
+    - unconvert
     - unparam
-    - goprintffuncname
-    - forcetypeassert
+    - unused
+    - whitespace
 
 severity:
   default-severity: error
@@ -41,6 +49,16 @@ linters-settings:
 
 issues:
   exclude-rules:
-    - path: _gen\.go
+    - path: "lcmi/fake"
       linters:
-        - typecheck
+        - dupl
+    - path: _test\.go
+      linters:
+        - dupl
+        - funlen
+    - path: "manager/controllers"
+      linters:
+        - dupl
+    - linters:
+        - lll
+      source: "^// [+]kubebuilder"

@@ -1,0 +1,31 @@
+# permissions for end users to edit packageinstalljobs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: packageinstalljob-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: lifecycle-manager
+    app.kubernetes.io/part-of: lifecycle-manager
+    app.kubernetes.io/managed-by: kustomize
+  name: packageinstalljob-editor-role
+rules:
+- apiGroups:
+  - lifecycle.ironcore.dev
+  resources:
+  - packageinstalljobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - lifecycle.ironcore.dev
+  resources:
+  - packageinstalljobs/status
+  verbs:
+  - get

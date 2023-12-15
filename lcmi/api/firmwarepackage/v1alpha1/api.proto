@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package lcmi.api.firmwarepackage.v1alpha1;
+
+import "lcmi/api/common/v1alpha1/api.proto";
+import "lcmi/api/meta/v1alpha1/api.proto";
+
+option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/firmwarepackage/v1alpha1";
+
+message FirmwarePackage {
+  meta.v1alpha1.ObjectMetadata metadata = 1;
+  FirmwarePackageSpec spec = 2;
+}
+
+message FirmwarePackageSpec {
+  meta.v1alpha1.LocalObjectReference machine_type_ref = 1;
+  string name = 2;
+  string version = 3;
+  string source = 4;
+  bool reboot_required = 5;
+}
+
+message FirmwarePackageFilter {
+  string id = 1;
+  meta.v1alpha1.LocalObjectReference machine_type_red = 2;
+  map<string, string> label_selector = 3;
+}
+
+message ListFirmwarePackagesRequest {
+  FirmwarePackageFilter filter = 1;
+}
+
+message ListFirmwarePackagesResponse {
+  repeated FirmwarePackage firmware_package = 1;
+}
+
+message CreateFirmwarePackageRequest {
+  FirmwarePackageSpec spec = 1;
+}
+
+message CreateFirmwarePackageResponse {
+  common.v1alpha1.CreateResult result = 1;
+  FirmwarePackage firmware_package = 2;
+}
+
+message DeleteFirmwarePackageRequest {
+  string id = 1;
+}
+
+message DeleteFirmwarePackageResponse {
+  common.v1alpha1.DeleteResult result = 1;
+}
+
+service FirmwarePackageBrokerService {
+  rpc ListFirmwarePackages(ListFirmwarePackagesRequest) returns (ListFirmwarePackagesResponse) {}
+  rpc CreateFirmwarePackage(CreateFirmwarePackageRequest) returns (CreateFirmwarePackageResponse) {}
+  rpc DeleteFirmwarePackage(DeleteFirmwarePackageRequest) returns (DeleteFirmwarePackageResponse) {}
+}

@@ -52,19 +52,19 @@ func withRuntimeObject(object client.Object) clientOption {
 	}
 }
 
-func setupPrerequisites(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) (client.Client, *runtime.Scheme) {
+func setupPrerequisites(t *testing.T, sOpts []schemeOption, cOpts []clientOption) (client.Client, *runtime.Scheme) {
 	t.Helper()
 
 	s := runtime.NewScheme()
-	setupScheme(t, s, schemeOpts...)
-	c := setupClient(t, s, clientOpts...)
+	setupScheme(t, s, sOpts...)
+	c := setupClient(t, s, cOpts...)
 	return c, s
 }
 
-func newOnboardingReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *OnboardingReconciler {
+func newOnboardingReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientOption) *OnboardingReconciler {
 	t.Helper()
 
-	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
+	c, s := setupPrerequisites(t, sOpts, cOpts)
 	return &OnboardingReconciler{
 		Client:        c,
 		Scheme:        s,
@@ -72,21 +72,21 @@ func newOnboardingReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts
 	}
 }
 
-func newUpdateTaskReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *UpdateTaskReconciler {
+func newUpdateTaskReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientOption) *PackageInstallTaskReconciler {
 	t.Helper()
 
-	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
-	return &UpdateTaskReconciler{
+	c, s := setupPrerequisites(t, sOpts, cOpts)
+	return &PackageInstallTaskReconciler{
 		Client:   c,
 		Scheme:   s,
 		Recorder: &record.FakeRecorder{},
 	}
 }
 
-func newMachineTypeReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *MachineTypeReconciler {
+func newMachineTypeReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientOption) *MachineTypeReconciler {
 	t.Helper()
 
-	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
+	c, s := setupPrerequisites(t, sOpts, cOpts)
 	return &MachineTypeReconciler{
 		Client:  c,
 		Scheme:  s,
@@ -94,11 +94,11 @@ func newMachineTypeReconciler(t *testing.T, schemeOpts []schemeOption, clientOpt
 	}
 }
 
-func newMachineLifecycleReconciler(t *testing.T, schemeOpts []schemeOption, clientOpts []clientOption) *MachineLifecycleReconciler {
+func newMachineReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientOption) *MachineReconciler {
 	t.Helper()
 
-	c, s := setupPrerequisites(t, schemeOpts, clientOpts)
-	return &MachineLifecycleReconciler{
+	c, s := setupPrerequisites(t, sOpts, cOpts)
+	return &MachineReconciler{
 		Client:  c,
 		Scheme:  s,
 		Horizon: time.Minute * 30,

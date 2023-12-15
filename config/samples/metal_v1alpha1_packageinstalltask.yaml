@@ -1,0 +1,12 @@
+apiVersion: lifecycle.ironcore.dev/v1alpha1
+kind: PackageInstallTask
+metadata:
+  labels:
+    app.kubernetes.io/name: packageinstalltask
+    app.kubernetes.io/instance: packageinstalltask-sample
+    app.kubernetes.io/part-of: lifecycle-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: lifecycle-manager
+  name: packageinstalltask-sample
+spec:
+  # TODO(user): Add fields here
