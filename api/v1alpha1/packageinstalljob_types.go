@@ -33,7 +33,7 @@ type PackageInstallJobStatus struct {
 	// - InProgress
 	// - Finished
 	// +kubebuilder:validation:Optional
-	Conditions []metav1.Condition `json:"conditions"`
+	Conditions []PackageInstallJobCondition `json:"conditions"`
 
 	// State reflects the final state of the job.
 	// +kubebuilder:validation:Optional

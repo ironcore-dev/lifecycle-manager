@@ -54,10 +54,10 @@ type PackageInstallTaskReconciler struct {
 	Recorder record.EventRecorder
 }
 
-// +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=updatetasks,verbs=watch;get;list;patch;update
-// +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=updatetasks/status,verbs=get;patch;update
-// +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=updatejobs,verbs=watch;get;list;create
-// +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=updatejobs/status,verbs=get
+// +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=packageinstalltasks,verbs=watch;get;list;patch;update
+// +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=packageinstalltasks/status,verbs=get;patch;update
+// +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=packageinstalljobs,verbs=watch;get;list;create
+// +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=packageinstalljobs/status,verbs=get
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 func (r *PackageInstallTaskReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -197,7 +197,7 @@ func (r *PackageInstallTaskReconciler) processPackages(
 				FirmwarePackageRef: corev1.LocalObjectReference{Name: pRef.Name},
 			},
 		}
-		if err := r.Create(ctx, updateJob); err != nil {
+		if err = r.Create(ctx, updateJob); err != nil {
 			log.Error(err, "failed to create PackageInstallJob object")
 			return 0, err
 		}

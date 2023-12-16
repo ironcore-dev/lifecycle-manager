@@ -20,7 +20,7 @@ message PackageInstallJobSpec {
 
 message PackageInstallJobStatus {
   repeated meta.v1alpha1.Condition conditions = 1;
-  common.v1alpha1.UpdateJobState state = 2;
+  common.v1alpha1.PackageInstallJobState state = 2;
   string message = 3;
 }
 
@@ -36,7 +36,7 @@ message ListPackageInstallJobsRequest {
 }
 
 message ListPackageInstallJobsResponse {
-  repeated PackageInstallJob update_job = 1;
+  repeated PackageInstallJob package_install_job = 1;
 }
 
 message StatusRequest {
@@ -48,7 +48,7 @@ message StatusResponse {
 }
 
 message ExecuteRequest {
-  PackageInstallJob update_job = 1;
+  PackageInstallJob package_install_job = 1;
 }
 
 message ExecuteResponse {

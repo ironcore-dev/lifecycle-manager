@@ -3,6 +3,10 @@
 
 package v1alpha1
 
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 type ScanResult string
 
 const (
@@ -46,4 +50,44 @@ func (in ScanState) IsScheduled() bool {
 
 func (in ScanState) IsFinished() bool {
 	return in == ScanFinished
+}
+
+const (
+	ConditionTypePending    = "Pending"
+	ConditionTypeScheduled  = "Scheduled"
+	ConditionTypeInProgress = "InProgress"
+	ConditionTypeFinished   = "Finished"
+
+	ConditionStatusTrue  metav1.ConditionStatus = "True"
+	ConditionStatusFalse metav1.ConditionStatus = "False"
+)
+
+// +kubebuilder:object:generate=true
+
+type PackageInstallJobCondition struct {
+	metav1.Condition `json:",inline"`
+}
+
+func (in PackageInstallJobCondition) IsPending() bool {
+	return in.Type == ConditionTypePending
+}
+
+func (in PackageInstallJobCondition) IsScheduled() bool {
+	return in.Type == ConditionTypeScheduled
+}
+
+func (in PackageInstallJobCondition) IsInProgress() bool {
+	return in.Type == ConditionTypeInProgress
+}
+
+func (in PackageInstallJobCondition) IsFinished() bool {
+	return in.Type == ConditionTypeFinished
+}
+
+func (in PackageInstallJobCondition) IsTrue() bool {
+	return in.Status == ConditionStatusTrue
+}
+
+func (in PackageInstallJobCondition) IsFalse() bool {
+	return in.Status == ConditionStatusFalse
 }
