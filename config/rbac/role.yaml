@@ -52,22 +52,26 @@ rules:
 - apiGroups:
   - lifecycle.ironcore.dev
   resources:
-  - updatejobs
+  - packageinstalljobs
   verbs:
   - create
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - lifecycle.ironcore.dev
   resources:
-  - updatejobs/status
+  - packageinstalljobs/status
   verbs:
   - get
+  - patch
+  - update
 - apiGroups:
   - lifecycle.ironcore.dev
   resources:
-  - updatetasks
+  - packageinstalltasks
   verbs:
   - get
   - list
@@ -77,7 +81,7 @@ rules:
 - apiGroups:
   - lifecycle.ironcore.dev
   resources:
-  - updatetasks/status
+  - packageinstalltasks/status
   verbs:
   - get
   - patch
