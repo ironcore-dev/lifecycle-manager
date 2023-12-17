@@ -152,7 +152,7 @@ func (r *PackageInstallJobReconciler) reconcileExistingJob(
 ) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	conditions := make([]v1alpha1.PackageInstallJobCondition, len(lcmiJob.Status.Conditions))
-	for _, jobCondition := range lcmiJob.Status.Conditions {
+	for i, jobCondition := range lcmiJob.Status.Conditions {
 		condition := v1alpha1.PackageInstallJobCondition{Condition: metav1.Condition{
 			Type:               LCMIConditionTypeToString[jobCondition.Type],
 			Status:             metav1.ConditionStatus(jobCondition.Status),
@@ -161,7 +161,7 @@ func (r *PackageInstallJobReconciler) reconcileExistingJob(
 			Reason:             jobCondition.Reason,
 			Message:            jobCondition.Message,
 		}}
-		conditions = append(conditions, condition)
+		conditions[i] = condition
 	}
 	obj.Status.Conditions = conditions
 	obj.Status.State = LCMIJobStateToString[lcmiJob.Status.State]

@@ -61,7 +61,11 @@ func setupPrerequisites(t *testing.T, sOpts []schemeOption, cOpts []clientOption
 	return c, s
 }
 
-func newOnboardingReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientOption) *OnboardingReconciler {
+func newOnboardingReconciler(
+	t *testing.T,
+	sOpts []schemeOption,
+	cOpts []clientOption,
+) *OnboardingReconciler {
 	t.Helper()
 
 	c, s := setupPrerequisites(t, sOpts, cOpts)
@@ -72,7 +76,11 @@ func newOnboardingReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientO
 	}
 }
 
-func newUpdateTaskReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientOption) *PackageInstallTaskReconciler {
+func newPackageInstallTaskReconciler(
+	t *testing.T,
+	sOpts []schemeOption,
+	cOpts []clientOption,
+) *PackageInstallTaskReconciler {
 	t.Helper()
 
 	c, s := setupPrerequisites(t, sOpts, cOpts)
@@ -83,7 +91,11 @@ func newUpdateTaskReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientO
 	}
 }
 
-func newMachineTypeReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientOption) *MachineTypeReconciler {
+func newMachineTypeReconciler(
+	t *testing.T,
+	sOpts []schemeOption,
+	cOpts []clientOption,
+) *MachineTypeReconciler {
 	t.Helper()
 
 	c, s := setupPrerequisites(t, sOpts, cOpts)
@@ -94,7 +106,11 @@ func newMachineTypeReconciler(t *testing.T, sOpts []schemeOption, cOpts []client
 	}
 }
 
-func newMachineReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientOption) *MachineReconciler {
+func newMachineReconciler(
+	t *testing.T,
+	sOpts []schemeOption,
+	cOpts []clientOption,
+) *MachineReconciler {
 	t.Helper()
 
 	c, s := setupPrerequisites(t, sOpts, cOpts)
@@ -102,5 +118,19 @@ func newMachineReconciler(t *testing.T, sOpts []schemeOption, cOpts []clientOpti
 		Client:  c,
 		Scheme:  s,
 		Horizon: time.Minute * 30,
+	}
+}
+
+func newPackageInstallJobReconciler(
+	t *testing.T,
+	sOpts []schemeOption,
+	cOpts []clientOption,
+) *PackageInstallJobReconciler {
+	t.Helper()
+
+	c, s := setupPrerequisites(t, sOpts, cOpts)
+	return &PackageInstallJobReconciler{
+		Client: c,
+		Scheme: s,
 	}
 }

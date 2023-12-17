@@ -284,7 +284,7 @@ func TestUpdateTaskReconciler_Reconcile(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			clientOpts := []clientOption{withRuntimeObject(testCase.target)}
-			r := newUpdateTaskReconciler(t, schemeOpts, clientOpts)
+			r := newPackageInstallTaskReconciler(t, schemeOpts, clientOpts)
 			resp, err := r.Reconcile(context.Background(), testCase.request)
 			if testCase.expectError {
 				assert.Error(t, err)
@@ -380,7 +380,7 @@ func TestUpdateTaskReconciler_Reconcile2(t *testing.T) {
 			for _, o := range updateJobs[testCase.updateJobsKey] {
 				clientOpts = append(clientOpts, withRuntimeObject(o))
 			}
-			r := newUpdateTaskReconciler(t, schemeOpts, clientOpts)
+			r := newPackageInstallTaskReconciler(t, schemeOpts, clientOpts)
 			_, err := r.Reconcile(context.Background(), testCase.request)
 			if testCase.expectError {
 				assert.Error(t, err)
