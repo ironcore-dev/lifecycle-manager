@@ -7,28 +7,68 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// MachineTypeSpec defines the desired state of MachineType
+// MachineTypeSpec defines the desired state of MachineType.
 type MachineTypeSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// Manufacturer refers to manufacturer, e.g. Lenovo, Dell etc.
+	// +kubebuilder:validation:Required
+	Manufacturer string `json:"manufacturer"`
 
-	// Foo is an example field of MachineType. Edit machinetype_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Type refers to machine type, e.g. 7z21 for Lenovo, R440 for Dell etc.
+	// +kubebuilder:validation:Required
+	Type string `json:"type"`
+
+	// ScanPeriod defines the interval between scans.
+	// +kubebuilder:validation:Required
+	ScanPeriod metav1.Duration `json:"scanPeriod"`
+
+	// MachineGroups defines list of MachineGroup
+	// +kubebuilder:validation:Optional
+	MachineGroups []MachineGroup `json:"machineGroups"`
 }
 
-// MachineTypeStatus defines the observed state of MachineType
+// MachineGroup defines group of Machine objects filtered by label selector
+// and a list of firmware packages versions which should be installed by default.
+type MachineGroup struct {
+	// MachineSelector defines native kubernetes label selector to apply to Machine objects.
+	// +kubebuilder:validation:Required
+	MachineSelector metav1.LabelSelector `json:"machineSelector"`
+
+	// Packages defines default firmware package versions for the group of Machine objects.
+	// +kubebuilder:validation:Required
+	Packages []PackageVersion `json:"packages"`
+}
+
+// MachineTypeStatus defines the observed state of MachineType.
 type MachineTypeStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// LastScanTime reflects the timestamp when the last scan of available packages was done.
+	// +kubebuilder:validation:Optional
+	LastScanTime metav1.Time `json:"lastScanTime"`
+
+	// LastScanResult reflects the result of the last scan.
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=Success;Failure
+	LastScanResult ScanResult `json:"lastScanResult"`
+
+	// AvailablePackages reflects the list of AvailablePackageVersion
+	// +kubebuilder:validation:Optional
+	AvailablePackages []AvailablePackageVersions `json:"availablePackages"`
+}
+
+// AvailablePackageVersions defines a number of versions for concrete firmware package.
+type AvailablePackageVersions struct {
+	// Name reflects the name of the firmware package
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+
+	// Versions reflects the list of discovered package versions available for installation.
+	// +kubebuilder:validation:Required
+	Versions []string `json:"versions"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// MachineType is the Schema for the machinetypes API
+// MachineType is the Schema for the machinetypes API.
 type MachineType struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -39,7 +79,7 @@ type MachineType struct {
 
 // +kubebuilder:object:root=true
 
-// MachineTypeList contains a list of MachineType
+// MachineTypeList contains a list of MachineType.
 type MachineTypeList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

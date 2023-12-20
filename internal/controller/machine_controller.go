@@ -14,7 +14,7 @@ import (
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/v1alpha1"
 )
 
-// MachineReconciler reconciles a Machine object
+// MachineReconciler reconciles a Machine object.
 type MachineReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme

@@ -4,31 +4,49 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// MachineSpec defines the desired state of Machine
+// MachineSpec defines the desired state of Machine.
 type MachineSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// MachineTypeRef contain reference to MachineType object.
+	// +kubebuilder:validation:Required
+	MachineTypeRef corev1.LocalObjectReference `json:"machineTypeRef"`
 
-	// Foo is an example field of Machine. Edit machine_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// OOBMachineRef contains reference to OOB machine object.
+	// +kubebuilder:validation:Required
+	OOBMachineRef corev1.LocalObjectReference `json:"oobMachineRef"`
+
+	// ScanPeriod defines the interval between scans.
+	// +kubebuilder:validation:Required
+	ScanPeriod metav1.Duration `json:"scanPeriod"`
+
+	// Packages defines the list of package versions to install.
+	// +kubebuilder:validation:Optional
+	Packages []PackageVersion `json:"packages"`
 }
 
-// MachineStatus defines the observed state of Machine
+// MachineStatus defines the observed state of Machine.
 type MachineStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// LastScanTime reflects the timestamp when the last scan job for installed
+	// firmware versions was performed.
+	// +kubebuilder:validation:Optional
+	LastScanTime metav1.Time `json:"lastScanTime"`
+
+	// LastScanResult reflects either success or failure of the last scan job.
+	// +kubebuilder:validation:Optional
+	LastScanResult ScanResult `json:"lastScanResult"`
+
+	// InstalledPackages reflects the versions of installed firmware packages.
+	// +kubebuilder:validation:Optional
+	InstalledPackages []InstalledPackage `json:"installedPackages"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 
-// Machine is the Schema for the machines API
+// Machine is the Schema for the machines API.
 type Machine struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -39,7 +57,7 @@ type Machine struct {
 
 // +kubebuilder:object:root=true
 
-// MachineList contains a list of Machine
+// MachineList contains a list of Machine.
 type MachineList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

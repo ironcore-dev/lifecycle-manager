@@ -8,8 +8,15 @@ vet:
 	go vet ./...
 
 .PHONY: lint
-lint: golangci-lint buf
-	$(GOLANGCI_LINT) run ./...
+lint: golangci-lint
+	$(GOLANGCI_LINT) run
+
+.PHONY: lint-fix
+lint-fix: golangci-lint
+	$(GOLANGCI_LINT) run --fix
+
+.PHONY: buf-lint
+buf-lint: buf
 	$(BUF) lint
 
 .PHONY: manifests
