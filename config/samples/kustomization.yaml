@@ -1,0 +1,5 @@
+## Append samples of your project ##
+resources:
+- lifecycle_v1alpha1_machine.yaml
+- lifecycle_v1alpha1_machinetype.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples
