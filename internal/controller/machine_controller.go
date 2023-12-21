@@ -22,12 +22,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/v1alpha1"
+	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
+	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
+)
+
+const (
+	StatusMessageScanPending = "scan job pending"
 )
 
 // MachineReconciler reconciles a Machine object.
 type MachineReconciler struct {
 	client.Client
+	machinev1alpha1.MachineServiceClient
 
 	Namespace string
 
@@ -87,8 +93,18 @@ func (r *MachineReconciler) reconcileRequired(
 	return ctrl.Result{}, nil
 }
 
-func (r *MachineReconciler) reconcile(_ context.Context, _ *lifecyclev1alpha1.Machine) (ctrl.Result, error) {
-	// todo: implement me
+func (r *MachineReconciler) reconcile(ctx context.Context, obj *lifecyclev1alpha1.Machine) (ctrl.Result, error) {
+	log := logr.FromContextOrDiscard(ctx)
+	resp, err := r.Scan(ctx, &machinev1alpha1.ScanRequest{Name: obj.Name, Namespace: obj.Namespace})
+	if err != nil {
+		log.Error(err, "failed to get scan results")
+		return ctrl.Result{}, err
+	}
+	if resp.Response == nil {
+		obj.Status.Message = StatusMessageScanPending
+		return ctrl.Result{}, nil
+	}
+	obj.Status = *resp.Response
 	return ctrl.Result{}, nil
 }
 

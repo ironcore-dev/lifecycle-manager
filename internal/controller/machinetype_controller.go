@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
-	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/v1alpha1"
+	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 )
 
 // MachineTypeReconciler reconciles a MachineType object.

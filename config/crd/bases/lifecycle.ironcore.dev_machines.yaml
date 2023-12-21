@@ -84,14 +84,9 @@ spec:
                 description: InstalledPackages reflects the versions of installed
                   firmware packages.
                 items:
-                  description: InstalledPackage defines the concrete installed package
-                    version with installation timestamp.
+                  description: PackageVersion defines the concrete package version
+                    item.
                   properties:
-                    installTime:
-                      description: InstallTime reflects timestamp when the package
-                        was installed.
-                      format: date-time
-                      type: string
                     name:
                       description: Name defines the name of the firmware package.
                       type: string
@@ -99,7 +94,6 @@ spec:
                       description: Version defines the version of the firmware package.
                       type: string
                   required:
-                  - installTime
                   - name
                   - version
                   type: object
@@ -112,6 +106,9 @@ spec:
                 description: LastScanTime reflects the timestamp when the last scan
                   job for installed firmware versions was performed.
                 format: date-time
+                type: string
+              message:
+                description: Message contains verbose message explaining current state
                 type: string
             type: object
         type: object

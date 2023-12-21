@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
-	"github.com/ironcore-dev/lifecycle-manager/api/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 )
 
 // OnboardingReconciler watches for OOB objects and creates

@@ -56,3 +56,17 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - onmetal.de
+  resources:
+  - oobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - onmetal.de
+  resources:
+  - oobs/status
+  verbs:
+  - get

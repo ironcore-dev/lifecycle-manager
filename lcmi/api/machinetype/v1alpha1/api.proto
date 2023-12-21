@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package github.com.ironcore_dev.lifecycle_manager.lcmi.api.machinetype.v1alpha1;
+
+import "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1/generated.proto";
+import "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1/api.proto";
+import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
+
+option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1";
+
+message ListMachineTypesRequest {
+  github.com.ironcore_dev.lifecycle_manager.lcmi.api.common.v1alpha1.Filter filter = 1;
+}
+
+message ListMachineTypesResponse {
+  repeated github.com.ironcore_dev.lifecycle_manager.api.lifecycle.v1alpha1.MachineType machine_types = 1;
+}
+
+message ScanRequest {
+  string name = 1;
+  string namespace = 2;
+}
+
+message ScanResponse {
+  github.com.ironcore_dev.lifecycle_manager.api.lifecycle.v1alpha1.MachineTypeStatus result = 1;
+}
+
+service MachineTypeService {
+  rpc ListMachineTypes(ListMachineTypesRequest) returns (ListMachineTypesResponse) {}
+  rpc Scan(ScanRequest) returns (ScanResponse) {}
+}

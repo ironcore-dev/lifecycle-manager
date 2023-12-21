@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package github.com.ironcore_dev.lifecycle_manager.lcmi.api.common.v1alpha1;
+
+import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
+
+option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1";
+
+enum ScanResult {
+  SCAN_RESULT_UNSPECIFIED = 0;
+  SCAN_RESULT_SUCCESS = 1;
+  SCAN_RESULT_FAILURE = 2;
+}
+
+enum InstallResult {
+  INSTALL_RESULT_UNSPECIFIED = 0;
+  INSTALL_RESULT_SCHEDULED = 1;
+  INSTALL_RESULT_FAILURE = 2;
+}
+
+message Filter {
+  string id = 1;
+  string name = 2;
+  string namespace = 3;
+  k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector label_selector = 4;
+}
