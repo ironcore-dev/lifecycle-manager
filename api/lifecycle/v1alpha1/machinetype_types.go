@@ -52,6 +52,10 @@ type MachineTypeStatus struct {
 	// AvailablePackages reflects the list of AvailablePackageVersion
 	// +kubebuilder:validation:Optional
 	AvailablePackages []AvailablePackageVersions `json:"availablePackages" protobuf:"bytes,3,rep,name=available_packages"`
+
+	// Message contains verbose message explaining current state
+	// +kubebuilder:validation:Optional
+	Message string `json:"message" protobuf:"bytes,4,opt,name=message"`
 }
 
 // AvailablePackageVersions defines a number of versions for concrete firmware package.

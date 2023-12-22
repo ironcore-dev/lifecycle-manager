@@ -22,7 +22,7 @@ message ScanRequest {
 }
 
 message ScanResponse {
-  github.com.ironcore_dev.lifecycle_manager.api.lifecycle.v1alpha1.MachineTypeStatus result = 1;
+  github.com.ironcore_dev.lifecycle_manager.api.lifecycle.v1alpha1.MachineTypeStatus response = 1;
 }
 
 service MachineTypeService {

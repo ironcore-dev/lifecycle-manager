@@ -6,11 +6,11 @@ package controller
 import (
 	"context"
 	"reflect"
-	"time"
+	"slices"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/reference"
@@ -27,19 +27,20 @@ import (
 )
 
 const (
-	StatusMessageScanPending = "scan job pending"
+	StatusMessageScanRequestSubmitted  = "scan request submitted"
+	StatusMessageInstallationFailed    = "packages installation failed"
+	StatusMessageInstallationScheduled = "packages installation scheduled"
 )
 
 // MachineReconciler reconciles a Machine object.
 type MachineReconciler struct {
 	client.Client
-	machinev1alpha1.MachineServiceClient
+	Broker machinev1alpha1.MachineServiceClient
 
 	Namespace string
 
-	Log     logr.Logger
-	Scheme  *runtime.Scheme
-	Horizon time.Duration
+	Log    logr.Logger
+	Scheme *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=machines,verbs=get;list;watch;create;update;patch;delete
@@ -95,16 +96,45 @@ func (r *MachineReconciler) reconcileRequired(
 
 func (r *MachineReconciler) reconcile(ctx context.Context, obj *lifecyclev1alpha1.Machine) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	resp, err := r.Scan(ctx, &machinev1alpha1.ScanRequest{Name: obj.Name, Namespace: obj.Namespace})
+	scanResponse, err := r.Broker.Scan(ctx, &machinev1alpha1.ScanRequest{Name: obj.Name, Namespace: obj.Namespace})
 	if err != nil {
-		log.Error(err, "failed to get scan results")
+		log.Error(err, "failed to send scan request")
 		return ctrl.Result{}, err
 	}
-	if resp.Response == nil {
-		obj.Status.Message = StatusMessageScanPending
+	if scanResponse.Response == nil {
+		obj.Status.Message = StatusMessageScanRequestSubmitted
 		return ctrl.Result{}, nil
 	}
-	obj.Status = *resp.Response
+	obj.Status = *scanResponse.Response
+	packagesToInstall, err := r.packagesToInstall(ctx, obj)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	if len(packagesToInstall) == 0 {
+		log.V(2).Info("install packages versions match desired state")
+		return ctrl.Result{}, nil
+	}
+
+	installResponse, err := r.Broker.Install(ctx, &machinev1alpha1.InstallRequest{
+		Name:      obj.Name,
+		Namespace: obj.Namespace,
+		Packages: func() []*lifecyclev1alpha1.PackageVersion {
+			l := make([]*lifecyclev1alpha1.PackageVersion, len(packagesToInstall))
+			for i, pv := range packagesToInstall {
+				l[i] = pv.DeepCopy()
+			}
+			return l
+		}(),
+	})
+	if err != nil {
+		log.Error(err, "failed to send install request")
+		return ctrl.Result{}, err
+	}
+	obj.Status.Message = StatusMessageInstallationScheduled
+	if LCIMInstallResultToString[installResponse.Result] == InstallFailed {
+		log.V(1).Info(StatusMessageInstallationFailed)
+		obj.Status.Message = StatusMessageInstallationFailed
+	}
 	return ctrl.Result{}, nil
 }
 
@@ -136,7 +166,7 @@ func (r *MachineReconciler) enqueueOnMachineTypeUpdate(
 	}
 	for _, group := range newMachineType.Spec.MachineGroups {
 		ls := group.MachineSelector
-		selector, err := v1.LabelSelectorAsSelector(&ls)
+		selector, err := metav1.LabelSelectorAsSelector(&ls)
 		if err != nil {
 			r.Log.Error(err, "failed to process machinetype update")
 			return
@@ -158,4 +188,76 @@ func (r *MachineReconciler) enqueueOnMachineTypeUpdate(
 			}})
 		}
 	}
+}
+
+func (r *MachineReconciler) packagesToInstall(
+	ctx context.Context,
+	obj *lifecyclev1alpha1.Machine,
+) ([]lifecyclev1alpha1.PackageVersion, error) {
+	log := logr.FromContextOrDiscard(ctx)
+	machineType := &lifecyclev1alpha1.MachineType{}
+	key := types.NamespacedName{Name: obj.Spec.MachineTypeRef.Name, Namespace: obj.Namespace}
+	if err := r.Get(ctx, key, machineType); err != nil {
+		log.Error(err, "failed to get referenced machine type object")
+		return nil, err
+	}
+
+	defaultPackages := make([]lifecyclev1alpha1.PackageVersion, 0)
+	for _, entry := range machineType.Spec.MachineGroups {
+		selector := entry.MachineSelector.DeepCopy()
+		groupLabels, err := metav1.LabelSelectorAsMap(selector)
+		if err != nil {
+			log.Error(err, "failed to convert label selector to map")
+			return nil, err
+		}
+		if machineLabelsCompliant(obj.Labels, groupLabels) {
+			defaultPackages = append(defaultPackages, entry.Packages...)
+			break
+		}
+	}
+
+	resultPackages := filterPackageVersion(obj.Spec.Packages, obj.Status.InstalledPackages, defaultPackages)
+	return resultPackages, nil
+}
+
+func machineLabelsCompliant(machineLabels, selectorLabels map[string]string) bool {
+	for k, sv := range selectorLabels {
+		mv, ok := machineLabels[k]
+		if !ok {
+			return false
+		}
+		if mv != sv {
+			return false
+		}
+	}
+	return true
+}
+
+func filterPackageVersion(
+	desiredPackages, installedPackages, defaultPackages []lifecyclev1alpha1.PackageVersion,
+) []lifecyclev1alpha1.PackageVersion {
+	tempPackages := make([]lifecyclev1alpha1.PackageVersion, 0)
+	resultPackages := make([]lifecyclev1alpha1.PackageVersion, 0)
+	tempPackages = append(tempPackages, desiredPackages...)
+
+	for _, pv := range defaultPackages {
+		idx := slices.IndexFunc(desiredPackages, func(packageVersion lifecyclev1alpha1.PackageVersion) bool {
+			return pv.Name == packageVersion.Name
+		})
+		if idx < 0 {
+			tempPackages = append(tempPackages, pv)
+			continue
+		}
+	}
+
+	for _, pv := range tempPackages {
+		idx := slices.IndexFunc(installedPackages, func(packageVersion lifecyclev1alpha1.PackageVersion) bool {
+			return pv.Name == packageVersion.Name && pv.Version != packageVersion.Version
+		})
+		if idx < 0 {
+			continue
+		}
+		resultPackages = append(resultPackages, pv)
+	}
+	return resultPackages
 }

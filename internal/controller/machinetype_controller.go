@@ -5,7 +5,6 @@ package controller
 
 import (
 	"context"
-	"time"
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -16,14 +15,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
+	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
 )
 
 // MachineTypeReconciler reconciles a MachineType object.
 type MachineTypeReconciler struct {
 	client.Client
-	Log     logr.Logger
-	Scheme  *runtime.Scheme
-	Horizon time.Duration
+	Broker machinetypev1alpha1.MachineTypeServiceClient
+
+	Log    logr.Logger
+	Scheme *runtime.Scheme
 }
 
 // +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=machinetypes,verbs=get;list;watch;create;update;patch;delete
@@ -81,7 +82,17 @@ func (r *MachineTypeReconciler) reconcile(
 	ctx context.Context,
 	obj *lifecyclev1alpha1.MachineType,
 ) (ctrl.Result, error) {
-	// todo: implement me
+	log := logr.FromContextOrDiscard(ctx)
+	resp, err := r.Broker.Scan(ctx, &machinetypev1alpha1.ScanRequest{Name: obj.Name, Namespace: obj.Namespace})
+	if err != nil {
+		log.Error(err, "failed to send scan request")
+		return ctrl.Result{}, err
+	}
+	if resp.Response == nil {
+		obj.Status.Message = StatusMessageScanRequestSubmitted
+		return ctrl.Result{}, nil
+	}
+	obj.Status = *resp.Response
 	return ctrl.Result{}, nil
 }
 

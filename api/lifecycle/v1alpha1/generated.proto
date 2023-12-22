@@ -140,6 +140,10 @@ message MachineTypeStatus {
   // AvailablePackages reflects the list of AvailablePackageVersion
   // +kubebuilder:validation:Optional
   repeated AvailablePackageVersions available_packages = 3;
+
+  // Message contains verbose message explaining current state
+  // +kubebuilder:validation:Optional
+  optional string message = 4;
 }
 
 // PackageVersion defines the concrete package version item.

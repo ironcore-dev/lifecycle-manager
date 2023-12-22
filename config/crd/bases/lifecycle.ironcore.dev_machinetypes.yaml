@@ -161,6 +161,9 @@ spec:
                   of available packages was done.
                 format: date-time
                 type: string
+              message:
+                description: Message contains verbose message explaining current state
+                type: string
             type: object
         type: object
     served: true
