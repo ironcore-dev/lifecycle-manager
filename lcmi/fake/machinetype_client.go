@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and IronCore contributors
+// SPDX-License-Identifier: Apache-2.0
+
 package fake
 
 import (
@@ -7,8 +10,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/internal/util/uuidutil"
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 )
 
 type MachineTypeClient struct {
