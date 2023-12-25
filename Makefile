@@ -20,7 +20,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
-generate: code-gen fmt
+generate: code-gen
 
 .PHONY: add-license
 add-license: addlicense ## Add license header to all .go files in project
@@ -40,6 +40,16 @@ test-integration: envtest
 
 .PHONY: test
 test: test-controllers test-integration
+
+.PHONY: check
+check: vet lint check-license test
+
+.PHONY: format
+format: generate manifests add-license fmt lint-fix
+
+.PHONY: docs
+docs: gen-crd-api-reference-docs ## Run go generate to generate API reference documentation.
+	$(GEN_CRD_API_REFERENCE_DOCS) -api-dir ./api/lifecycle/v1alpha1 -config ./hack/api-reference/config.json -template-dir ./hack/api-reference/template -out-file ./docs/api-reference/lifecycle.md
 
 ### AUXILIARY ###
 LOCAL_BIN ?= $(shell pwd)/bin
@@ -64,6 +74,7 @@ APPLYCONFIGURATION_GEN ?= $(LOCAL_BIN)/applyconfiguration-gen
 GO_TO_PROTOBUF ?= $(LOCAL_BIN)/go-to-protobuf
 MODELS_SCHEMA ?= $(LOCAL_BIN)/models-schema
 VGOPATH ?= $(LOCAL_BIN)/vgopath
+GEN_CRD_API_REFERENCE_DOCS ?= $(LOCAL_BIN)/gen-crd-api-reference-docs
 
 ## Tools versions
 ADDLICENSE_VERSION ?= v1.1.1
@@ -74,6 +85,7 @@ PROTOC_GEN_GOGO_VERSION ?= v1.3.2
 ENVTEST_K8S_VERSION ?= 1.28.3
 CODE_GENERATOR_VERSION ?= v0.28.3
 VGOPATH_VERSION ?= v0.1.3
+GEN_CRD_API_REFERENCE_DOCS_VERSION ?= v0.3.0
 
 .PHONY: code-gen
 code-gen: vgopath goimports go-to-protobuf deepcopy-gen protoc-gen-gogo
@@ -129,3 +141,9 @@ $(DEEPCOPY_GEN): $(LOCAL_BIN)
 go-to-protobuf: $(GO_TO_PROTOBUF)
 $(GO_TO_PROTOBUF): $(LOCAL_BIN)
 	@test -s $(GO_TO_PROTOBUF) || GOBIN=$(LOCAL_BIN) go install k8s.io/code-generator/cmd/go-to-protobuf@$(CODE_GENERATOR_VERSION)
+
+.PHONY: gen-crd-api-reference-docs
+gen-crd-api-reference-docs: $(GEN_CRD_API_REFERENCE_DOCS) ## Download gen-crd-api-reference-docs locally if necessary.
+$(GEN_CRD_API_REFERENCE_DOCS): $(LOCAL_BIN)
+	test -s $(GEN_CRD_API_REFERENCE_DOCS) || GOBIN=$(LOCAL_BIN) go install github.com/ahmetb/gen-crd-api-reference-docs@$(GEN_CRD_API_REFERENCE_DOCS_VERSION)
+
