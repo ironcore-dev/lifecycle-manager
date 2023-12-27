@@ -5,190 +5,102 @@ package controller
 
 import (
 	"context"
-	"testing"
-	"time"
 
 	oobv1alpha1 "github.com/onmetal/oob-operator/api/v1alpha1"
-	"github.com/stretchr/testify/assert"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
+	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
 )
 
-func TestOnboardingReconciler_Reconcile(t *testing.T) {
-	t.Skipf("not all dependencies were migrated to ironcore")
-	t.Parallel()
-
-	schemeOpts := []schemeOption{withGroupVersion(oobv1alpha1.AddToScheme)}
-
-	tests := map[string]struct {
-		target        *oobv1alpha1.OOB
-		request       types.NamespacedName
-		expectRequeue bool
-		expectError   bool
-	}{
-		"absent-oob": {
-			target: &oobv1alpha1.OOB{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "OOB",
-					APIVersion: "v1alpha1",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "absent-oob",
-					Namespace: "metal",
-				},
-				Spec: oobv1alpha1.OOBSpec{
-					LocatorLED: "On",
-					Power:      "On",
-					Reset:      "None",
-					Filler:     pointer.Int64(0),
-				},
-				Status: oobv1alpha1.OOBStatus{
-					Manufacturer: "Dell",
-					SKU:          "R440X0001",
-				},
-			},
-			request: types.NamespacedName{
-				Namespace: "default",
-				Name:      "sample",
-			},
-			expectRequeue: false,
-			expectError:   false,
-		},
-		"empty-status": {
-			target: &oobv1alpha1.OOB{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "OOB",
-					APIVersion: "v1alpha1",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "empty-oob",
-					Namespace: "default",
-				},
-				Spec: oobv1alpha1.OOBSpec{
-					LocatorLED: "On",
-					Power:      "On",
-					Reset:      "None",
-					Filler:     pointer.Int64(0),
-				},
-			},
-			request: types.NamespacedName{
-				Namespace: "default",
-				Name:      "empty-oob",
-			},
-			expectRequeue: true,
-			expectError:   false,
-		},
-		"deleting-oob": {
-			target: &oobv1alpha1.OOB{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "OOB",
-					APIVersion: "v1alpha1",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:              "deleting-oob",
-					Namespace:         "default",
-					DeletionTimestamp: &metav1.Time{Time: time.Now()},
-					Finalizers:        []string{"fake-finalizer"},
-				},
-				Spec: oobv1alpha1.OOBSpec{
-					LocatorLED: "On",
-					Power:      "On",
-					Reset:      "None",
-					Filler:     pointer.Int64(0),
-				},
-			},
-			request: types.NamespacedName{
-				Namespace: "default",
-				Name:      "deleting-oob",
-			},
-			expectRequeue: false,
-			expectError:   false,
-		},
-	}
-
-	for n, tc := range tests {
-		name, testCase := n, tc
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			clientOpts := []clientOption{withRuntimeObject(testCase.target)}
-			r := newOnboardingReconciler(t, schemeOpts, clientOpts)
-			resp, err := r.Reconcile(context.Background(), ctrl.Request{NamespacedName: testCase.request})
-			if testCase.expectError {
-				assert.Error(t, err)
-			}
-			if !testCase.expectError {
-				assert.NoError(t, err)
-			}
-			if testCase.expectRequeue {
-				assert.NotEmpty(t, resp.RequeueAfter)
-			}
+var _ = Describe("Onboarding controller", func() {
+	Context("When OOB object is not found", func() {
+		It("Should interrupt reconciliation and return empty result with no error", func() {
+			s := testutil.SetupScheme(testutil.WithGroupVersion(oobv1alpha1.AddToScheme))
+			c := testutil.SetupClient(s)
+			onboardingRec := NewOnboardingReconciler(c, s)
+			req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "sample"}}
+			res, err := onboardingRec.Reconcile(context.Background(), req)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).To(Equal(ctrl.Result{}))
 		})
-	}
-}
+	})
 
-func TestOnboardingReconciler_Onboarding(t *testing.T) {
-	t.Skipf("not all dependencies were migrated to ironcore")
-	t.Parallel()
+	Context("When OOB object's status is empty", func() {
+		It("Should requeue OOB object's reconciliation", func() {
+			s := testutil.SetupScheme(testutil.WithGroupVersion(oobv1alpha1.AddToScheme))
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewOOBObject("sample", "default")))
+			onboardingRec := NewOnboardingReconciler(c, s)
+			req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "sample"}}
+			res, err := onboardingRec.Reconcile(context.Background(), req)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).To(Equal(ctrl.Result{RequeueAfter: onboardingRec.RequeuePeriod}))
+		})
+	})
 
-	schemeOpts := []schemeOption{
-		withGroupVersion(oobv1alpha1.AddToScheme),
-		withGroupVersion(v1alpha1.AddToScheme),
-	}
+	Context("When OOB object is being deleted", func() {
+		It("Should interrupt reconciliation and return empty result with no error", func() {
+			s := testutil.SetupScheme(testutil.WithGroupVersion(oobv1alpha1.AddToScheme))
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewOOBObject("sample", "default",
+				testutil.OOBWithDeletionTimestamp(),
+				testutil.OOBWithFinalizer(),
+			)))
+			onboardingRec := NewOnboardingReconciler(c, s)
+			req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "sample"}}
+			res, err := onboardingRec.Reconcile(context.Background(), req)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).To(Equal(ctrl.Result{}))
+		})
+	})
 
-	targetOOB := &oobv1alpha1.OOB{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "OOB",
-			APIVersion: "v1alpha1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "sample-oob",
-			Namespace: "metal",
-		},
-		Spec: oobv1alpha1.OOBSpec{
-			LocatorLED: "On",
-			Power:      "On",
-			Reset:      "None",
-			Filler:     pointer.Int64(0),
-		},
-		Status: oobv1alpha1.OOBStatus{
-			Manufacturer: "Dell",
-			SKU:          "R440X0001",
-		},
-	}
-	targetMachineType := &v1alpha1.MachineType{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "MachineType",
-			APIVersion: "v1alpha1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "Dell-R440",
-			Namespace: "metal",
-		},
-		Spec: v1alpha1.MachineTypeSpec{
-			Manufacturer: "Dell",
-			Type:         "R440",
-			ScanPeriod:   metav1.Duration{Duration: time.Hour * 24},
-		},
-	}
+	Context("When OOB object is being processed normally", func() {
+		It("Should create MachineType object if absent", func() {
+			expectedMachineTypeKey := types.NamespacedName{Namespace: "default", Name: "Sample-0000"}
+			s := testutil.SetupScheme(
+				testutil.WithGroupVersion(oobv1alpha1.AddToScheme),
+				testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme),
+			)
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(
+				testutil.NewOOBObject("sample", "default", testutil.OOBWithStatus())))
+			onboardingRec := NewOnboardingReconciler(c, s)
+			onboardedMachineType := &lifecyclev1alpha1.MachineType{}
+			err := onboardingRec.Get(context.Background(), expectedMachineTypeKey, onboardedMachineType)
+			Expect(err).To(HaveOccurred())
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+			req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "sample"}}
+			_, err = onboardingRec.Reconcile(context.Background(), req)
+			Expect(err).NotTo(HaveOccurred())
+			err = onboardingRec.Get(context.Background(), expectedMachineTypeKey, onboardedMachineType)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(client.ObjectKeyFromObject(onboardedMachineType)).To(Equal(expectedMachineTypeKey))
+		})
+	})
 
-	clientOpts := []clientOption{withRuntimeObject(targetOOB)}
-	r := newOnboardingReconciler(t, schemeOpts, clientOpts)
-	_, err := r.Reconcile(context.Background(), ctrl.Request{NamespacedName: client.ObjectKeyFromObject(targetOOB)})
-	assert.NoError(t, err)
-
-	actualMachineType := &v1alpha1.MachineType{}
-	err = r.Get(context.Background(), types.NamespacedName{Namespace: "metal", Name: "Dell-R440"}, actualMachineType)
-	assert.NoError(t, err)
-	assert.Equal(t, client.ObjectKeyFromObject(targetMachineType), client.ObjectKeyFromObject(actualMachineType))
-	actualMachine := &v1alpha1.Machine{}
-	err = r.Get(context.Background(), types.NamespacedName{Namespace: "metal", Name: "sample-oob"}, actualMachine)
-	assert.NoError(t, err)
-	assert.Equal(t, client.ObjectKeyFromObject(targetOOB), client.ObjectKeyFromObject(actualMachine))
-	assert.Equal(t, targetOOB.Name, actualMachine.Spec.OOBMachineRef.Name)
-	assert.Equal(t, actualMachineType.Name, actualMachine.Spec.MachineTypeRef.Name)
-}
+	Context("When OOB object is being processed normally", func() {
+		It("Should create Machine object if absent", func() {
+			expectedMachineKey := types.NamespacedName{Namespace: "default", Name: "sample"}
+			s := testutil.SetupScheme(
+				testutil.WithGroupVersion(oobv1alpha1.AddToScheme),
+				testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme),
+			)
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(
+				testutil.NewOOBObject("sample", "default", testutil.OOBWithStatus())))
+			onboardingRec := NewOnboardingReconciler(c, s)
+			onboardedMachine := &lifecyclev1alpha1.Machine{}
+			err := onboardingRec.Get(context.Background(), expectedMachineKey, onboardedMachine)
+			Expect(err).To(HaveOccurred())
+			Expect(apierrors.IsNotFound(err)).To(BeTrue())
+			req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "sample"}}
+			_, err = onboardingRec.Reconcile(context.Background(), req)
+			Expect(err).NotTo(HaveOccurred())
+			err = onboardingRec.Get(context.Background(), expectedMachineKey, onboardedMachine)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(client.ObjectKeyFromObject(onboardedMachine)).To(Equal(expectedMachineKey))
+		})
+	})
+})

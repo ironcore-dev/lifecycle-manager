@@ -6,6 +6,7 @@ package fake
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -43,6 +44,9 @@ func (m *MachineTypeClient) Scan(
 	in *machinetypev1alpha1.ScanRequest,
 	_ ...grpc.CallOption,
 ) (*machinetypev1alpha1.ScanResponse, error) {
+	if in.Name == "failed-scan" {
+		return nil, errors.New("fake error")
+	}
 	key := types.NamespacedName{Name: in.Name, Namespace: in.Namespace}
 	uid := uuidutil.UUIDFromObjectKey(key)
 	entry, ok := m.cache[uid]

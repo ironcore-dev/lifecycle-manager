@@ -67,14 +67,13 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	log := r.Log.WithValues("object", *ref)
 	log.V(1).Info("reconciliation started")
 
-	base := obj.DeepCopy()
 	recCtx := logr.NewContext(ctx, log)
 	result, err = r.reconcileRequired(recCtx, obj)
 	if err != nil {
 		log.V(1).Info("reconciliation interrupted by an error")
 		return result, err
 	}
-	if err = r.Status().Patch(ctx, obj, client.MergeFrom(base)); err != nil {
+	if err = r.Status().Patch(ctx, obj, client.Apply, patchOpts); err != nil {
 		log.Error(err, "failed to update object status")
 		return ctrl.Result{}, err
 	}
@@ -252,12 +251,15 @@ func filterPackageVersion(
 
 	for _, pv := range tempPackages {
 		idx := slices.IndexFunc(installedPackages, func(packageVersion lifecyclev1alpha1.PackageVersion) bool {
-			return pv.Name == packageVersion.Name && pv.Version != packageVersion.Version
+			return pv.Name == packageVersion.Name
 		})
 		if idx < 0 {
+			resultPackages = append(resultPackages, pv)
 			continue
 		}
-		resultPackages = append(resultPackages, pv)
+		if installedPackages[idx].Version != pv.Version {
+			resultPackages = append(resultPackages, pv)
+		}
 	}
 	return resultPackages
 }

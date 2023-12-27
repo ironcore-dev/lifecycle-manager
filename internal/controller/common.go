@@ -4,6 +4,9 @@
 package controller
 
 import (
+	"k8s.io/utils/pointer"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 )
@@ -12,6 +15,13 @@ const (
 	InstallScheduled = "Scheduled"
 	InstallFailed    = "Failed"
 )
+
+var patchOpts = &client.SubResourcePatchOptions{
+	PatchOptions: client.PatchOptions{
+		Force:        pointer.Bool(true),
+		FieldManager: "lifecycle-manager",
+	},
+}
 
 var LCIMScanResultToString = map[commonv1alpha1.ScanResult]v1alpha1.ScanResult{
 	commonv1alpha1.ScanResult_SCAN_RESULT_UNSPECIFIED: "",

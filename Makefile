@@ -32,11 +32,11 @@ check-license: addlicense ## Check license header presence in all .go files in p
 
 .PHONY: test-controllers
 test-controllers:
-	go test ./internal/... -coverprofile cover.out
+	@go test ./internal/... -coverprofile cover.out
 
 .PHONY: test-integration
 test-integration: envtest
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./integrationtests/... -coverprofile cover.out
+	@KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./integrationtests/... -coverprofile cover.out
 
 .PHONY: test
 test: test-controllers test-integration

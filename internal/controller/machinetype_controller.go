@@ -51,14 +51,13 @@ func (r *MachineTypeReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	log := r.Log.WithValues("object", *ref)
 	log.V(1).Info("reconciliation started")
 
-	base := obj.DeepCopy()
 	recCtx := logr.NewContext(ctx, log)
 	result, err = r.reconcileRequired(recCtx, obj)
 	if err != nil {
 		log.V(1).Info("reconciliation interrupted by an error")
 		return result, err
 	}
-	if err = r.Status().Patch(ctx, obj, client.MergeFrom(base)); err != nil {
+	if err = r.Status().Patch(ctx, obj, client.Apply, patchOpts); err != nil {
 		log.Error(err, "failed to update object status")
 		return ctrl.Result{}, err
 	}

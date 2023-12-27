@@ -6,6 +6,7 @@ package fake
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -44,6 +45,9 @@ func (m *MachineClient) Scan(
 	in *machinev1alpha1.ScanRequest,
 	_ ...grpc.CallOption,
 ) (*machinev1alpha1.ScanResponse, error) {
+	if in.Name == "failed-scan" {
+		return nil, errors.New("fake error")
+	}
 	key := types.NamespacedName{Name: in.Name, Namespace: in.Namespace}
 	uid := uuidutil.UUIDFromObjectKey(key)
 	entry, ok := m.cache[uid]
@@ -59,6 +63,12 @@ func (m *MachineClient) Install(
 	in *machinev1alpha1.InstallRequest,
 	_ ...grpc.CallOption,
 ) (*machinev1alpha1.InstallResponse, error) {
+	if in.Name == "failed-install" {
+		return nil, errors.New("fake error")
+	}
+	if in.Name == "fake-failure" {
+		return &machinev1alpha1.InstallResponse{Result: commonv1alpha1.InstallResult_INSTALL_RESULT_FAILURE}, nil
+	}
 	key := types.NamespacedName{Name: in.Name, Namespace: in.Namespace}
 	uid := uuidutil.UUIDFromObjectKey(key)
 	_, ok := m.cache[uid]
@@ -66,5 +76,5 @@ func (m *MachineClient) Install(
 		return &machinev1alpha1.InstallResponse{Result: commonv1alpha1.InstallResult_INSTALL_RESULT_SCHEDULED}, nil
 	}
 	m.cache[uid] = &lifecyclev1alpha1.MachineStatus{}
-	return &machinev1alpha1.InstallResponse{Result: commonv1alpha1.InstallResult_INSTALL_RESULT_FAILURE}, nil
+	return &machinev1alpha1.InstallResponse{Result: commonv1alpha1.InstallResult_INSTALL_RESULT_UNSPECIFIED}, nil
 }
