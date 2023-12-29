@@ -1,0 +1,12 @@
+apiVersion: lifecycle.ironcore.dev/v1alpha1
+kind: MachineType
+metadata:
+  labels:
+    app.kubernetes.io/name: machinetype
+    app.kubernetes.io/instance: machinetype-sample
+    app.kubernetes.io/part-of: lifecycle-manager
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: lifecycle-manager
+  name: machinetype-sample
+spec:
+  # TODO(user): Add fields here

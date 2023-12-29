@@ -1,0 +1,172 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+  name: machinetypes.lifecycle.ironcore.dev
+spec:
+  group: lifecycle.ironcore.dev
+  names:
+    kind: MachineType
+    listKind: MachineTypeList
+    plural: machinetypes
+    singular: machinetype
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: MachineType is the Schema for the machinetypes API.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: MachineTypeSpec defines the desired state of MachineType.
+            properties:
+              machineGroups:
+                description: MachineGroups defines list of MachineGroup
+                items:
+                  description: MachineGroup defines group of Machine objects filtered
+                    by label selector and a list of firmware packages versions which
+                    should be installed by default.
+                  properties:
+                    machineSelector:
+                      description: MachineSelector defines native kubernetes label
+                        selector to apply to Machine objects.
+                      properties:
+                        matchExpressions:
+                          description: matchExpressions is a list of label selector
+                            requirements. The requirements are ANDed.
+                          items:
+                            description: A label selector requirement is a selector
+                              that contains values, a key, and an operator that relates
+                              the key and values.
+                            properties:
+                              key:
+                                description: key is the label key that the selector
+                                  applies to.
+                                type: string
+                              operator:
+                                description: operator represents a key's relationship
+                                  to a set of values. Valid operators are In, NotIn,
+                                  Exists and DoesNotExist.
+                                type: string
+                              values:
+                                description: values is an array of string values.
+                                  If the operator is In or NotIn, the values array
+                                  must be non-empty. If the operator is Exists or
+                                  DoesNotExist, the values array must be empty. This
+                                  array is replaced during a strategic merge patch.
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - key
+                            - operator
+                            type: object
+                          type: array
+                        matchLabels:
+                          additionalProperties:
+                            type: string
+                          description: matchLabels is a map of {key,value} pairs.
+                            A single {key,value} in the matchLabels map is equivalent
+                            to an element of matchExpressions, whose key field is
+                            "key", the operator is "In", and the values array contains
+                            only "value". The requirements are ANDed.
+                          type: object
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    packages:
+                      description: Packages defines default firmware package versions
+                        for the group of Machine objects.
+                      items:
+                        description: PackageVersion defines the concrete package version
+                          item.
+                        properties:
+                          name:
+                            description: Name defines the name of the firmware package.
+                            type: string
+                          version:
+                            description: Version defines the version of the firmware
+                              package.
+                            type: string
+                        required:
+                        - name
+                        - version
+                        type: object
+                      type: array
+                  required:
+                  - machineSelector
+                  - packages
+                  type: object
+                type: array
+              manufacturer:
+                description: Manufacturer refers to manufacturer, e.g. Lenovo, Dell
+                  etc.
+                type: string
+              scanPeriod:
+                description: ScanPeriod defines the interval between scans.
+                type: string
+              type:
+                description: Type refers to machine type, e.g. 7z21 for Lenovo, R440
+                  for Dell etc.
+                type: string
+            required:
+            - manufacturer
+            - scanPeriod
+            - type
+            type: object
+          status:
+            description: MachineTypeStatus defines the observed state of MachineType.
+            properties:
+              availablePackages:
+                description: AvailablePackages reflects the list of AvailablePackageVersion
+                items:
+                  description: AvailablePackageVersions defines a number of versions
+                    for concrete firmware package.
+                  properties:
+                    name:
+                      description: Name reflects the name of the firmware package
+                      type: string
+                    versions:
+                      description: Versions reflects the list of discovered package
+                        versions available for installation.
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - name
+                  - versions
+                  type: object
+                type: array
+              lastScanResult:
+                description: LastScanResult reflects the result of the last scan.
+                enum:
+                - Success
+                - Failure
+                type: string
+              lastScanTime:
+                description: LastScanTime reflects the timestamp when the last scan
+                  of available packages was done.
+                format: date-time
+                type: string
+              message:
+                description: Message contains verbose message explaining current state
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

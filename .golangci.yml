@@ -1,0 +1,63 @@
+run:
+  allow-parallel-runners: true
+
+linters:
+  enable:
+    - asciicheck
+    - dogsled
+    - durationcheck
+    - dupl
+    - errcheck
+    - exportloopref
+    - forcetypeassert
+    - funlen
+    - goconst
+    - gocyclo
+    - godot
+    - gofmt
+    - goimports
+    - goprintffuncname
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - paralleltest
+    - prealloc
+    - predeclared
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+
+severity:
+  default-severity: error
+
+linters-settings:
+  revive:
+    severity: error
+    rules:
+      - name: exported
+      - name: if-return
+        disabled: true
+
+issues:
+  exclude-rules:
+    - path: "lcmi/fake"
+      linters:
+        - dupl
+    - path: _test\.go
+      linters:
+        - dupl
+        - funlen
+    - path: "internal/controller"
+      linters:
+        - dupl
+    - linters:
+        - lll
+      source: "^// [+]kubebuilder"
