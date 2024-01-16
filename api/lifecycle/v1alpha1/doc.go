@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // +k8s:deepcopy-gen=package
+// +k8s:openapi-gen=true
 // +groupName=lifecycle.ironcore.dev
 
 // Package v1alpha1 is the v1alpha1 version of the API.
