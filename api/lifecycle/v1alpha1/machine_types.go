@@ -50,6 +50,7 @@ type MachineStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
 
 // Machine is the Schema for the machines API.
 type Machine struct {

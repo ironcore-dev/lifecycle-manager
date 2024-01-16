@@ -160,6 +160,9 @@ func (r *MachineReconciler) enqueueOnMachineTypeUpdate(
 	if !castOldOk || !castNewOk {
 		return
 	}
+	if oldMachineType.Namespace != r.Namespace || newMachineType.Namespace != r.Namespace {
+		return
+	}
 	if reflect.DeepEqual(oldMachineType.Spec.MachineGroups, newMachineType.Spec.MachineGroups) {
 		return
 	}

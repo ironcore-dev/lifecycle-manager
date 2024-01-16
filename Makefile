@@ -86,13 +86,18 @@ ENVTEST_K8S_VERSION ?= 1.28.3
 CODE_GENERATOR_VERSION ?= v0.28.3
 VGOPATH_VERSION ?= v0.1.3
 GEN_CRD_API_REFERENCE_DOCS_VERSION ?= v0.3.0
+MODELS_SCHEMA_VERSION ?= main
 
 .PHONY: code-gen
-code-gen: vgopath goimports go-to-protobuf deepcopy-gen protoc-gen-gogo
+code-gen: vgopath goimports go-to-protobuf deepcopy-gen protoc-gen-gogo models-schema openapi-gen applyconfiguration-gen client-gen
 	@VGOPATH=$(VGOPATH) \
+	MODELS_SCHEMA=$(MODELS_SCHEMA) \
 	DEEPCOPY_GEN=$(DEEPCOPY_GEN) \
 	GO_TO_PROTOBUF=$(GO_TO_PROTOBUF) \
 	PROTOC_GEN_GOGO=$(PROTOC_GEN_GOGO) \
+	CLIENT_GEN=$(CLIENT_GEN) \
+   	OPENAPI_GEN=$(OPENAPI_GEN) \
+   	APPLYCONFIGURATION_GEN=$(APPLYCONFIGURATION_GEN) \
 	./hack/generate.sh
 
 .PHONY: addlicense
@@ -147,3 +152,27 @@ gen-crd-api-reference-docs: $(GEN_CRD_API_REFERENCE_DOCS) ## Download gen-crd-ap
 $(GEN_CRD_API_REFERENCE_DOCS): $(LOCAL_BIN)
 	test -s $(GEN_CRD_API_REFERENCE_DOCS) || GOBIN=$(LOCAL_BIN) go install github.com/ahmetb/gen-crd-api-reference-docs@$(GEN_CRD_API_REFERENCE_DOCS_VERSION)
 
+.PHONY: models-schema
+models-schema: $(MODELS_SCHEMA)
+$(MODELS_SCHEMA): $(LOCALBIN)
+	@test -s $(MODELS_SCHEMA) || GOBIN=$(LOCAL_BIN) go install github.com/ironcore-dev/ironcore/models-schema@$(MODELS_SCHEMA_VERSION)
+
+.PHONY: openapi-gen
+openapi-gen: $(OPENAPI_GEN)
+$(OPENAPI_GEN): $(LOCAL_BIN)
+	@test -s $(OPENAPI_GEN) || GOBIN=$(LOCAL_BIN) go install k8s.io/code-generator/cmd/openapi-gen@$(CODE_GENERATOR_VERSION)
+
+.PHONY: applyconfiguration-gen
+applyconfiguration-gen: $(APPLYCONFIGURATION_GEN) ## Download applyconfiguration-gen locally if necessary.
+$(APPLYCONFIGURATION_GEN): $(LOCALBIN)
+	@test -s $(APPLYCONFIGURATION_GEN) || GOBIN=$(LOCAL_BIN) go install k8s.io/code-generator/cmd/applyconfiguration-gen@$(CODE_GENERATOR_VERSION)
+
+.PHONY: client-gen
+client-gen: $(CLIENT_GEN) ## Download client-gen locally if necessary.
+$(CLIENT_GEN): $(LOCALBIN)
+	@test -s $(CLIENT_GEN) || GOBIN=$(LOCAL_BIN) go install k8s.io/code-generator/cmd/client-gen@$(CODE_GENERATOR_VERSION)
+
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE)
+$(KUSTOMIZE): $(LOCAL_BIN)
+	@test -s $(KUSTOMIZE) || GOBIN=$(LOCAL_BIN) go install sigs.k8s.io/kustomize/kustomize/v4@$(KUSTOMIZE_VERSION)

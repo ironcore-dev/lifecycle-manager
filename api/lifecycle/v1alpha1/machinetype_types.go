@@ -72,6 +72,7 @@ type AvailablePackageVersions struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient
 
 // MachineType is the Schema for the machinetypes API.
 type MachineType struct {
