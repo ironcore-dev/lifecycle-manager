@@ -20,7 +20,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/internal/controller"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/server"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -65,33 +65,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controller.MachineReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Machine")
-		os.Exit(1)
-	}
-	if err = (&controller.MachineTypeReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "MachineType")
+	if err = mgr.Add(server.NewLifecycleGRPCServer(mgr.GetLogger(), server.Options{Port: 25600})); err != nil {
+		setupLog.Error(err, "unable to add machine grpc server as runnable")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder
 
-	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+	if err = mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
 		os.Exit(1)
 	}
-	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+	if err = mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up ready check")
 		os.Exit(1)
 	}
 
 	setupLog.Info("starting manager")
-	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
+	if err = mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		setupLog.Error(err, "problem running manager")
 		os.Exit(1)
 	}

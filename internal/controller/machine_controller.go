@@ -147,6 +147,7 @@ func (r *MachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(&lifecyclev1alpha1.MachineType{}, handler.Funcs{
 			UpdateFunc: r.enqueueOnMachineTypeUpdate,
 		}).
+		Named("machine").
 		Complete(r)
 }
 

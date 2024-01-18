@@ -102,5 +102,6 @@ func (r *MachineTypeReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: 10,
 		}).
+		Named("machinetype").
 		Complete(r)
 }
