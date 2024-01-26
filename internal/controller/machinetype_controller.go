@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/reference"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -16,6 +17,7 @@ import (
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 )
 
 // MachineTypeReconciler reconciles a MachineType object.
@@ -58,6 +60,9 @@ func (r *MachineTypeReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return result, err
 	}
 	if err = r.Status().Patch(ctx, obj, client.Apply, patchOpts); err != nil {
+		if apierrors.IsConflict(err) {
+			return ctrl.Result{RequeueAfter: requeuePeriod}, nil
+		}
 		log.Error(err, "failed to update object status")
 		return ctrl.Result{}, err
 	}
@@ -87,11 +92,15 @@ func (r *MachineTypeReconciler) reconcile(
 		log.Error(err, "failed to send scan request")
 		return ctrl.Result{}, err
 	}
-	if resp.Response == nil {
+	if LCIMRequestResultToString[resp.Result].IsScheduled() {
 		obj.Status.Message = StatusMessageScanRequestSubmitted
 		return ctrl.Result{}, nil
 	}
-	obj.Status = *resp.Response
+	if LCIMRequestResultToString[resp.Result].IsFailure() {
+		obj.Status.Message = StatusMessageScanRequestFailed
+		return ctrl.Result{}, nil
+	}
+	obj.Status = apiutil.MachineTypeStatusFrom(resp.Status)
 	return ctrl.Result{}, nil
 }
 

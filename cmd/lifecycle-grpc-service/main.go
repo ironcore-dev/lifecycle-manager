@@ -65,7 +65,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = mgr.Add(server.NewLifecycleGRPCServer(mgr.GetLogger(), server.Options{Port: 25600})); err != nil {
+	serverOptions := server.Options{
+		Cfg:  mgr.GetConfig(),
+		Log:  mgr.GetLogger(),
+		Port: 25600,
+	}
+	if err = mgr.Add(server.NewLifecycleGRPCServer(serverOptions)); err != nil {
 		setupLog.Error(err, "unable to add machine grpc server as runnable")
 		os.Exit(1)
 	}

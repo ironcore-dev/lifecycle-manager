@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and IronCore contributors
+// SPDX-License-Identifier: Apache-2.0
+
 package server
 
 import (
@@ -7,6 +10,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc"
+	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
@@ -23,13 +27,15 @@ type LifecycleGRPCServer struct {
 }
 
 type Options struct {
+	Cfg  *rest.Config
+	Log  logr.Logger
 	Port int
 }
 
-func NewLifecycleGRPCServer(log logr.Logger, opts Options) *LifecycleGRPCServer {
+func NewLifecycleGRPCServer(opts Options) *LifecycleGRPCServer {
 	return &LifecycleGRPCServer{
-		log:                    log,
-		machineGrpcService:     machine.NewGRPCService(),
+		log:                    opts.Log,
+		machineGrpcService:     machine.NewGRPCService(opts.Cfg),
 		machinetypeGrpcService: machinetype.NewGRPCService(),
 		port:                   opts.Port,
 	}

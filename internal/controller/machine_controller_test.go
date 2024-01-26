@@ -14,7 +14,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
+	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
+	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/fake"
+	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
 	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 )
@@ -50,14 +53,20 @@ var _ = Describe("Machine controller", func() {
 
 		Context("When referred MachineType object is not found", func() {
 			It("Should interrupt reconciliation and return empty result with error", func() {
+				now := metav1.Now()
 				machineKey := types.NamespacedName{Namespace: "default", Name: "sample"}
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 				c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineObject("sample", "default",
 					testutil.MachineWithMachineTypeRef("sample"),
 				)))
 				machineRec := NewMachineReconciler(c, s)
-				brokerClient := fake.NewMachineClient(map[string]*lifecyclev1alpha1.MachineStatus{
-					uuidutil.UUIDFromObjectKey(machineKey): {},
+				brokerClient := fake.NewMachineClient(map[string]*machinev1alpha1.MachineStatus{
+					uuidutil.UUIDFromObjectKey(machineKey): {
+						LastScanTime:      &now,
+						LastScanResult:    commonv1alpha1.ScanResult_SCAN_RESULT_SUCCESS,
+						InstalledPackages: nil,
+						Message:           "",
+					},
 				})
 				machineRec.Broker = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}
@@ -73,7 +82,7 @@ var _ = Describe("Machine controller", func() {
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 				c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineObject("sample", "default")))
 				machineRec := NewMachineReconciler(c, s)
-				brokerClient := fake.NewMachineClient(map[string]*lifecyclev1alpha1.MachineStatus{})
+				brokerClient := fake.NewMachineClient(map[string]*machinev1alpha1.MachineStatus{})
 				machineRec.Broker = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}
 				res, err := machineRec.Reconcile(context.Background(), req)
@@ -96,7 +105,7 @@ var _ = Describe("Machine controller", func() {
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 				c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineObject("failed-scan", "default")))
 				machineRec := NewMachineReconciler(c, s)
-				brokerClient := fake.NewMachineClient(map[string]*lifecyclev1alpha1.MachineStatus{})
+				brokerClient := fake.NewMachineClient(map[string]*machinev1alpha1.MachineStatus{})
 				machineRec.Broker = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}
 				res, err := machineRec.Reconcile(context.Background(), req)
@@ -108,14 +117,14 @@ var _ = Describe("Machine controller", func() {
 		Context("When installed packages match desired state", func() {
 			It("Should update Machine object's status with scan timestamp and result", func() {
 				now := time.Unix(time.Now().Unix(), 0)
-				expectedPackages := []lifecyclev1alpha1.PackageVersion{{Name: "bios", Version: "1.0.0"}}
+				expectedPackages := []*commonv1alpha1.PackageVersion{{Name: "bios", Version: "1.0.0"}}
 				machine := testutil.NewMachineObject("sample", "default",
 					testutil.MachineWithMachineTypeRef("sample"),
 					testutil.MachineWithLabels(map[string]string{"env": "test"}))
 				machineType := testutil.NewMachineTypeObject("sample", "default",
 					testutil.MachineTypeWithGroup(lifecyclev1alpha1.MachineGroup{
 						MachineSelector: metav1.LabelSelector{MatchLabels: map[string]string{"env": "test"}},
-						Packages:        expectedPackages}))
+						Packages:        apiutil.PackageVersionsFrom(expectedPackages)}))
 
 				machineKey := types.NamespacedName{Namespace: "default", Name: "sample"}
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
@@ -123,10 +132,10 @@ var _ = Describe("Machine controller", func() {
 					testutil.WithRuntimeObject(machine),
 					testutil.WithRuntimeObject(machineType))
 				machineRec := NewMachineReconciler(c, s)
-				brokerClient := fake.NewMachineClient(map[string]*lifecyclev1alpha1.MachineStatus{
+				brokerClient := fake.NewMachineClient(map[string]*machinev1alpha1.MachineStatus{
 					uuidutil.UUIDFromObjectKey(machineKey): {
-						LastScanTime:      metav1.Time{Time: now},
-						LastScanResult:    lifecyclev1alpha1.ScanSuccess,
+						LastScanTime:      &metav1.Time{Time: now},
+						LastScanResult:    1,
 						InstalledPackages: expectedPackages,
 					}})
 				machineRec.Broker = brokerClient
@@ -138,7 +147,7 @@ var _ = Describe("Machine controller", func() {
 				reconciledMachine := &lifecyclev1alpha1.Machine{}
 				err = machineRec.Get(context.Background(), machineKey, reconciledMachine)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(reconciledMachine.Status.InstalledPackages).To(Equal(expectedPackages))
+				Expect(reconciledMachine.Status.InstalledPackages).To(Equal(apiutil.PackageVersionsFrom(expectedPackages)))
 			})
 		})
 
@@ -160,10 +169,10 @@ var _ = Describe("Machine controller", func() {
 					testutil.WithRuntimeObject(machine),
 					testutil.WithRuntimeObject(machineType))
 				machineRec := NewMachineReconciler(c, s)
-				brokerClient := fake.NewMachineClient(map[string]*lifecyclev1alpha1.MachineStatus{
+				brokerClient := fake.NewMachineClient(map[string]*machinev1alpha1.MachineStatus{
 					uuidutil.UUIDFromObjectKey(machineKey): {
-						LastScanTime:   metav1.Time{Time: now},
-						LastScanResult: lifecyclev1alpha1.ScanSuccess,
+						LastScanTime:   &metav1.Time{Time: now},
+						LastScanResult: 1,
 					}})
 				machineRec.Broker = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}
@@ -196,10 +205,10 @@ var _ = Describe("Machine controller", func() {
 					testutil.WithRuntimeObject(machine),
 					testutil.WithRuntimeObject(machineType))
 				machineRec := NewMachineReconciler(c, s)
-				brokerClient := fake.NewMachineClient(map[string]*lifecyclev1alpha1.MachineStatus{
+				brokerClient := fake.NewMachineClient(map[string]*machinev1alpha1.MachineStatus{
 					uuidutil.UUIDFromObjectKey(machineKey): {
-						LastScanTime:   metav1.Time{Time: now},
-						LastScanResult: lifecyclev1alpha1.ScanSuccess,
+						LastScanTime:   &metav1.Time{Time: now},
+						LastScanResult: 1,
 					}})
 				machineRec.Broker = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}

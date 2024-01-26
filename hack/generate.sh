@@ -29,25 +29,9 @@ function qualify-gvs() {
   echo "$res"
 }
 
-function generate() {
-  package="$1"
-  (
-  cd "$VIRTUAL_GOPATH/src"
-  export PATH="$PATH:$(dirname "$PROTOC_GEN_GOGO")"
-  echo "Generating ${blue}$package${normal}"
-  protoc \
-    --proto_path "./github.com/ironcore-dev/lifecycle-manager/$package" \
-    --proto_path "$VIRTUAL_GOPATH/src" \
-    --gogo_out=plugins=grpc:"$VIRTUAL_GOPATH/src" \
-    "./github.com/ironcore-dev/lifecycle-manager/$package/api.proto"
-  )
-}
-
 VGOPATH="$VGOPATH"
 MODELS_SCHEMA="$MODELS_SCHEMA"
 DEEPCOPY_GEN="$DEEPCOPY_GEN"
-GO_TO_PROTOBUF="$GO_TO_PROTOBUF"
-PROTOC_GEN_GOGO="$PROTOC_GEN_GOGO"
 OPENAPI_GEN="$OPENAPI_GEN"
 APPLYCONFIGURATION_GEN="$APPLYCONFIGURATION_GEN"
 CLIENT_GEN="$CLIENT_GEN"
@@ -105,14 +89,3 @@ echo "Generating ${blue}client${normal}"
   --apply-configuration-package "github.com/ironcore-dev/lifecycle-manager/clientgo/applyconfiguration" \
   --clientset-name "lifecycle" \
   --input-base ""
-
-echo "Generating ${blue}protobuf${normal}"
-"$GO_TO_PROTOBUF" \
-  --output-base "$GOPATH/src" \
-  --go-header-file "$SCRIPT_DIR/boilerplate.go.txt" \
-  --packages "$(qualify-gvs "github.com/ironcore-dev/lifecycle-manager/api" "$ALL_VERSION_GROUPS")" \
-  --apimachinery-packages "-k8s.io/apimachinery/pkg/runtime/schema,-k8s.io/apimachinery/pkg/apis/meta/v1,-k8s.io/api/core/v1"
-
-generate "lcmi/api/common/v1alpha1"
-generate "lcmi/api/machine/v1alpha1"
-generate "lcmi/api/machinetype/v1alpha1"

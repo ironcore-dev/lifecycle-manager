@@ -20,7 +20,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
-generate: code-gen
+generate: code-gen proto-gen fmt
 
 .PHONY: add-license
 add-license: addlicense ## Add license header to all .go files in project
@@ -61,7 +61,6 @@ ADDLICENSE ?= $(LOCAL_BIN)/addlicense
 CONTROLLER_GEN ?= $(LOCAL_BIN)/controller-gen
 GOLANGCI_LINT ?= $(LOCAL_BIN)/golangci-lint
 GOIMPORTS ?= $(LOCAL_BIN)/goimports
-PROTOC_GEN_GOGO ?= $(LOCAL_BIN)/protoc-gen-gogo
 ENVTEST ?= $(LOCAL_BIN)/setup-envtest
 DEEPCOPY_GEN ?= $(LOCAL_BIN)/deepcopy-gen
 CLIENT_GEN ?= $(LOCAL_BIN)/client-gen
@@ -71,34 +70,46 @@ DEFAULTER_GEN ?= $(LOCAL_BIN)/defaulter-gen
 CONVERSION_GEN ?= $(LOCAL_BIN)/conversion-gen
 OPENAPI_GEN ?= $(LOCAL_BIN)/openapi-gen
 APPLYCONFIGURATION_GEN ?= $(LOCAL_BIN)/applyconfiguration-gen
-GO_TO_PROTOBUF ?= $(LOCAL_BIN)/go-to-protobuf
 MODELS_SCHEMA ?= $(LOCAL_BIN)/models-schema
 VGOPATH ?= $(LOCAL_BIN)/vgopath
 GEN_CRD_API_REFERENCE_DOCS ?= $(LOCAL_BIN)/gen-crd-api-reference-docs
+# Protobuf tools
+PROTOC_GEN_GOGOFAST ?= $(LOCAL_BIN)/protoc-gen-gogofast
+PROTOC_GEN_GO ?= $(LOCAL_BIN)/protoc-gen-go
+PROTOC_GEN_GO_GRPC ?= $(LOCAL_BIN)/protoc-gen-go-grpc
+PROTOC_GEN_GRPC_GATEWAY ?= $(LOCAL_BIN)/protoc-gen-grpc-gateway
+BUF ?= $(LOCAL_BIN)/buf
 
 ## Tools versions
 ADDLICENSE_VERSION ?= v1.1.1
 CONTROLLER_GEN_VERSION ?= v0.13.0
 GOLANGCI_LINT_VERSION ?= v1.55.2
 GOIMPORTS_VERSION ?= v0.16.1
-PROTOC_GEN_GOGO_VERSION ?= v1.3.2
 ENVTEST_K8S_VERSION ?= 1.28.3
 CODE_GENERATOR_VERSION ?= v0.28.3
 VGOPATH_VERSION ?= v0.1.3
 GEN_CRD_API_REFERENCE_DOCS_VERSION ?= v0.3.0
 MODELS_SCHEMA_VERSION ?= main
+# Protobuf tools
+PROTOC_GEN_GOGOFAST_VERSION ?= v1.3.2
+PROTOC_GEN_GO_VERSION ?= v1.32.0
+PROTOC_GEN_GO_GRPC_VERSION ?= v1.3.0
+PROTOC_GEN_GRPC_GATEWAY_VERSION ?= v2.19.0
+BUF_VERSION ?= v1.29.0
 
 .PHONY: code-gen
-code-gen: vgopath goimports go-to-protobuf deepcopy-gen protoc-gen-gogo models-schema openapi-gen applyconfiguration-gen client-gen
+code-gen: vgopath deepcopy-gen models-schema openapi-gen applyconfiguration-gen client-gen
 	@VGOPATH=$(VGOPATH) \
 	MODELS_SCHEMA=$(MODELS_SCHEMA) \
 	DEEPCOPY_GEN=$(DEEPCOPY_GEN) \
-	GO_TO_PROTOBUF=$(GO_TO_PROTOBUF) \
-	PROTOC_GEN_GOGO=$(PROTOC_GEN_GOGO) \
 	CLIENT_GEN=$(CLIENT_GEN) \
    	OPENAPI_GEN=$(OPENAPI_GEN) \
    	APPLYCONFIGURATION_GEN=$(APPLYCONFIGURATION_GEN) \
 	./hack/generate.sh
+
+.PHONY: proto-gen
+proto-gen: protoc-gen-go protoc-gen-go-grpc protoc-gen-grpc-gateway buf
+	@./hack/genproto.sh
 
 .PHONY: addlicense
 addlicense: $(ADDLICENSE)
@@ -122,11 +133,6 @@ goimports: $(GOIMPORTS)
 $(GOIMPORTS): $(LOCAL_BIN)
 	@test -s $(GOIMPORTS) || GOBIN=$(LOCAL_BIN) go install golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION)
 
-.PHONY: protoc-gen-gogo
-protoc-gen-gogo: $(PROTOC_GEN_GOGO)
-$(PROTOC_GEN_GOGO): $(LOCAL_BIN)
-	@test -s $(PROTOC_GEN_GOGO) || GOBIN=$(LOCAL_BIN) go install github.com/gogo/protobuf/protoc-gen-gogo@$(PROTOC_GEN_GOGO_VERSION)
-
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCAL_BIN)
@@ -141,11 +147,6 @@ $(VGOPATH): $(LOCAL_BIN)
 deepcopy-gen: $(DEEPCOPY_GEN)
 $(DEEPCOPY_GEN): $(LOCAL_BIN)
 	@test -s $(DEEPCOPY_GEN) || GOBIN=$(LOCAL_BIN) go install k8s.io/code-generator/cmd/deepcopy-gen@$(CODE_GENERATOR_VERSION)
-
-.PHONY: go-to-protobuf
-go-to-protobuf: $(GO_TO_PROTOBUF)
-$(GO_TO_PROTOBUF): $(LOCAL_BIN)
-	@test -s $(GO_TO_PROTOBUF) || GOBIN=$(LOCAL_BIN) go install k8s.io/code-generator/cmd/go-to-protobuf@$(CODE_GENERATOR_VERSION)
 
 .PHONY: gen-crd-api-reference-docs
 gen-crd-api-reference-docs: $(GEN_CRD_API_REFERENCE_DOCS) ## Download gen-crd-api-reference-docs locally if necessary.
@@ -176,3 +177,30 @@ $(CLIENT_GEN): $(LOCALBIN)
 kustomize: $(KUSTOMIZE)
 $(KUSTOMIZE): $(LOCAL_BIN)
 	@test -s $(KUSTOMIZE) || GOBIN=$(LOCAL_BIN) go install sigs.k8s.io/kustomize/kustomize/v4@$(KUSTOMIZE_VERSION)
+
+# Protobuf tools
+.PHONY: protoc-gen-gogofast
+protoc-gen-gogofast: $(PROTOC_GEN_GOGOFAST)
+$(PROTOC_GEN_GOGOFAST): $(LOCAL_BIN)
+	@test -s $(PROTOC_GEN_GOGOFAST) || GOBIN=$(LOCAL_BIN) go install github.com/gogo/protobuf/protoc-gen-gogofast@$(PROTOC_GEN_GOGOFAST_VERSION)
+
+.PHONY: protoc-gen-go
+protoc-gen-go: $(PROTOC_GEN_GO)
+$(PROTOC_GEN_GO): $(LOCAL_BIN)
+	@test -s $(PROTOC_GEN_GO) || GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@$(PROTOC_GEN_GO_VERSION)
+
+.PHONY: protoc-gen-go-grpc
+protoc-gen-go-grpc: $(PROTOC_GEN_GO_GRPC)
+$(PROTOC_GEN_GO_GRPC): $(LOCAL_BIN)
+	@test -s $(PROTOC_GEN_GO_GRPC) || GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$(PROTOC_GEN_GO_GRPC_VERSION)
+
+.PHONY: protoc-gen-grpc-gateway
+protoc-gen-grpc-gateway: $(PROTOC_GEN_GRPC_GATEWAY)
+$(PROTOC_GEN_GRPC_GATEWAY): $(LOCAL_BIN)
+	@test -s $(PROTOC_GEN_GRPC_GATEWAY) || GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@$(PROTOC_GEN_GRPC_GATEWAY_VERSION)
+
+.PHONY: buf
+buf: $(BUF)
+$(BUF): $(LOCAL_BIN)
+	@test -s $(BUF) && $(BUF) --version | grep -q $(BUF_VERSION) || \
+	GOBIN=$(LOCAL_BIN) go install github.com/bufbuild/buf/cmd/buf@$(BUF_VERSION)

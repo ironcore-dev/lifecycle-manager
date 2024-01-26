@@ -13,10 +13,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
 	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
+	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/fake"
 )
 
@@ -54,7 +56,7 @@ var _ = Describe("MachineType controller", func() {
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineTypeObject("sample", "default")))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
-			brokerClient := fake.NewMachineTypeClient(map[string]*lifecyclev1alpha1.MachineTypeStatus{})
+			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{})
 			machinetypeRec.Broker = brokerClient
 			req := ctrl.Request{NamespacedName: machinetypeKey}
 			res, err := machinetypeRec.Reconcile(context.Background(), req)
@@ -76,7 +78,7 @@ var _ = Describe("MachineType controller", func() {
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineTypeObject("failed-scan", "default")))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
-			brokerClient := fake.NewMachineTypeClient(map[string]*lifecyclev1alpha1.MachineTypeStatus{})
+			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{})
 			machinetypeRec.Broker = brokerClient
 			req := ctrl.Request{NamespacedName: machinetypeKey}
 			res, err := machinetypeRec.Reconcile(context.Background(), req)
@@ -92,11 +94,11 @@ var _ = Describe("MachineType controller", func() {
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineTypeObject("sample", "default")))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
-			brokerClient := fake.NewMachineTypeClient(map[string]*lifecyclev1alpha1.MachineTypeStatus{
+			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{
 				uuidutil.UUIDFromObjectKey(machinetypeKey): {
-					LastScanTime:   metav1.Time{Time: now},
-					LastScanResult: lifecyclev1alpha1.ScanSuccess,
-					AvailablePackages: []lifecyclev1alpha1.AvailablePackageVersions{
+					LastScanTime:   &metav1.Time{Time: now},
+					LastScanResult: 1,
+					AvailablePackages: []*machinetypev1alpha1.AvailablePackageVersions{
 						{Name: "raid", Versions: []string{"2.9.0", "3.0.0", "3.2.1"}},
 					},
 				},
@@ -112,7 +114,7 @@ var _ = Describe("MachineType controller", func() {
 			reconciledMachineType := &lifecyclev1alpha1.MachineType{}
 			err = machinetypeRec.Get(context.Background(), machinetypeKey, reconciledMachineType)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(reconciledMachineType.Status).To(Equal(*entry))
+			Expect(reconciledMachineType.Status).To(Equal(apiutil.MachineTypeStatusFrom(entry)))
 		})
 	})
 })

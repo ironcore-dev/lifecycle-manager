@@ -12,19 +12,19 @@ import (
 type MachineSpec struct {
 	// MachineTypeRef contain reference to MachineType object.
 	// +kubebuilder:validation:Required
-	MachineTypeRef corev1.LocalObjectReference `json:"machineTypeRef" protobuf:"bytes,1,name=machine_type_ref"`
+	MachineTypeRef corev1.LocalObjectReference `json:"machineTypeRef"`
 
 	// OOBMachineRef contains reference to OOB machine object.
 	// +kubebuilder:validation:Required
-	OOBMachineRef corev1.LocalObjectReference `json:"oobMachineRef" protobuf:"bytes,2,name=oob_machine_ref"`
+	OOBMachineRef corev1.LocalObjectReference `json:"oobMachineRef"`
 
 	// ScanPeriod defines the interval between scans.
 	// +kubebuilder:validation:Required
-	ScanPeriod metav1.Duration `json:"scanPeriod" protobuf:"bytes,3,name=scan_period"`
+	ScanPeriod metav1.Duration `json:"scanPeriod"`
 
 	// Packages defines the list of package versions to install.
 	// +kubebuilder:validation:Optional
-	Packages []PackageVersion `json:"packages" protobuf:"bytes,4,rep,name=packages"`
+	Packages []PackageVersion `json:"packages"`
 }
 
 // MachineStatus defines the observed state of Machine.
@@ -32,19 +32,19 @@ type MachineStatus struct {
 	// LastScanTime reflects the timestamp when the last scan job for installed
 	// firmware versions was performed.
 	// +kubebuilder:validation:Optional
-	LastScanTime metav1.Time `json:"lastScanTime" protobuf:"bytes,1,opt,name=last_scan_time"`
+	LastScanTime metav1.Time `json:"lastScanTime"`
 
 	// LastScanResult reflects either success or failure of the last scan job.
 	// +kubebuilder:validation:Optional
-	LastScanResult ScanResult `json:"lastScanResult" protobuf:"bytes,2,opt,name=last_scan_result,casttype=ScanResult"`
+	LastScanResult ScanResult `json:"lastScanResult"`
 
 	// InstalledPackages reflects the versions of installed firmware packages.
 	// +kubebuilder:validation:Optional
-	InstalledPackages []PackageVersion `json:"installedPackages" protobuf:"bytes,3,rep,name=installed_packages"`
+	InstalledPackages []PackageVersion `json:"installedPackages"`
 
 	// Message contains verbose message explaining current state
 	// +kubebuilder:validation:Optional
-	Message string `json:"message" protobuf:"bytes,4,opt,name=message"`
+	Message string `json:"message"`
 }
 
 // +kubebuilder:object:root=true
@@ -55,10 +55,10 @@ type MachineStatus struct {
 // Machine is the Schema for the machines API.
 type Machine struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   MachineSpec   `json:"spec,omitempty" protobuf:"bytes,2,name=spec"`
-	Status MachineStatus `json:"status,omitempty" protobuf:"bytes,3,name=status"`
+	Spec   MachineSpec   `json:"spec,omitempty"`
+	Status MachineStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -67,6 +67,6 @@ type Machine struct {
 // MachineList contains a list of Machine.
 type MachineList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
-	Items           []Machine `json:"items" protobuf:"bytes,2,name=items"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Machine `json:"items"`
 }

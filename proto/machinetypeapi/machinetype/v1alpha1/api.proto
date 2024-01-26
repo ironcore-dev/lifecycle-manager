@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package machinetype.v1alpha1;
+
+import "common/v1alpha1/api.proto";
+import "google/api/annotations.proto";
+import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
+
+option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1";
+
+message MachineGroup {
+  k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector machine_selector = 1;
+  common.v1alpha1.PackageVersion packages = 2;
+}
+
+message MachineTypeSpec {
+  string manufacturer = 1;
+  string type = 2;
+  k8s.io.apimachinery.pkg.apis.meta.v1.Duration scan_period = 3;
+  repeated MachineGroup machine_groups = 4;
+}
+
+message AvailablePackageVersions {
+  string name = 1;
+  repeated string versions = 2;
+}
+
+message MachineTypeStatus {
+  k8s.io.apimachinery.pkg.apis.meta.v1.Time last_scan_time = 1;
+  common.v1alpha1.ScanResult last_scan_result = 2;
+  repeated AvailablePackageVersions available_packages = 3;
+  string message = 4;
+}
+
+message MachineType {
+  k8s.io.apimachinery.pkg.apis.meta.v1.TypeMeta type_meta = 1;
+  k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta object_meta = 2;
+  MachineTypeSpec spec = 3;
+  MachineTypeStatus status = 4;
+}
+
+message ListMachineTypesRequest {
+  common.v1alpha1.Filter filter = 1;
+}
+
+message ListMachineTypesResponse {
+  repeated MachineType machine_types = 1;
+}
+
+message ScanRequest {
+  string name = 1;
+  string namespace = 2;
+}
+
+message ScanResponse {
+  common.v1alpha1.RequestResult result = 1;
+  MachineTypeStatus status = 2;
+}
+
+message UpdateMachineTypeRequest {
+  string name = 1;
+  string namespace = 2;
+  MachineTypeStatus status = 3;
+}
+
+message UpdateMachineTypeResponse {
+  common.v1alpha1.RequestResult result = 1;
+}
+
+service MachineTypeService {
+  rpc ListMachineTypes(ListMachineTypesRequest) returns (ListMachineTypesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/machinetypes/list"
+    };
+  }
+  rpc Scan(ScanRequest) returns (ScanResponse) {
+    option (google.api.http) = {
+      post: "/v1alpha1/machinetypes/scan"
+      body: "*"
+    };
+  }
+  rpc UpdateMachineType(UpdateMachineTypeRequest) returns (UpdateMachineTypeResponse) {
+    option (google.api.http) = {
+      post: "/v1alpha1/machinetypes/update"
+      body: "*"
+    };
+  }
+}

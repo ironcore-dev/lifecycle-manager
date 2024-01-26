@@ -12,11 +12,11 @@ import (
 type PackageVersion struct {
 	// Name defines the name of the firmware package.
 	// +kubebuilder:validation:Required
-	Name string `json:"name" protobuf:"bytes,1,name=name"`
+	Name string `json:"name"`
 
 	// Version defines the version of the firmware package.
 	// +kubebuilder:validation:Required
-	Version string `json:"version" protobuf:"bytes,2,name=version"`
+	Version string `json:"version"`
 }
 
 type ScanResult string

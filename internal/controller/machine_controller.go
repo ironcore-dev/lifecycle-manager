@@ -24,12 +24,7 @@ import (
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
-)
-
-const (
-	StatusMessageScanRequestSubmitted  = "scan request submitted"
-	StatusMessageInstallationFailed    = "packages installation failed"
-	StatusMessageInstallationScheduled = "packages installation scheduled"
+	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 )
 
 // MachineReconciler reconciles a Machine object.
@@ -87,24 +82,36 @@ func (r *MachineReconciler) reconcileRequired(
 ) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	if obj.GetDeletionTimestamp().IsZero() {
-		return r.reconcile(ctx, obj)
+		return r.reconcileScan(ctx, obj)
 	}
 	log.V(2).Info("object is being deleted")
 	return ctrl.Result{}, nil
 }
 
-func (r *MachineReconciler) reconcile(ctx context.Context, obj *lifecyclev1alpha1.Machine) (ctrl.Result, error) {
+func (r *MachineReconciler) reconcileScan(ctx context.Context, obj *lifecyclev1alpha1.Machine) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	scanResponse, err := r.Broker.Scan(ctx, &machinev1alpha1.ScanRequest{Name: obj.Name, Namespace: obj.Namespace})
+	scanResponse, err := r.Broker.ScanMachine(ctx, &machinev1alpha1.ScanMachineRequest{
+		Name:      obj.Name,
+		Namespace: obj.Namespace,
+	})
 	if err != nil {
 		log.Error(err, "failed to send scan request")
 		return ctrl.Result{}, err
 	}
-	if scanResponse.Response == nil {
+	if LCIMRequestResultToString[scanResponse.Result].IsScheduled() {
 		obj.Status.Message = StatusMessageScanRequestSubmitted
 		return ctrl.Result{}, nil
 	}
-	obj.Status = *scanResponse.Response
+	if LCIMRequestResultToString[scanResponse.Result].IsFailure() {
+		obj.Status.Message = StatusMessageScanRequestFailed
+		return ctrl.Result{}, nil
+	}
+	obj.Status = apiutil.MachineStatusFrom(scanResponse.Status)
+	return r.reconcileInstall(ctx, obj)
+}
+
+func (r *MachineReconciler) reconcileInstall(ctx context.Context, obj *lifecyclev1alpha1.Machine) (ctrl.Result, error) {
+	log := logr.FromContextOrDiscard(ctx)
 	packagesToInstall, err := r.packagesToInstall(ctx, obj)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -113,26 +120,22 @@ func (r *MachineReconciler) reconcile(ctx context.Context, obj *lifecyclev1alpha
 		log.V(2).Info("install packages versions match desired state")
 		return ctrl.Result{}, nil
 	}
-
 	installResponse, err := r.Broker.Install(ctx, &machinev1alpha1.InstallRequest{
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
-		Packages: func() []*lifecyclev1alpha1.PackageVersion {
-			l := make([]*lifecyclev1alpha1.PackageVersion, len(packagesToInstall))
-			for i, pv := range packagesToInstall {
-				l[i] = pv.DeepCopy()
-			}
-			return l
-		}(),
+		Packages:  apiutil.PackageVersionsTo(packagesToInstall),
 	})
 	if err != nil {
 		log.Error(err, "failed to send install request")
 		return ctrl.Result{}, err
 	}
-	obj.Status.Message = StatusMessageInstallationScheduled
-	if LCIMInstallResultToString[installResponse.Result] == InstallFailed {
-		log.V(1).Info(StatusMessageInstallationFailed)
-		obj.Status.Message = StatusMessageInstallationFailed
+	if LCIMRequestResultToString[installResponse.Result].IsScheduled() {
+		obj.Status.Message = StatusMessageInstallationScheduled
+		return ctrl.Result{}, nil
+	}
+	if LCIMRequestResultToString[installResponse.Result].IsFailure() {
+		log.V(1).Info(StatusMessageInstallRequestFailed)
+		obj.Status.Message = StatusMessageInstallRequestFailed
 	}
 	return ctrl.Result{}, nil
 }
