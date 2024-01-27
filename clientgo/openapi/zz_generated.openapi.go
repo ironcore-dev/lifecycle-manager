@@ -394,6 +394,14 @@ func schema_lifecycle_manager_api_lifecycle_v1alpha1_MachineGroup(ref common.Ref
 				Description: "MachineGroup defines group of Machine objects filtered by label selector and a list of firmware packages versions which should be installed by default.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name defines machine group name",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"machineSelector": {
 						SchemaProps: spec.SchemaProps{
 							Description: "MachineSelector defines native kubernetes label selector to apply to Machine objects.",
@@ -416,7 +424,7 @@ func schema_lifecycle_manager_api_lifecycle_v1alpha1_MachineGroup(ref common.Ref
 						},
 					},
 				},
-				Required: []string{"machineSelector", "packages"},
+				Required: []string{"name", "machineSelector", "packages"},
 			},
 		},
 		Dependencies: []string{
@@ -568,12 +576,26 @@ func schema_lifecycle_manager_api_lifecycle_v1alpha1_MachineStatus(ref common.Re
 							Format:      "",
 						},
 					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions reflects Machine conditions and their state",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
 				},
-				Required: []string{"lastScanTime", "lastScanResult", "installedPackages", "message"},
+				Required: []string{"lastScanTime", "lastScanResult", "installedPackages", "message", "conditions"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1.PackageVersion", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+			"github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1.PackageVersion", "k8s.io/apimachinery/pkg/apis/meta/v1.Condition", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 

@@ -82,12 +82,42 @@ func (s *GrpcService) Install(
 	return nil, err
 }
 
-func (s *GrpcService) UpdateMachine(
+func (s *GrpcService) UpdateMachineStatus(
 	ctx context.Context,
-	req *machinev1alpha1.UpdateMachineRequest,
-) (*machinev1alpha1.UpdateMachineResponse, error) {
+	req *machinev1alpha1.UpdateMachineStatusRequest,
+) (*machinev1alpha1.UpdateMachineStatusResponse, error) {
 	// TODO implement me
 	// invoke install with provided params
 	err := status.Error(codes.Unimplemented, "UpdateMachine() is not implemented yet")
+	return nil, err
+}
+
+func (s *GrpcService) AddPackageVersion(
+	ctx context.Context,
+	req *machinev1alpha1.AddPackageVersionRequest,
+) (*machinev1alpha1.AddPackageVersionResponse, error) {
+	// TODO implement me
+	// invoke install with provided params
+	err := status.Error(codes.Unimplemented, "AddPackageVersion() is not implemented yet")
+	return nil, err
+}
+
+func (s *GrpcService) SetPackageVersion(
+	ctx context.Context,
+	req *machinev1alpha1.SetPackageVersionRequest,
+) (*machinev1alpha1.SetPackageVersionResponse, error) {
+	// TODO implement me
+	// invoke install with provided params
+	err := status.Error(codes.Unimplemented, "SetPackageVersion() is not implemented yet")
+	return nil, err
+}
+
+func (s *GrpcService) RemovePackageVersion(
+	ctx context.Context,
+	req *machinev1alpha1.RemovePackageVersionRequest,
+) (*machinev1alpha1.RemovePackageVersionResponse, error) {
+	// TODO implement me
+	// invoke install with provided params
+	err := status.Error(codes.Unimplemented, "RemovePackageVersion() is not implemented yet")
 	return nil, err
 }

@@ -66,6 +66,10 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         namedType: io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector
       default: {}
+    - name: name
+      type:
+        scalar: string
+      default: ""
     - name: packages
       type:
         list:
@@ -96,6 +100,12 @@ var schemaYAML = typed.YAMLObject(`types:
 - name: com.github.ironcore-dev.lifecycle-manager.api.lifecycle.v1alpha1.MachineStatus
   map:
     fields:
+    - name: conditions
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Condition
+          elementRelationship: atomic
     - name: installedPackages
       type:
         list:
@@ -195,6 +205,32 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
     elementRelationship: atomic
+- name: io.k8s.apimachinery.pkg.apis.meta.v1.Condition
+  map:
+    fields:
+    - name: lastTransitionTime
+      type:
+        namedType: io.k8s.apimachinery.pkg.apis.meta.v1.Time
+      default: {}
+    - name: message
+      type:
+        scalar: string
+      default: ""
+    - name: observedGeneration
+      type:
+        scalar: numeric
+    - name: reason
+      type:
+        scalar: string
+      default: ""
+    - name: status
+      type:
+        scalar: string
+      default: ""
+    - name: type
+      type:
+        scalar: string
+      default: ""
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.Duration
   scalar: string
 - name: io.k8s.apimachinery.pkg.apis.meta.v1.FieldsV1

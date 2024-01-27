@@ -1,6 +1,7 @@
 API rule violation: list_type_missing,github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1,AvailablePackageVersions,Versions
 API rule violation: list_type_missing,github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1,MachineGroup,Packages
 API rule violation: list_type_missing,github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1,MachineSpec,Packages
+API rule violation: list_type_missing,github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1,MachineStatus,Conditions
 API rule violation: list_type_missing,github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1,MachineStatus,InstalledPackages
 API rule violation: list_type_missing,github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1,MachineTypeSpec,MachineGroups
 API rule violation: list_type_missing,github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1,MachineTypeStatus,AvailablePackages

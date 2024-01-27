@@ -20,10 +20,13 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	MachineService_ScanMachine_FullMethodName   = "/machine.v1alpha1.MachineService/ScanMachine"
-	MachineService_Install_FullMethodName       = "/machine.v1alpha1.MachineService/Install"
-	MachineService_UpdateMachine_FullMethodName = "/machine.v1alpha1.MachineService/UpdateMachine"
-	MachineService_ListMachines_FullMethodName  = "/machine.v1alpha1.MachineService/ListMachines"
+	MachineService_ScanMachine_FullMethodName          = "/machine.v1alpha1.MachineService/ScanMachine"
+	MachineService_Install_FullMethodName              = "/machine.v1alpha1.MachineService/Install"
+	MachineService_UpdateMachineStatus_FullMethodName  = "/machine.v1alpha1.MachineService/UpdateMachineStatus"
+	MachineService_ListMachines_FullMethodName         = "/machine.v1alpha1.MachineService/ListMachines"
+	MachineService_AddPackageVersion_FullMethodName    = "/machine.v1alpha1.MachineService/AddPackageVersion"
+	MachineService_SetPackageVersion_FullMethodName    = "/machine.v1alpha1.MachineService/SetPackageVersion"
+	MachineService_RemovePackageVersion_FullMethodName = "/machine.v1alpha1.MachineService/RemovePackageVersion"
 )
 
 // MachineServiceClient is the client API for MachineService service.
@@ -32,8 +35,11 @@ const (
 type MachineServiceClient interface {
 	ScanMachine(ctx context.Context, in *ScanMachineRequest, opts ...grpc.CallOption) (*ScanMachineResponse, error)
 	Install(ctx context.Context, in *InstallRequest, opts ...grpc.CallOption) (*InstallResponse, error)
-	UpdateMachine(ctx context.Context, in *UpdateMachineRequest, opts ...grpc.CallOption) (*UpdateMachineResponse, error)
+	UpdateMachineStatus(ctx context.Context, in *UpdateMachineStatusRequest, opts ...grpc.CallOption) (*UpdateMachineStatusResponse, error)
 	ListMachines(ctx context.Context, in *ListMachinesRequest, opts ...grpc.CallOption) (*ListMachinesResponse, error)
+	AddPackageVersion(ctx context.Context, in *AddPackageVersionRequest, opts ...grpc.CallOption) (*AddPackageVersionResponse, error)
+	SetPackageVersion(ctx context.Context, in *SetPackageVersionRequest, opts ...grpc.CallOption) (*SetPackageVersionResponse, error)
+	RemovePackageVersion(ctx context.Context, in *RemovePackageVersionRequest, opts ...grpc.CallOption) (*RemovePackageVersionResponse, error)
 }
 
 type machineServiceClient struct {
@@ -62,9 +68,9 @@ func (c *machineServiceClient) Install(ctx context.Context, in *InstallRequest, 
 	return out, nil
 }
 
-func (c *machineServiceClient) UpdateMachine(ctx context.Context, in *UpdateMachineRequest, opts ...grpc.CallOption) (*UpdateMachineResponse, error) {
-	out := new(UpdateMachineResponse)
-	err := c.cc.Invoke(ctx, MachineService_UpdateMachine_FullMethodName, in, out, opts...)
+func (c *machineServiceClient) UpdateMachineStatus(ctx context.Context, in *UpdateMachineStatusRequest, opts ...grpc.CallOption) (*UpdateMachineStatusResponse, error) {
+	out := new(UpdateMachineStatusResponse)
+	err := c.cc.Invoke(ctx, MachineService_UpdateMachineStatus_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,14 +86,44 @@ func (c *machineServiceClient) ListMachines(ctx context.Context, in *ListMachine
 	return out, nil
 }
 
+func (c *machineServiceClient) AddPackageVersion(ctx context.Context, in *AddPackageVersionRequest, opts ...grpc.CallOption) (*AddPackageVersionResponse, error) {
+	out := new(AddPackageVersionResponse)
+	err := c.cc.Invoke(ctx, MachineService_AddPackageVersion_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *machineServiceClient) SetPackageVersion(ctx context.Context, in *SetPackageVersionRequest, opts ...grpc.CallOption) (*SetPackageVersionResponse, error) {
+	out := new(SetPackageVersionResponse)
+	err := c.cc.Invoke(ctx, MachineService_SetPackageVersion_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *machineServiceClient) RemovePackageVersion(ctx context.Context, in *RemovePackageVersionRequest, opts ...grpc.CallOption) (*RemovePackageVersionResponse, error) {
+	out := new(RemovePackageVersionResponse)
+	err := c.cc.Invoke(ctx, MachineService_RemovePackageVersion_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MachineServiceServer is the server API for MachineService service.
 // All implementations must embed UnimplementedMachineServiceServer
 // for forward compatibility
 type MachineServiceServer interface {
 	ScanMachine(context.Context, *ScanMachineRequest) (*ScanMachineResponse, error)
 	Install(context.Context, *InstallRequest) (*InstallResponse, error)
-	UpdateMachine(context.Context, *UpdateMachineRequest) (*UpdateMachineResponse, error)
+	UpdateMachineStatus(context.Context, *UpdateMachineStatusRequest) (*UpdateMachineStatusResponse, error)
 	ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error)
+	AddPackageVersion(context.Context, *AddPackageVersionRequest) (*AddPackageVersionResponse, error)
+	SetPackageVersion(context.Context, *SetPackageVersionRequest) (*SetPackageVersionResponse, error)
+	RemovePackageVersion(context.Context, *RemovePackageVersionRequest) (*RemovePackageVersionResponse, error)
 	mustEmbedUnimplementedMachineServiceServer()
 }
 
@@ -101,11 +137,20 @@ func (UnimplementedMachineServiceServer) ScanMachine(context.Context, *ScanMachi
 func (UnimplementedMachineServiceServer) Install(context.Context, *InstallRequest) (*InstallResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Install not implemented")
 }
-func (UnimplementedMachineServiceServer) UpdateMachine(context.Context, *UpdateMachineRequest) (*UpdateMachineResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateMachine not implemented")
+func (UnimplementedMachineServiceServer) UpdateMachineStatus(context.Context, *UpdateMachineStatusRequest) (*UpdateMachineStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMachineStatus not implemented")
 }
 func (UnimplementedMachineServiceServer) ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMachines not implemented")
+}
+func (UnimplementedMachineServiceServer) AddPackageVersion(context.Context, *AddPackageVersionRequest) (*AddPackageVersionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddPackageVersion not implemented")
+}
+func (UnimplementedMachineServiceServer) SetPackageVersion(context.Context, *SetPackageVersionRequest) (*SetPackageVersionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetPackageVersion not implemented")
+}
+func (UnimplementedMachineServiceServer) RemovePackageVersion(context.Context, *RemovePackageVersionRequest) (*RemovePackageVersionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemovePackageVersion not implemented")
 }
 func (UnimplementedMachineServiceServer) mustEmbedUnimplementedMachineServiceServer() {}
 
@@ -156,20 +201,20 @@ func _MachineService_Install_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MachineService_UpdateMachine_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateMachineRequest)
+func _MachineService_UpdateMachineStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateMachineStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MachineServiceServer).UpdateMachine(ctx, in)
+		return srv.(MachineServiceServer).UpdateMachineStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: MachineService_UpdateMachine_FullMethodName,
+		FullMethod: MachineService_UpdateMachineStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MachineServiceServer).UpdateMachine(ctx, req.(*UpdateMachineRequest))
+		return srv.(MachineServiceServer).UpdateMachineStatus(ctx, req.(*UpdateMachineStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -192,6 +237,60 @@ func _MachineService_ListMachines_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MachineService_AddPackageVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddPackageVersionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineServiceServer).AddPackageVersion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MachineService_AddPackageVersion_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineServiceServer).AddPackageVersion(ctx, req.(*AddPackageVersionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MachineService_SetPackageVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetPackageVersionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineServiceServer).SetPackageVersion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MachineService_SetPackageVersion_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineServiceServer).SetPackageVersion(ctx, req.(*SetPackageVersionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MachineService_RemovePackageVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemovePackageVersionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineServiceServer).RemovePackageVersion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MachineService_RemovePackageVersion_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineServiceServer).RemovePackageVersion(ctx, req.(*RemovePackageVersionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MachineService_ServiceDesc is the grpc.ServiceDesc for MachineService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -208,12 +307,24 @@ var MachineService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MachineService_Install_Handler,
 		},
 		{
-			MethodName: "UpdateMachine",
-			Handler:    _MachineService_UpdateMachine_Handler,
+			MethodName: "UpdateMachineStatus",
+			Handler:    _MachineService_UpdateMachineStatus_Handler,
 		},
 		{
 			MethodName: "ListMachines",
 			Handler:    _MachineService_ListMachines_Handler,
+		},
+		{
+			MethodName: "AddPackageVersion",
+			Handler:    _MachineService_AddPackageVersion_Handler,
+		},
+		{
+			MethodName: "SetPackageVersion",
+			Handler:    _MachineService_SetPackageVersion_Handler,
+		},
+		{
+			MethodName: "RemovePackageVersion",
+			Handler:    _MachineService_RemovePackageVersion_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

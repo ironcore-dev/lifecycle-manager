@@ -63,10 +63,26 @@ func (m *MachineTypeClient) Scan(
 	}, nil
 }
 
-func (m *MachineTypeClient) UpdateMachineType(
+func (m *MachineTypeClient) UpdateMachineTypeStatus(
 	_ context.Context,
-	_ *machinetypev1alpha1.UpdateMachineTypeRequest,
+	_ *machinetypev1alpha1.UpdateMachineTypeStatusRequest,
 	_ ...grpc.CallOption,
-) (*machinetypev1alpha1.UpdateMachineTypeResponse, error) {
+) (*machinetypev1alpha1.UpdateMachineTypeStatusResponse, error) {
+	return nil, nil
+}
+
+func (m *MachineTypeClient) AddMachineGroup(
+	_ context.Context,
+	_ *machinetypev1alpha1.AddMachineGroupRequest,
+	_ ...grpc.CallOption,
+) (*machinetypev1alpha1.AddMachineGroupResponse, error) {
+	return nil, nil
+}
+
+func (m *MachineTypeClient) RemoveMachineGroup(
+	_ context.Context,
+	_ *machinetypev1alpha1.RemoveMachineGroupRequest,
+	_ ...grpc.CallOption,
+) (*machinetypev1alpha1.RemoveMachineGroupResponse, error) {
 	return nil, nil
 }

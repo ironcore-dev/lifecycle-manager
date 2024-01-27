@@ -3,7 +3,6 @@ syntax = "proto3";
 package machine.v1alpha1;
 
 import "common/v1alpha1/api.proto";
-import "google/api/annotations.proto";
 import "k8s.io/api/core/v1/generated.proto";
 import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
 
@@ -21,6 +20,7 @@ message MachineStatus {
   common.v1alpha1.ScanResult last_scan_result = 2;
   repeated common.v1alpha1.PackageVersion installed_packages = 3;
   string message = 4;
+  repeated k8s.io.apimachinery.pkg.apis.meta.v1.Condition conditions = 5;
 }
 
 message Machine {
@@ -58,38 +58,55 @@ message InstallResponse {
   common.v1alpha1.RequestResult result = 1;
 }
 
-message UpdateMachineRequest {
+message UpdateMachineStatusRequest {
   string name = 1;
   string namespace = 2;
   MachineStatus status = 3;
 }
 
-message UpdateMachineResponse {
+message UpdateMachineStatusResponse {
   common.v1alpha1.RequestResult result = 1;
 }
 
+message AddPackageVersionRequest {
+  string name = 1;
+  string namespace = 2;
+  common.v1alpha1.PackageVersion package = 3;
+}
+
+message AddPackageVersionResponse {
+  string reason = 1;
+  common.v1alpha1.RequestResult result = 2;
+}
+
+message SetPackageVersionRequest {
+  string name = 1;
+  string namespace = 2;
+  common.v1alpha1.PackageVersion package = 3;
+}
+
+message SetPackageVersionResponse {
+  string reason = 1;
+  common.v1alpha1.RequestResult result = 2;
+}
+
+message RemovePackageVersionRequest {
+  string name = 1;
+  string namespace = 2;
+  string package_name = 3;
+}
+
+message RemovePackageVersionResponse {
+  string reason = 1;
+  common.v1alpha1.RequestResult result = 2;
+}
+
 service MachineService {
-  rpc ScanMachine(ScanMachineRequest) returns (ScanMachineResponse) {
-    option (google.api.http) = {
-      post: "/v1alpha1/machines/scan"
-      body: "*"
-    };
-  }
-  rpc Install(InstallRequest) returns (InstallResponse) {
-    option (google.api.http) = {
-      post: "/v1alpha1/machines/install"
-      body: "*"
-    };
-  }
-  rpc UpdateMachine(UpdateMachineRequest) returns (UpdateMachineResponse) {
-    option (google.api.http) = {
-      post: "/v1alpha1/machines/update"
-      body: "*"
-    };
-  }
-  rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse) {
-    option (google.api.http) = {
-      get: "/v1alpha1/machines/list"
-    };
-  }
+  rpc ScanMachine(ScanMachineRequest) returns (ScanMachineResponse) {}
+  rpc Install(InstallRequest) returns (InstallResponse) {}
+  rpc UpdateMachineStatus(UpdateMachineStatusRequest) returns (UpdateMachineStatusResponse) {}
+  rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse) {}
+  rpc AddPackageVersion(AddPackageVersionRequest) returns (AddPackageVersionResponse) {}
+  rpc SetPackageVersion(SetPackageVersionRequest) returns (SetPackageVersionResponse) {}
+  rpc RemovePackageVersion(RemovePackageVersionRequest) returns (RemovePackageVersionResponse) {}
 }

@@ -45,6 +45,9 @@ type MachineStatus struct {
 	// Message contains verbose message explaining current state
 	// +kubebuilder:validation:Optional
 	Message string `json:"message"`
+
+	// Conditions reflects Machine conditions and their state
+	Conditions []metav1.Condition `json:"conditions"`
 }
 
 // +kubebuilder:object:root=true

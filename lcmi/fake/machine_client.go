@@ -84,10 +84,34 @@ func (m *MachineClient) Install(
 	return &machinev1alpha1.InstallResponse{Result: commonv1alpha1.RequestResult_REQUEST_RESULT_UNSPECIFIED}, nil
 }
 
-func (m *MachineClient) UpdateMachine(
+func (m *MachineClient) UpdateMachineStatus(
 	_ context.Context,
-	_ *machinev1alpha1.UpdateMachineRequest,
+	_ *machinev1alpha1.UpdateMachineStatusRequest,
 	_ ...grpc.CallOption,
-) (*machinev1alpha1.UpdateMachineResponse, error) {
+) (*machinev1alpha1.UpdateMachineStatusResponse, error) {
+	return nil, nil
+}
+
+func (m *MachineClient) AddPackageVersion(
+	_ context.Context,
+	_ *machinev1alpha1.AddPackageVersionRequest,
+	_ ...grpc.CallOption,
+) (*machinev1alpha1.AddPackageVersionResponse, error) {
+	return nil, nil
+}
+
+func (m *MachineClient) SetPackageVersion(
+	_ context.Context,
+	_ *machinev1alpha1.SetPackageVersionRequest,
+	_ ...grpc.CallOption,
+) (*machinev1alpha1.SetPackageVersionResponse, error) {
+	return nil, nil
+}
+
+func (m *MachineClient) RemovePackageVersion(
+	_ context.Context,
+	_ *machinev1alpha1.RemovePackageVersionRequest,
+	_ ...grpc.CallOption,
+) (*machinev1alpha1.RemovePackageVersionResponse, error) {
 	return nil, nil
 }

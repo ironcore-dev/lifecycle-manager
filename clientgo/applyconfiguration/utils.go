@@ -37,6 +37,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &lifecyclev1alpha1.PackageVersionApplyConfiguration{}
 
 		// Group=meta.k8s.io, Version=v1
+	case v1.SchemeGroupVersion.WithKind("Condition"):
+		return &metav1.ConditionApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("LabelSelector"):
 		return &metav1.LabelSelectorApplyConfiguration{}
 	case v1.SchemeGroupVersion.WithKind("LabelSelectorRequirement"):

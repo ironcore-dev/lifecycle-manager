@@ -7,4 +7,3 @@ lint:
     - DEFAULT
 deps:
   - buf.build/k8s/api
-  - buf.build/googleapis/googleapis

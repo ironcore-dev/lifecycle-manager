@@ -73,11 +73,6 @@ APPLYCONFIGURATION_GEN ?= $(LOCAL_BIN)/applyconfiguration-gen
 MODELS_SCHEMA ?= $(LOCAL_BIN)/models-schema
 VGOPATH ?= $(LOCAL_BIN)/vgopath
 GEN_CRD_API_REFERENCE_DOCS ?= $(LOCAL_BIN)/gen-crd-api-reference-docs
-# Protobuf tools
-PROTOC_GEN_GOGOFAST ?= $(LOCAL_BIN)/protoc-gen-gogofast
-PROTOC_GEN_GO ?= $(LOCAL_BIN)/protoc-gen-go
-PROTOC_GEN_GO_GRPC ?= $(LOCAL_BIN)/protoc-gen-go-grpc
-PROTOC_GEN_GRPC_GATEWAY ?= $(LOCAL_BIN)/protoc-gen-grpc-gateway
 BUF ?= $(LOCAL_BIN)/buf
 
 ## Tools versions
@@ -90,11 +85,6 @@ CODE_GENERATOR_VERSION ?= v0.28.3
 VGOPATH_VERSION ?= v0.1.3
 GEN_CRD_API_REFERENCE_DOCS_VERSION ?= v0.3.0
 MODELS_SCHEMA_VERSION ?= main
-# Protobuf tools
-PROTOC_GEN_GOGOFAST_VERSION ?= v1.3.2
-PROTOC_GEN_GO_VERSION ?= v1.32.0
-PROTOC_GEN_GO_GRPC_VERSION ?= v1.3.0
-PROTOC_GEN_GRPC_GATEWAY_VERSION ?= v2.19.0
 BUF_VERSION ?= v1.29.0
 
 .PHONY: code-gen
@@ -108,8 +98,10 @@ code-gen: vgopath deepcopy-gen models-schema openapi-gen applyconfiguration-gen 
 	./hack/generate.sh
 
 .PHONY: proto-gen
-proto-gen: protoc-gen-go protoc-gen-go-grpc protoc-gen-grpc-gateway buf
+proto-gen: buf
 	@./hack/genproto.sh
+#proto-gen: protoc-gen-go protoc-gen-go-grpc protoc-gen-grpc-gateway buf
+#	@./hack/genproto.sh
 
 .PHONY: addlicense
 addlicense: $(ADDLICENSE)
@@ -177,27 +169,6 @@ $(CLIENT_GEN): $(LOCALBIN)
 kustomize: $(KUSTOMIZE)
 $(KUSTOMIZE): $(LOCAL_BIN)
 	@test -s $(KUSTOMIZE) || GOBIN=$(LOCAL_BIN) go install sigs.k8s.io/kustomize/kustomize/v4@$(KUSTOMIZE_VERSION)
-
-# Protobuf tools
-.PHONY: protoc-gen-gogofast
-protoc-gen-gogofast: $(PROTOC_GEN_GOGOFAST)
-$(PROTOC_GEN_GOGOFAST): $(LOCAL_BIN)
-	@test -s $(PROTOC_GEN_GOGOFAST) || GOBIN=$(LOCAL_BIN) go install github.com/gogo/protobuf/protoc-gen-gogofast@$(PROTOC_GEN_GOGOFAST_VERSION)
-
-.PHONY: protoc-gen-go
-protoc-gen-go: $(PROTOC_GEN_GO)
-$(PROTOC_GEN_GO): $(LOCAL_BIN)
-	@test -s $(PROTOC_GEN_GO) || GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@$(PROTOC_GEN_GO_VERSION)
-
-.PHONY: protoc-gen-go-grpc
-protoc-gen-go-grpc: $(PROTOC_GEN_GO_GRPC)
-$(PROTOC_GEN_GO_GRPC): $(LOCAL_BIN)
-	@test -s $(PROTOC_GEN_GO_GRPC) || GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$(PROTOC_GEN_GO_GRPC_VERSION)
-
-.PHONY: protoc-gen-grpc-gateway
-protoc-gen-grpc-gateway: $(PROTOC_GEN_GRPC_GATEWAY)
-$(PROTOC_GEN_GRPC_GATEWAY): $(LOCAL_BIN)
-	@test -s $(PROTOC_GEN_GRPC_GATEWAY) || GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@$(PROTOC_GEN_GRPC_GATEWAY_VERSION)
 
 .PHONY: buf
 buf: $(BUF)

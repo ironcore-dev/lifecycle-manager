@@ -29,6 +29,10 @@ type MachineTypeSpec struct {
 // MachineGroup defines group of Machine objects filtered by label selector
 // and a list of firmware packages versions which should be installed by default.
 type MachineGroup struct {
+	// Name defines machine group name
+	// +kubebuilder:validation:Optional
+	Name string `json:"name"`
+
 	// MachineSelector defines native kubernetes label selector to apply to Machine objects.
 	// +kubebuilder:validation:Required
 	MachineSelector metav1.LabelSelector `json:"machineSelector"`

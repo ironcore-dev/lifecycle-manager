@@ -3,14 +3,14 @@ syntax = "proto3";
 package machinetype.v1alpha1;
 
 import "common/v1alpha1/api.proto";
-import "google/api/annotations.proto";
 import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
 
 option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1";
 
 message MachineGroup {
-  k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector machine_selector = 1;
-  common.v1alpha1.PackageVersion packages = 2;
+  string name = 1;
+  k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector machine_selector = 2;
+  common.v1alpha1.PackageVersion packages = 3;
 }
 
 message MachineTypeSpec {
@@ -57,32 +57,43 @@ message ScanResponse {
   MachineTypeStatus status = 2;
 }
 
-message UpdateMachineTypeRequest {
+message UpdateMachineTypeStatusRequest {
   string name = 1;
   string namespace = 2;
   MachineTypeStatus status = 3;
 }
 
-message UpdateMachineTypeResponse {
-  common.v1alpha1.RequestResult result = 1;
+message UpdateMachineTypeStatusResponse {
+  string reason = 1;
+  common.v1alpha1.RequestResult result = 2;
+}
+
+message AddMachineGroupRequest {
+  string name = 1;
+  string namespace = 2;
+  MachineGroup machine_group = 3;
+}
+
+message AddMachineGroupResponse {
+  string reason = 1;
+  common.v1alpha1.RequestResult result = 2;
+}
+
+message RemoveMachineGroupRequest {
+  string name = 1;
+  string namespace = 2;
+  string group_name = 3;
+}
+
+message RemoveMachineGroupResponse {
+  string reason = 1;
+  common.v1alpha1.RequestResult result = 2;
 }
 
 service MachineTypeService {
-  rpc ListMachineTypes(ListMachineTypesRequest) returns (ListMachineTypesResponse) {
-    option (google.api.http) = {
-      get: "/v1alpha1/machinetypes/list"
-    };
-  }
-  rpc Scan(ScanRequest) returns (ScanResponse) {
-    option (google.api.http) = {
-      post: "/v1alpha1/machinetypes/scan"
-      body: "*"
-    };
-  }
-  rpc UpdateMachineType(UpdateMachineTypeRequest) returns (UpdateMachineTypeResponse) {
-    option (google.api.http) = {
-      post: "/v1alpha1/machinetypes/update"
-      body: "*"
-    };
-  }
+  rpc ListMachineTypes(ListMachineTypesRequest) returns (ListMachineTypesResponse) {}
+  rpc Scan(ScanRequest) returns (ScanResponse) {}
+  rpc UpdateMachineTypeStatus(UpdateMachineTypeStatusRequest) returns (UpdateMachineTypeStatusResponse) {}
+  rpc AddMachineGroup(AddMachineGroupRequest) returns (AddMachineGroupResponse) {}
+  rpc RemoveMachineGroup(RemoveMachineGroupRequest) returns (RemoveMachineGroupResponse) {}
 }

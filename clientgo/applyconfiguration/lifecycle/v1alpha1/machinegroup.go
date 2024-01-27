@@ -11,6 +11,7 @@ import (
 // MachineGroupApplyConfiguration represents an declarative configuration of the MachineGroup type for use
 // with apply.
 type MachineGroupApplyConfiguration struct {
+	Name            *string                             `json:"name,omitempty"`
 	MachineSelector *v1.LabelSelectorApplyConfiguration `json:"machineSelector,omitempty"`
 	Packages        []PackageVersionApplyConfiguration  `json:"packages,omitempty"`
 }
@@ -19,6 +20,14 @@ type MachineGroupApplyConfiguration struct {
 // apply.
 func MachineGroup() *MachineGroupApplyConfiguration {
 	return &MachineGroupApplyConfiguration{}
+}
+
+// WithName sets the Name field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Name field is set to the value of the last call.
+func (b *MachineGroupApplyConfiguration) WithName(value string) *MachineGroupApplyConfiguration {
+	b.Name = &value
+	return b
 }
 
 // WithMachineSelector sets the MachineSelector field in the declarative configuration to the given value

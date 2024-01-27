@@ -20,9 +20,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	MachineTypeService_ListMachineTypes_FullMethodName  = "/machinetype.v1alpha1.MachineTypeService/ListMachineTypes"
-	MachineTypeService_Scan_FullMethodName              = "/machinetype.v1alpha1.MachineTypeService/Scan"
-	MachineTypeService_UpdateMachineType_FullMethodName = "/machinetype.v1alpha1.MachineTypeService/UpdateMachineType"
+	MachineTypeService_ListMachineTypes_FullMethodName        = "/machinetype.v1alpha1.MachineTypeService/ListMachineTypes"
+	MachineTypeService_Scan_FullMethodName                    = "/machinetype.v1alpha1.MachineTypeService/Scan"
+	MachineTypeService_UpdateMachineTypeStatus_FullMethodName = "/machinetype.v1alpha1.MachineTypeService/UpdateMachineTypeStatus"
+	MachineTypeService_AddMachineGroup_FullMethodName         = "/machinetype.v1alpha1.MachineTypeService/AddMachineGroup"
+	MachineTypeService_RemoveMachineGroup_FullMethodName      = "/machinetype.v1alpha1.MachineTypeService/RemoveMachineGroup"
 )
 
 // MachineTypeServiceClient is the client API for MachineTypeService service.
@@ -31,7 +33,9 @@ const (
 type MachineTypeServiceClient interface {
 	ListMachineTypes(ctx context.Context, in *ListMachineTypesRequest, opts ...grpc.CallOption) (*ListMachineTypesResponse, error)
 	Scan(ctx context.Context, in *ScanRequest, opts ...grpc.CallOption) (*ScanResponse, error)
-	UpdateMachineType(ctx context.Context, in *UpdateMachineTypeRequest, opts ...grpc.CallOption) (*UpdateMachineTypeResponse, error)
+	UpdateMachineTypeStatus(ctx context.Context, in *UpdateMachineTypeStatusRequest, opts ...grpc.CallOption) (*UpdateMachineTypeStatusResponse, error)
+	AddMachineGroup(ctx context.Context, in *AddMachineGroupRequest, opts ...grpc.CallOption) (*AddMachineGroupResponse, error)
+	RemoveMachineGroup(ctx context.Context, in *RemoveMachineGroupRequest, opts ...grpc.CallOption) (*RemoveMachineGroupResponse, error)
 }
 
 type machineTypeServiceClient struct {
@@ -60,9 +64,27 @@ func (c *machineTypeServiceClient) Scan(ctx context.Context, in *ScanRequest, op
 	return out, nil
 }
 
-func (c *machineTypeServiceClient) UpdateMachineType(ctx context.Context, in *UpdateMachineTypeRequest, opts ...grpc.CallOption) (*UpdateMachineTypeResponse, error) {
-	out := new(UpdateMachineTypeResponse)
-	err := c.cc.Invoke(ctx, MachineTypeService_UpdateMachineType_FullMethodName, in, out, opts...)
+func (c *machineTypeServiceClient) UpdateMachineTypeStatus(ctx context.Context, in *UpdateMachineTypeStatusRequest, opts ...grpc.CallOption) (*UpdateMachineTypeStatusResponse, error) {
+	out := new(UpdateMachineTypeStatusResponse)
+	err := c.cc.Invoke(ctx, MachineTypeService_UpdateMachineTypeStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *machineTypeServiceClient) AddMachineGroup(ctx context.Context, in *AddMachineGroupRequest, opts ...grpc.CallOption) (*AddMachineGroupResponse, error) {
+	out := new(AddMachineGroupResponse)
+	err := c.cc.Invoke(ctx, MachineTypeService_AddMachineGroup_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *machineTypeServiceClient) RemoveMachineGroup(ctx context.Context, in *RemoveMachineGroupRequest, opts ...grpc.CallOption) (*RemoveMachineGroupResponse, error) {
+	out := new(RemoveMachineGroupResponse)
+	err := c.cc.Invoke(ctx, MachineTypeService_RemoveMachineGroup_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +97,9 @@ func (c *machineTypeServiceClient) UpdateMachineType(ctx context.Context, in *Up
 type MachineTypeServiceServer interface {
 	ListMachineTypes(context.Context, *ListMachineTypesRequest) (*ListMachineTypesResponse, error)
 	Scan(context.Context, *ScanRequest) (*ScanResponse, error)
-	UpdateMachineType(context.Context, *UpdateMachineTypeRequest) (*UpdateMachineTypeResponse, error)
+	UpdateMachineTypeStatus(context.Context, *UpdateMachineTypeStatusRequest) (*UpdateMachineTypeStatusResponse, error)
+	AddMachineGroup(context.Context, *AddMachineGroupRequest) (*AddMachineGroupResponse, error)
+	RemoveMachineGroup(context.Context, *RemoveMachineGroupRequest) (*RemoveMachineGroupResponse, error)
 	mustEmbedUnimplementedMachineTypeServiceServer()
 }
 
@@ -89,8 +113,14 @@ func (UnimplementedMachineTypeServiceServer) ListMachineTypes(context.Context, *
 func (UnimplementedMachineTypeServiceServer) Scan(context.Context, *ScanRequest) (*ScanResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Scan not implemented")
 }
-func (UnimplementedMachineTypeServiceServer) UpdateMachineType(context.Context, *UpdateMachineTypeRequest) (*UpdateMachineTypeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateMachineType not implemented")
+func (UnimplementedMachineTypeServiceServer) UpdateMachineTypeStatus(context.Context, *UpdateMachineTypeStatusRequest) (*UpdateMachineTypeStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMachineTypeStatus not implemented")
+}
+func (UnimplementedMachineTypeServiceServer) AddMachineGroup(context.Context, *AddMachineGroupRequest) (*AddMachineGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddMachineGroup not implemented")
+}
+func (UnimplementedMachineTypeServiceServer) RemoveMachineGroup(context.Context, *RemoveMachineGroupRequest) (*RemoveMachineGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveMachineGroup not implemented")
 }
 func (UnimplementedMachineTypeServiceServer) mustEmbedUnimplementedMachineTypeServiceServer() {}
 
@@ -141,20 +171,56 @@ func _MachineTypeService_Scan_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _MachineTypeService_UpdateMachineType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateMachineTypeRequest)
+func _MachineTypeService_UpdateMachineTypeStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateMachineTypeStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MachineTypeServiceServer).UpdateMachineType(ctx, in)
+		return srv.(MachineTypeServiceServer).UpdateMachineTypeStatus(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: MachineTypeService_UpdateMachineType_FullMethodName,
+		FullMethod: MachineTypeService_UpdateMachineTypeStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MachineTypeServiceServer).UpdateMachineType(ctx, req.(*UpdateMachineTypeRequest))
+		return srv.(MachineTypeServiceServer).UpdateMachineTypeStatus(ctx, req.(*UpdateMachineTypeStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MachineTypeService_AddMachineGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddMachineGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineTypeServiceServer).AddMachineGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MachineTypeService_AddMachineGroup_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineTypeServiceServer).AddMachineGroup(ctx, req.(*AddMachineGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MachineTypeService_RemoveMachineGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveMachineGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MachineTypeServiceServer).RemoveMachineGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MachineTypeService_RemoveMachineGroup_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MachineTypeServiceServer).RemoveMachineGroup(ctx, req.(*RemoveMachineGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -175,8 +241,16 @@ var MachineTypeService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MachineTypeService_Scan_Handler,
 		},
 		{
-			MethodName: "UpdateMachineType",
-			Handler:    _MachineTypeService_UpdateMachineType_Handler,
+			MethodName: "UpdateMachineTypeStatus",
+			Handler:    _MachineTypeService_UpdateMachineTypeStatus_Handler,
+		},
+		{
+			MethodName: "AddMachineGroup",
+			Handler:    _MachineTypeService_AddMachineGroup_Handler,
+		},
+		{
+			MethodName: "RemoveMachineGroup",
+			Handler:    _MachineTypeService_RemoveMachineGroup_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

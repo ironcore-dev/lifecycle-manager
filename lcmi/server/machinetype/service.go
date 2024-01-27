@@ -45,11 +45,29 @@ func (s *GrpcService) Scan(
 	return nil, err
 }
 
-func (s *GrpcService) UpdateMachineType(
+func (s *GrpcService) UpdateMachineTypeStatus(
 	ctx context.Context,
-	req *machinetypev1alpha1.UpdateMachineTypeRequest,
-) (*machinetypev1alpha1.UpdateMachineTypeResponse, error) {
+	req *machinetypev1alpha1.UpdateMachineTypeStatusRequest,
+) (*machinetypev1alpha1.UpdateMachineTypeStatusResponse, error) {
 	// TODO implement me
-	err := status.Error(codes.Unimplemented, "UpdateMachineType() is not implemented yet")
+	err := status.Error(codes.Unimplemented, "UpdateMachineTypeStatus() is not implemented yet")
+	return nil, err
+}
+
+func (s *GrpcService) AddMachineGroup(
+	ctx context.Context,
+	req *machinetypev1alpha1.AddMachineGroupRequest,
+) (*machinetypev1alpha1.AddMachineGroupResponse, error) {
+	// TODO implement me
+	err := status.Error(codes.Unimplemented, "AddMachineGroup() is not implemented yet")
+	return nil, err
+}
+
+func (s *GrpcService) RemoveMachineGroup(
+	ctx context.Context,
+	req *machinetypev1alpha1.RemoveMachineGroupRequest,
+) (*machinetypev1alpha1.RemoveMachineGroupResponse, error) {
+	// TODO implement me
+	err := status.Error(codes.Unimplemented, "RemoveMachineGroup() is not implemented yet")
 	return nil, err
 }

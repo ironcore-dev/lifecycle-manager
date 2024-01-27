@@ -8,6 +8,7 @@
 package v1alpha1
 
 import (
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -147,6 +148,13 @@ func (in *MachineStatus) DeepCopyInto(out *MachineStatus) {
 		in, out := &in.InstalledPackages, &out.InstalledPackages
 		*out = make([]PackageVersion, len(*in))
 		copy(*out, *in)
+	}
+	if in.Conditions != nil {
+		in, out := &in.Conditions, &out.Conditions
+		*out = make([]v1.Condition, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 	return
 }
