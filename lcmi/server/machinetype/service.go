@@ -19,7 +19,7 @@ type GrpcService struct {
 	cache map[string]string
 }
 
-func NewGRPCService() *GrpcService {
+func NewGrpcService() *GrpcService {
 	return &GrpcService{}
 }
 

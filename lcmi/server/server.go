@@ -17,12 +17,14 @@ import (
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/server/machine"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/server/machinetype"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/server/storage"
 )
 
 type LifecycleGRPCServer struct {
 	log                    logr.Logger
 	machineGrpcService     *machine.GrpcService
 	machinetypeGrpcService *machinetype.GrpcService
+	storageGrpcService     *storage.GrpcService
 	port                   int
 }
 
@@ -35,9 +37,10 @@ type Options struct {
 func NewLifecycleGRPCServer(opts Options) *LifecycleGRPCServer {
 	return &LifecycleGRPCServer{
 		log:                    opts.Log,
-		machineGrpcService:     machine.NewGRPCService(opts.Cfg),
-		machinetypeGrpcService: machinetype.NewGRPCService(),
 		port:                   opts.Port,
+		machineGrpcService:     machine.NewGrpcService(opts.Cfg),
+		machinetypeGrpcService: machinetype.NewGrpcService(),
+		storageGrpcService:     storage.NewGrpcService(),
 	}
 }
 

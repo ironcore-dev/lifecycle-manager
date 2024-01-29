@@ -3,4 +3,5 @@ directories:
   - commonapi
   - machineapi
   - machinetypeapi
+  - storageapi
 

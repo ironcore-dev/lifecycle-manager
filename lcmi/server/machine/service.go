@@ -16,19 +16,21 @@ import (
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/lifecycle"
+	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 )
 
 type GrpcService struct {
 	machinev1alpha1.UnimplementedMachineServiceServer
-	cl        *lifecycle.Clientset
-	cache     map[string]lifecyclev1alpha1.Machine
-	horizon   time.Duration
-	namespace string
+	cl         *lifecycle.Clientset
+	cache      map[string]lifecyclev1alpha1.Machine
+	horizon    time.Duration
+	scanPeriod time.Duration
+	namespace  string
 }
 
-func NewGRPCService(cfg *rest.Config) *GrpcService {
+func NewGrpcService(cfg *rest.Config) *GrpcService {
 	cl := lifecycle.NewForConfigOrDie(cfg)
 	return &GrpcService{cl: cl}
 }
@@ -63,23 +65,39 @@ func (s *GrpcService) ScanMachine(
 	ctx context.Context,
 	req *machinev1alpha1.ScanMachineRequest,
 ) (*machinev1alpha1.ScanMachineResponse, error) {
-	// TODO implement me
-	// lookup cache for stored entry
-	// if cache miss - get machine and invoke scan providing necessary info
-	// if cache hit && timestamp out of horizon - invoke scan
-	// otherwise send entry in response
-	err := status.Error(codes.Unimplemented, "Scan() is not implemented yet")
-	return nil, err
+	log := logr.FromContextOrDiscard(ctx)
+	resp := &machinev1alpha1.ScanMachineResponse{
+		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_UNSPECIFIED,
+		Status: nil,
+	}
+	// todo:
+	//  - check whether machine is already cached
+	//  - if machine is in cache, check whether last scan timestamp in horizon
+	//  - if yes then send Success response with cached data
+	//  - otherwise (machine is not in cache, last scan is outdated), send machine to scheduler
+
+	_, err := s.cl.LifecycleV1alpha1().Machines(req.Namespace).Get(ctx, req.Name, metav1.GetOptions{})
+	if err != nil {
+		log.Error(err, "failed to get machine", "name", req.Name, "namespace", req.Namespace)
+		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_FAILURE
+		return resp, err
+	}
+
+	resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
+	return resp, nil
 }
 
 func (s *GrpcService) Install(
 	ctx context.Context,
 	req *machinev1alpha1.InstallRequest,
 ) (*machinev1alpha1.InstallResponse, error) {
-	// TODO implement me
-	// invoke install with provided params
-	err := status.Error(codes.Unimplemented, "Install() is not implemented yet")
-	return nil, err
+	log := logr.FromContextOrDiscard(ctx)
+	resp := &machinev1alpha1.InstallResponse{Result: commonv1alpha1.RequestResult_REQUEST_RESULT_UNSPECIFIED}
+
+	// todo: send data to scheduler
+	log.V(1).Info("packages installation scheduled for machine", "name", req.Name, "namespace", req.Namespace)
+	resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
+	return resp, nil
 }
 
 func (s *GrpcService) UpdateMachineStatus(
