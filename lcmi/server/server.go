@@ -15,6 +15,7 @@ import (
 
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
+	storagev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/storage/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/server/machine"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/server/machinetype"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/server/storage"
@@ -52,9 +53,12 @@ func (s *LifecycleGRPCServer) Start(ctx context.Context) error {
 		return err
 	}
 
+	// todo: run scheduler for scan/install jobs
+
 	srv := grpc.NewServer(grpc.UnaryInterceptor(s.addLogger))
 	machinev1alpha1.RegisterMachineServiceServer(srv, s.machineGrpcService)
 	machinetypev1alpha1.RegisterMachineTypeServiceServer(srv, s.machinetypeGrpcService)
+	storagev1alpha1.RegisterFirmwareStorageServiceServer(srv, s.storageGrpcService)
 
 	go func() {
 		defer func() {

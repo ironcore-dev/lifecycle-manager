@@ -30,7 +30,7 @@ import (
 // MachineReconciler reconciles a Machine object.
 type MachineReconciler struct {
 	client.Client
-	Broker machinev1alpha1.MachineServiceClient
+	machinev1alpha1.MachineServiceClient
 
 	Namespace string
 
@@ -90,7 +90,7 @@ func (r *MachineReconciler) reconcileRequired(
 
 func (r *MachineReconciler) reconcileScan(ctx context.Context, obj *lifecyclev1alpha1.Machine) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	scanResponse, err := r.Broker.ScanMachine(ctx, &machinev1alpha1.ScanMachineRequest{
+	scanResponse, err := r.ScanMachine(ctx, &machinev1alpha1.ScanMachineRequest{
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
 	})
@@ -106,7 +106,6 @@ func (r *MachineReconciler) reconcileScan(ctx context.Context, obj *lifecyclev1a
 		obj.Status.Message = StatusMessageScanRequestFailed
 		return ctrl.Result{}, nil
 	}
-	obj.Status = apiutil.MachineStatusToKubeAPI(scanResponse.Status)
 	return r.reconcileInstall(ctx, obj)
 }
 
@@ -117,10 +116,10 @@ func (r *MachineReconciler) reconcileInstall(ctx context.Context, obj *lifecycle
 		return ctrl.Result{}, err
 	}
 	if len(packagesToInstall) == 0 {
-		log.V(2).Info("install packages versions match desired state")
+		log.V(1).Info("install packages versions match desired state")
 		return ctrl.Result{}, nil
 	}
-	installResponse, err := r.Broker.Install(ctx, &machinev1alpha1.InstallRequest{
+	installResponse, err := r.Install(ctx, &machinev1alpha1.InstallRequest{
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
 		Packages:  apiutil.PackageVersionsToGrpcAPI(packagesToInstall),

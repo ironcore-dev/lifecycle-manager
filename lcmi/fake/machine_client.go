@@ -49,16 +49,14 @@ func (m *MachineClient) ScanMachine(
 	}
 	key := types.NamespacedName{Name: in.Name, Namespace: in.Namespace}
 	uid := uuidutil.UUIDFromObjectKey(key)
-	entry, ok := m.cache[uid]
+	_, ok := m.cache[uid]
 	if ok {
 		return &machinev1alpha1.ScanMachineResponse{
-			Status: entry,
 			Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 		}, nil
 	}
 	m.cache[uid] = &machinev1alpha1.MachineStatus{}
 	return &machinev1alpha1.ScanMachineResponse{
-		Status: nil,
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED,
 	}, nil
 }

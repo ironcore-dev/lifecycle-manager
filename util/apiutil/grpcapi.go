@@ -14,10 +14,6 @@ import (
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
 )
 
-// todo: conversion k8s api -> grpc api
-// todo: conversion grpc api -> k8s api
-// todo: conversion grpc api -> applyconfiguration
-
 func MachineToKubeAPI(src *machinev1alpha1.Machine) *lifecyclev1alpha1.Machine {
 	return nil
 }

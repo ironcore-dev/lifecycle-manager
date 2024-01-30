@@ -105,10 +105,10 @@ var _ = BeforeSuite(func() {
 		Broker: nil, // todo: setup broker client
 	}).SetupWithManager(k8sManager)).To(Succeed())
 	Expect((&controllers.MachineReconciler{
-		Client:    k8sClient,
-		Scheme:    scheme,
-		Broker:    nil, // todo: setup broker client
-		Namespace: namespace,
+		Client:               k8sClient,
+		Scheme:               scheme,
+		MachineServiceClient: nil, // todo: setup broker client
+		Namespace:            namespace,
 	}).SetupWithManager(k8sManager)).To(Succeed())
 
 	go func() {

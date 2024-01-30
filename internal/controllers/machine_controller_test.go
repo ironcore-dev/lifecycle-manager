@@ -68,7 +68,7 @@ var _ = Describe("Machine controller", func() {
 						Message:           "",
 					},
 				})
-				machineRec.Broker = brokerClient
+				machineRec.MachineServiceClient = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}
 				res, err := machineRec.Reconcile(context.Background(), req)
 				Expect(err).To(HaveOccurred())
@@ -83,13 +83,13 @@ var _ = Describe("Machine controller", func() {
 				c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineObject("sample", "default")))
 				machineRec := NewMachineReconciler(c, s)
 				brokerClient := fake.NewMachineClient(map[string]*machinev1alpha1.MachineStatus{})
-				machineRec.Broker = brokerClient
+				machineRec.MachineServiceClient = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}
 				res, err := machineRec.Reconcile(context.Background(), req)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(res).To(Equal(ctrl.Result{}))
 
-				broker, _ := machineRec.Broker.(*fake.MachineClient)
+				broker, _ := machineRec.MachineServiceClient.(*fake.MachineClient)
 				entry := broker.ReadCache(uuidutil.UUIDFromObjectKey(machineKey))
 				Expect(entry).NotTo(BeNil())
 				reconciledMachine := &lifecyclev1alpha1.Machine{}
@@ -106,7 +106,7 @@ var _ = Describe("Machine controller", func() {
 				c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineObject("failed-scan", "default")))
 				machineRec := NewMachineReconciler(c, s)
 				brokerClient := fake.NewMachineClient(map[string]*machinev1alpha1.MachineStatus{})
-				machineRec.Broker = brokerClient
+				machineRec.MachineServiceClient = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}
 				res, err := machineRec.Reconcile(context.Background(), req)
 				Expect(err).To(HaveOccurred())
@@ -120,7 +120,8 @@ var _ = Describe("Machine controller", func() {
 				expectedPackages := []*commonv1alpha1.PackageVersion{{Name: "bios", Version: "1.0.0"}}
 				machine := testutil.NewMachineObject("sample", "default",
 					testutil.MachineWithMachineTypeRef("sample"),
-					testutil.MachineWithLabels(map[string]string{"env": "test"}))
+					testutil.MachineWithLabels(map[string]string{"env": "test"}),
+					testutil.MachineStatusWithInstalledPackages(apiutil.PackageVersionsToKubeAPI(expectedPackages)))
 				machineType := testutil.NewMachineTypeObject("sample", "default",
 					testutil.MachineTypeWithGroup(lifecyclev1alpha1.MachineGroup{
 						MachineSelector: metav1.LabelSelector{MatchLabels: map[string]string{"env": "test"}},
@@ -138,7 +139,7 @@ var _ = Describe("Machine controller", func() {
 						LastScanResult:    1,
 						InstalledPackages: expectedPackages,
 					}})
-				machineRec.Broker = brokerClient
+				machineRec.MachineServiceClient = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}
 				res, err := machineRec.Reconcile(context.Background(), req)
 				Expect(err).NotTo(HaveOccurred())
@@ -174,7 +175,7 @@ var _ = Describe("Machine controller", func() {
 						LastScanTime:   &metav1.Time{Time: now},
 						LastScanResult: 1,
 					}})
-				machineRec.Broker = brokerClient
+				machineRec.MachineServiceClient = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}
 				res, err := machineRec.Reconcile(context.Background(), req)
 				Expect(err).NotTo(HaveOccurred())
@@ -210,7 +211,7 @@ var _ = Describe("Machine controller", func() {
 						LastScanTime:   &metav1.Time{Time: now},
 						LastScanResult: 1,
 					}})
-				machineRec.Broker = brokerClient
+				machineRec.MachineServiceClient = brokerClient
 				req := ctrl.Request{NamespacedName: machineKey}
 				res, err := machineRec.Reconcile(context.Background(), req)
 				Expect(err).To(HaveOccurred())
