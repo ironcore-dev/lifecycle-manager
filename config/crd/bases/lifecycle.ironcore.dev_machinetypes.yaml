@@ -87,6 +87,9 @@ spec:
                           type: object
                       type: object
                       x-kubernetes-map-type: atomic
+                    name:
+                      description: Name defines machine group name
+                      type: string
                     packages:
                       description: Packages defines default firmware package versions
                         for the group of Machine objects.

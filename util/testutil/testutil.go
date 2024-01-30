@@ -4,6 +4,13 @@
 package testutil
 
 import (
+	"go/build"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strings"
+
+	"golang.org/x/mod/modfile"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -44,4 +51,24 @@ func SetupClient(scheme *runtime.Scheme, opts ...ClientOption) client.Client {
 	}
 	cl := builder.Build()
 	return cl
+}
+
+func GetCrdPath(crdPackageScheme interface{}) (string, error) {
+	globalPackagePath := reflect.TypeOf(crdPackageScheme).PkgPath()
+	goModData, err := os.ReadFile(filepath.Join("..", "..", "go.mod"))
+	if err != nil {
+		return "", err
+	}
+	goModFile, err := modfile.ParseLax("", goModData, nil)
+	if err != nil {
+		return "", err
+	}
+	globalModulePath := ""
+	for _, req := range goModFile.Require {
+		if strings.HasPrefix(globalPackagePath, req.Mod.Path) {
+			globalModulePath = req.Mod.String()
+			break
+		}
+	}
+	return filepath.Join(build.Default.GOPATH, "pkg", "mod", globalModulePath, "config", "crd", "bases"), nil
 }

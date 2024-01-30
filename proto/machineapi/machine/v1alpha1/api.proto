@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package machine.v1alpha1;
+
+import "common/v1alpha1/api.proto";
+import "k8s.io/api/core/v1/generated.proto";
+import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
+
+option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1";
+
+message MachineSpec {
+  k8s.io.api.core.v1.LocalObjectReference machine_type_ref = 1;
+  k8s.io.api.core.v1.LocalObjectReference oob_machine_ref = 2;
+  k8s.io.apimachinery.pkg.apis.meta.v1.Duration scan_period = 3;
+  repeated common.v1alpha1.PackageVersion packages = 4;
+}
+
+message MachineStatus {
+  k8s.io.apimachinery.pkg.apis.meta.v1.Time last_scan_time = 1;
+  common.v1alpha1.ScanResult last_scan_result = 2;
+  repeated common.v1alpha1.PackageVersion installed_packages = 3;
+  string message = 4;
+  repeated k8s.io.apimachinery.pkg.apis.meta.v1.Condition conditions = 5;
+}
+
+message Machine {
+  k8s.io.apimachinery.pkg.apis.meta.v1.TypeMeta type_meta = 1;
+  k8s.io.apimachinery.pkg.apis.meta.v1.ObjectMeta object_meta = 2;
+  MachineSpec spec = 3;
+  MachineStatus status = 4;
+}
+
+message ListMachinesRequest {
+  common.v1alpha1.Filter filter = 1;
+}
+
+message ListMachinesResponse {
+  repeated Machine machines = 1;
+}
+
+message ScanMachineRequest {
+  string name = 1;
+  string namespace = 2;
+}
+
+message ScanMachineResponse {
+  common.v1alpha1.RequestResult result = 1;
+  MachineStatus status = 2;
+}
+
+message InstallRequest {
+  string name = 1;
+  string namespace = 2;
+  repeated common.v1alpha1.PackageVersion packages = 3;
+}
+
+message InstallResponse {
+  common.v1alpha1.RequestResult result = 1;
+}
+
+message UpdateMachineStatusRequest {
+  string name = 1;
+  string namespace = 2;
+  MachineStatus status = 3;
+}
+
+message UpdateMachineStatusResponse {
+  common.v1alpha1.RequestResult result = 1;
+}
+
+message AddPackageVersionRequest {
+  string name = 1;
+  string namespace = 2;
+  common.v1alpha1.PackageVersion package = 3;
+}
+
+message AddPackageVersionResponse {
+  string reason = 1;
+  common.v1alpha1.RequestResult result = 2;
+}
+
+message SetPackageVersionRequest {
+  string name = 1;
+  string namespace = 2;
+  common.v1alpha1.PackageVersion package = 3;
+}
+
+message SetPackageVersionResponse {
+  string reason = 1;
+  common.v1alpha1.RequestResult result = 2;
+}
+
+message RemovePackageVersionRequest {
+  string name = 1;
+  string namespace = 2;
+  string package_name = 3;
+}
+
+message RemovePackageVersionResponse {
+  string reason = 1;
+  common.v1alpha1.RequestResult result = 2;
+}
+
+service MachineService {
+  rpc ScanMachine(ScanMachineRequest) returns (ScanMachineResponse) {}
+  rpc Install(InstallRequest) returns (InstallResponse) {}
+  rpc UpdateMachineStatus(UpdateMachineStatusRequest) returns (UpdateMachineStatusResponse) {}
+  rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse) {}
+  rpc AddPackageVersion(AddPackageVersionRequest) returns (AddPackageVersionResponse) {}
+  rpc SetPackageVersion(SetPackageVersionRequest) returns (SetPackageVersionResponse) {}
+  rpc RemovePackageVersion(RemovePackageVersionRequest) returns (RemovePackageVersionResponse) {}
+}

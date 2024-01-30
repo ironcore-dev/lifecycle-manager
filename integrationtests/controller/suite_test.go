@@ -4,15 +4,19 @@
 package controller
 
 import (
-	"fmt"
+	"context"
 	"path/filepath"
-	"runtime"
 	"testing"
+	"time"
 
+	oobv1alpha1 "github.com/onmetal/oob-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
@@ -20,15 +24,35 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/internal/controllers"
+	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
 	// +kubebuilder:scaffold:imports
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var cfg *rest.Config
-var k8sClient client.Client
-var testEnv *envtest.Environment
+var (
+	lifecycleCRDPath string
+	oobCRDPath       string
+	// todo: scheme *runtime.Scheme
+	cfg        *rest.Config
+	k8sClient  client.Client
+	k8sManager manager.Manager
+	testEnv    *envtest.Environment
+	ctx        context.Context
+	cancel     context.CancelFunc
+	err        error
+)
+
+var scanPeriod = metav1.Duration{Duration: time.Second}
+
+const (
+	timeout       = time.Second * 3
+	interval      = time.Millisecond * 50
+	requeuePeriod = time.Second
+	namespace     = "default"
+)
 
 func TestControllers(t *testing.T) {
 	t.Parallel()
@@ -40,38 +64,61 @@ var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	By("bootstrapping test environment")
+	lifecycleCRDPath = filepath.Join("..", "..", "config", "crd", "bases")
+	oobCRDPath, err = testutil.GetCrdPath(oobv1alpha1.OOB{})
+	Expect(err).NotTo(HaveOccurred())
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
+		CRDDirectoryPaths:     []string{lifecycleCRDPath, oobCRDPath},
 		ErrorIfCRDPathMissing: true,
-
-		// The BinaryAssetsDirectory is only required if you want to run the tests directly
-		// without call the makefile target test. If not informed it will look for the
-		// default path defined in controller-runtime which is /usr/local/kubebuilder/.
-		// Note that you must have the required binaries setup under the bin directory to perform
-		// the tests directly. When we run make test it will be setup and used automatically.
-		BinaryAssetsDirectory: filepath.Join("..", "..", "bin", "k8s",
-			fmt.Sprintf("1.28.3-%s-%s", runtime.GOOS, runtime.GOARCH)),
 	}
+	ctx, cancel = context.WithCancel(context.TODO())
 
-	var err error
 	// cfg is defined in this file globally.
 	cfg, err = testEnv.Start()
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = lifecyclev1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
+	scheme := runtime.NewScheme()
+	Expect(lifecyclev1alpha1.AddToScheme(scheme)).To(Succeed())
+	Expect(oobv1alpha1.AddToScheme(scheme)).To(Succeed())
 
 	// +kubebuilder:scaffold:scheme
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	k8sManager, err = ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme,
+	})
 	Expect(err).NotTo(HaveOccurred())
+	Expect(k8sManager).NotTo(BeNil())
+
+	k8sClient = k8sManager.GetClient()
 	Expect(k8sClient).NotTo(BeNil())
 
+	Expect((&controllers.OnboardingReconciler{
+		Client:        k8sClient,
+		Scheme:        scheme,
+		RequeuePeriod: requeuePeriod,
+		ScanPeriod:    scanPeriod,
+	}).SetupWithManager(k8sManager)).To(Succeed())
+	Expect((&controllers.MachineTypeReconciler{
+		Client: k8sClient,
+		Scheme: scheme,
+		Broker: nil, // todo: setup broker client
+	}).SetupWithManager(k8sManager)).To(Succeed())
+	Expect((&controllers.MachineReconciler{
+		Client:    k8sClient,
+		Scheme:    scheme,
+		Broker:    nil, // todo: setup broker client
+		Namespace: namespace,
+	}).SetupWithManager(k8sManager)).To(Succeed())
+
+	go func() {
+		defer GinkgoRecover()
+		Expect(k8sManager.Start(ctx)).To(Succeed())
+	}()
 })
 
 var _ = AfterSuite(func() {
+	cancel()
 	By("tearing down the test environment")
-	err := testEnv.Stop()
-	Expect(err).NotTo(HaveOccurred())
+	Expect(testEnv.Stop()).To(Succeed())
 })

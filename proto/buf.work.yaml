@@ -1,0 +1,7 @@
+version: v1
+directories:
+  - commonapi
+  - machineapi
+  - machinetypeapi
+  - storageapi
+

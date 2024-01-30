@@ -45,6 +45,9 @@ linters-settings:
       - name: exported
       - name: if-return
         disabled: true
+  lll:
+    line-length: 120
+    tab-width: 4
 
 issues:
   exclude-rules:
@@ -55,6 +58,7 @@ issues:
       linters:
         - dupl
         - funlen
+        - lll
     - path: "internal/controller"
       linters:
         - dupl
