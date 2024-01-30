@@ -13,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
 
+	"github.com/ironcore-dev/lifecycle-manager/clientgo/applyconfiguration/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/lifecycle"
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
@@ -28,9 +29,12 @@ type GrpcService struct {
 	namespace string
 }
 
-func NewGrpcService(cfg *rest.Config) *GrpcService {
+func NewGrpcService(cfg *rest.Config, namespace string) *GrpcService {
 	cl := lifecycle.NewForConfigOrDie(cfg)
-	return &GrpcService{cl: cl}
+	return &GrpcService{
+		cl:        cl,
+		namespace: namespace,
+	}
 }
 
 func (s *GrpcService) ListMachines(
@@ -54,7 +58,7 @@ func (s *GrpcService) ListMachines(
 	resp := &machinev1alpha1.ListMachinesResponse{Machines: make([]*machinev1alpha1.Machine, len(machines.Items))}
 	for i, item := range machines.Items {
 		m := item.DeepCopy()
-		resp.Machines[i] = apiutil.MachineTo(m)
+		resp.Machines[i] = apiutil.MachineToGrpcAPI(m)
 	}
 	return resp, nil
 }
@@ -102,10 +106,25 @@ func (s *GrpcService) UpdateMachineStatus(
 	ctx context.Context,
 	req *machinev1alpha1.UpdateMachineStatusRequest,
 ) (*machinev1alpha1.UpdateMachineStatusResponse, error) {
-	// TODO implement me
-	// invoke install with provided params
-	err := status.Error(codes.Unimplemented, "UpdateMachine() is not implemented yet")
-	return nil, err
+	log := logr.FromContextOrDiscard(ctx).WithValues("name", req.Name, "namespace", req.Namespace)
+	machine, err := s.cl.LifecycleV1alpha1().Machines(s.namespace).Get(ctx, req.Name, metav1.GetOptions{})
+	if err != nil {
+		log.Error(err, "failed to get machine")
+		return nil, status.Errorf(codes.Internal, "%s", err.Error())
+	}
+	machineApply := v1alpha1.Machine(machine.Name, machine.Namespace).
+		WithStatus(apiutil.MachineStatusToApplyConfiguration(req.Status))
+	_, err = s.cl.LifecycleV1alpha1().Machines(s.namespace).ApplyStatus(ctx, machineApply, metav1.ApplyOptions{
+		FieldManager: "lifecycle.ironcore.dev/lifecycle-manager",
+		Force:        true,
+	})
+	if err != nil {
+		log.Error(err, "failed to update machine status")
+		return nil, status.Errorf(codes.Internal, "%s", err.Error())
+	}
+	return &machinev1alpha1.UpdateMachineStatusResponse{
+		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
+	}, nil
 }
 
 func (s *GrpcService) AddPackageVersion(

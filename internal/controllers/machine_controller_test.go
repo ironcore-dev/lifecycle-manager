@@ -124,7 +124,7 @@ var _ = Describe("Machine controller", func() {
 				machineType := testutil.NewMachineTypeObject("sample", "default",
 					testutil.MachineTypeWithGroup(lifecyclev1alpha1.MachineGroup{
 						MachineSelector: metav1.LabelSelector{MatchLabels: map[string]string{"env": "test"}},
-						Packages:        apiutil.PackageVersionsFrom(expectedPackages)}))
+						Packages:        apiutil.PackageVersionsToKubeAPI(expectedPackages)}))
 
 				machineKey := types.NamespacedName{Namespace: "default", Name: "sample"}
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
@@ -147,7 +147,7 @@ var _ = Describe("Machine controller", func() {
 				reconciledMachine := &lifecyclev1alpha1.Machine{}
 				err = machineRec.Get(context.Background(), machineKey, reconciledMachine)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(reconciledMachine.Status.InstalledPackages).To(Equal(apiutil.PackageVersionsFrom(expectedPackages)))
+				Expect(reconciledMachine.Status.InstalledPackages).To(Equal(apiutil.PackageVersionsToKubeAPI(expectedPackages)))
 			})
 		})
 

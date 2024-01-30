@@ -106,7 +106,7 @@ func (r *MachineReconciler) reconcileScan(ctx context.Context, obj *lifecyclev1a
 		obj.Status.Message = StatusMessageScanRequestFailed
 		return ctrl.Result{}, nil
 	}
-	obj.Status = apiutil.MachineStatusFrom(scanResponse.Status)
+	obj.Status = apiutil.MachineStatusToKubeAPI(scanResponse.Status)
 	return r.reconcileInstall(ctx, obj)
 }
 
@@ -123,7 +123,7 @@ func (r *MachineReconciler) reconcileInstall(ctx context.Context, obj *lifecycle
 	installResponse, err := r.Broker.Install(ctx, &machinev1alpha1.InstallRequest{
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
-		Packages:  apiutil.PackageVersionsTo(packagesToInstall),
+		Packages:  apiutil.PackageVersionsToGrpcAPI(packagesToInstall),
 	})
 	if err != nil {
 		log.Error(err, "failed to send install request")

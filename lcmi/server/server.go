@@ -29,16 +29,17 @@ type LifecycleGRPCServer struct {
 }
 
 type Options struct {
-	Cfg  *rest.Config
-	Log  logr.Logger
-	Port int
+	Cfg       *rest.Config
+	Log       logr.Logger
+	Port      int
+	Namespace string
 }
 
 func NewLifecycleGRPCServer(opts Options) *LifecycleGRPCServer {
 	return &LifecycleGRPCServer{
 		log:                    opts.Log,
 		port:                   opts.Port,
-		machineGrpcService:     machine.NewGrpcService(opts.Cfg),
+		machineGrpcService:     machine.NewGrpcService(opts.Cfg, opts.Namespace),
 		machinetypeGrpcService: machinetype.NewGrpcService(),
 		storageGrpcService:     storage.NewGrpcService(),
 	}
