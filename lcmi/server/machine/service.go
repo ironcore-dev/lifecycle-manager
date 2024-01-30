@@ -5,7 +5,6 @@ package machine
 
 import (
 	"context"
-	"time"
 
 	"github.com/go-logr/logr"
 	"google.golang.org/grpc/codes"
@@ -14,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
 
-	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/lifecycle"
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
@@ -23,11 +21,11 @@ import (
 
 type GrpcService struct {
 	machinev1alpha1.UnimplementedMachineServiceServer
-	cl         *lifecycle.Clientset
-	cache      map[string]lifecyclev1alpha1.Machine
-	horizon    time.Duration
-	scanPeriod time.Duration
-	namespace  string
+	cl *lifecycle.Clientset
+	// todo: cache      map[string]lifecyclev1alpha1.Machine
+	// todo: horizon    time.Duration
+	// todo: scanPeriod time.Duration
+	namespace string
 }
 
 func NewGrpcService(cfg *rest.Config) *GrpcService {

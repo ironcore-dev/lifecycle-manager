@@ -35,14 +35,14 @@ import (
 var (
 	lifecycleCRDPath string
 	oobCRDPath       string
-	scheme           *runtime.Scheme
-	cfg              *rest.Config
-	k8sClient        client.Client
-	k8sManager       manager.Manager
-	testEnv          *envtest.Environment
-	ctx              context.Context
-	cancel           context.CancelFunc
-	err              error
+	// todo: scheme *runtime.Scheme
+	cfg        *rest.Config
+	k8sClient  client.Client
+	k8sManager manager.Manager
+	testEnv    *envtest.Environment
+	ctx        context.Context
+	cancel     context.CancelFunc
+	err        error
 )
 
 var scanPeriod = metav1.Duration{Duration: time.Second}

@@ -16,7 +16,7 @@ import (
 type GrpcService struct {
 	machinetypev1alpha1.UnimplementedMachineTypeServiceServer
 	client.Client
-	cache map[string]string
+	// todo: cache map[string]string
 }
 
 func NewGrpcService() *GrpcService {
