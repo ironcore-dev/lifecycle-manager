@@ -22,7 +22,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/internal/controller"
+	"github.com/ironcore-dev/lifecycle-manager/internal/controllers"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -67,7 +67,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controller.MachineReconciler{
+	if err = (&controllers.MachineReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 		Log:    mgr.GetLogger().WithName("lifecycle-machine-controller"),
@@ -75,7 +75,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Machine")
 		os.Exit(1)
 	}
-	if err = (&controller.MachineTypeReconciler{
+	if err = (&controllers.MachineTypeReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 		Log:    mgr.GetLogger().WithName("lifecycle-machinetype-controller"),
@@ -83,7 +83,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "MachineType")
 		os.Exit(1)
 	}
-	if err = (&controller.OnboardingReconciler{
+	if err = (&controllers.OnboardingReconciler{
 		Client:        mgr.GetClient(),
 		Log:           mgr.GetLogger().WithName("lifecycle-onboarding-controller"),
 		Scheme:        mgr.GetScheme(),

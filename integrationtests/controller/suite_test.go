@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/internal/controller"
+	"github.com/ironcore-dev/lifecycle-manager/internal/controllers"
 	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
 	// +kubebuilder:scaffold:imports
 )
@@ -93,18 +93,18 @@ var _ = BeforeSuite(func() {
 	k8sClient = k8sManager.GetClient()
 	Expect(k8sClient).NotTo(BeNil())
 
-	Expect((&controller.OnboardingReconciler{
+	Expect((&controllers.OnboardingReconciler{
 		Client:        k8sClient,
 		Scheme:        scheme,
 		RequeuePeriod: requeuePeriod,
 		ScanPeriod:    scanPeriod,
 	}).SetupWithManager(k8sManager)).To(Succeed())
-	Expect((&controller.MachineTypeReconciler{
+	Expect((&controllers.MachineTypeReconciler{
 		Client: k8sClient,
 		Scheme: scheme,
 		Broker: nil, // todo: setup broker client
 	}).SetupWithManager(k8sManager)).To(Succeed())
-	Expect((&controller.MachineReconciler{
+	Expect((&controllers.MachineReconciler{
 		Client:    k8sClient,
 		Scheme:    scheme,
 		Broker:    nil, // todo: setup broker client
