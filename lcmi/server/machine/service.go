@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/jellydator/ttlcache/v3"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,19 +34,47 @@ const (
 
 type GrpcService struct {
 	machinev1alpha1.UnimplementedMachineServiceServer
-	cl *lifecycle.Clientset
-	// todo: implement cache with TTL equals to scan period
-	cache   map[string]*machinev1alpha1.MachineStatus
-	horizon time.Duration
-	// todo: scanPeriod time.Duration
-	namespace string
+	cl         *lifecycle.Clientset
+	cache      *ttlcache.Cache[string, *machinev1alpha1.MachineStatus]
+	horizon    time.Duration
+	scanPeriod time.Duration
+	namespace  string
 }
 
-func NewGrpcService(cfg *rest.Config, namespace string) *GrpcService {
+type ServiceOption func(service *GrpcService)
+
+func NewGrpcService(cfg *rest.Config, opts ...ServiceOption) *GrpcService {
 	cl := lifecycle.NewForConfigOrDie(cfg)
-	return &GrpcService{
-		cl:        cl,
-		namespace: namespace,
+	svc := &GrpcService{
+		cl: cl,
+	}
+	for _, opt := range opts {
+		opt(svc)
+	}
+	return svc
+}
+
+func WithNamespace(namespace string) ServiceOption {
+	return func(svc *GrpcService) {
+		svc.namespace = namespace
+	}
+}
+
+func WithHorizon(horizon time.Duration) ServiceOption {
+	return func(svc *GrpcService) {
+		svc.horizon = horizon
+	}
+}
+
+func WithScanPeriod(period time.Duration) ServiceOption {
+	return func(svc *GrpcService) {
+		svc.scanPeriod = period
+	}
+}
+
+func WithCache(cache *ttlcache.Cache[string, *machinev1alpha1.MachineStatus]) ServiceOption {
+	return func(svc *GrpcService) {
+		svc.cache = cache
 	}
 }
 
@@ -55,6 +84,9 @@ func (s *GrpcService) ListMachines(
 	req *machinev1alpha1.ListMachinesRequest,
 ) (*machinev1alpha1.ListMachinesResponse, error) {
 	log := logr.FromContextOrDiscard(ctx)
+	if req.Filter == nil {
+		return nil, status.Error(codes.InvalidArgument, "filter is mandatory field")
+	}
 	namespace := req.Filter.Namespace
 	if namespace == "" {
 		namespace = s.namespace
@@ -100,10 +132,15 @@ func (s *GrpcService) ScanMachine(
 	}
 
 	key := types.NamespacedName{Name: req.Name, Namespace: namespace}
-	entry, ok := s.cache[uuidutil.UUIDFromObjectKey(key)]
-
+	cacheItem := s.cache.Get(uuidutil.UUIDFromObjectKey(key))
+	if cacheItem == nil {
+		// todo: if scan job already scheduled, return, otherwise send to scheduler
+		log.V(1).Info("scan scheduled")
+		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
+	}
+	entry := cacheItem.Value()
 	switch {
-	case !ok, !lastScanTimeInHorizon(s.horizon, entry.LastScanTime), !installedPackagesEqual(machine.Status, entry):
+	case !lastScanTimeInHorizon(s.horizon, entry.LastScanTime), !installedPackagesEqual(machine.Status, entry):
 		// todo: if scan job already scheduled, return, otherwise send to scheduler
 		log.V(1).Info("scan scheduled")
 		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
@@ -161,7 +198,7 @@ func (s *GrpcService) UpdateMachineStatus(
 		return nil, status.Errorf(codes.Internal, "%s", err.Error())
 	}
 	key := types.NamespacedName{Name: req.Name, Namespace: namespace}
-	s.cache[uuidutil.UUIDFromObjectKey(key)] = req.Status
+	s.cache.Set(uuidutil.UUIDFromObjectKey(key), req.Status, ttlcache.DefaultTTL)
 	return &machinev1alpha1.UpdateMachineStatusResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 	}, nil
