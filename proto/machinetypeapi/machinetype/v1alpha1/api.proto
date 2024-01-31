@@ -41,7 +41,7 @@ message MachineType {
 
 message ListMachineTypesRequest {
   string namespace = 1;
-  common.v1alpha1.Filter filter = 2;
+  k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector label_selector = 2;
 }
 
 message ListMachineTypesResponse {

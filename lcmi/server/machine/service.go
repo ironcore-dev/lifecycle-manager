@@ -90,7 +90,7 @@ func (s *GrpcService) ListMachines(
 	}
 
 	opts := metav1.ListOptions{}
-	reqSelector := req.Filter.GetLabelSelector()
+	reqSelector := req.GetLabelSelector()
 	if reqSelector != nil {
 		opts.LabelSelector = labels.Set(reqSelector.MatchLabels).String()
 	}
