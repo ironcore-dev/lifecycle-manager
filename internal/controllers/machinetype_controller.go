@@ -100,7 +100,7 @@ func (r *MachineTypeReconciler) reconcile(
 		obj.Status.Message = StatusMessageScanRequestFailed
 		return ctrl.Result{}, nil
 	}
-	obj.Status = apiutil.MachineTypeStatusFrom(resp.Status)
+	obj.Status = apiutil.MachineTypeStatusToKubeAPI(resp.Status)
 	return ctrl.Result{}, nil
 }
 

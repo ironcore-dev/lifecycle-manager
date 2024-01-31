@@ -6,7 +6,7 @@ package controllers
 import (
 	"time"
 
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
@@ -47,7 +47,7 @@ func (r RequestResult) IsFailure() bool {
 
 var patchOpts = &client.SubResourcePatchOptions{
 	PatchOptions: client.PatchOptions{
-		Force:        pointer.Bool(true),
+		Force:        ptr.To(true),
 		FieldManager: "lifecycle-manager",
 	},
 }

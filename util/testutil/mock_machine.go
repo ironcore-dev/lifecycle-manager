@@ -38,6 +38,12 @@ func MachineWithMachineTypeRef(name string) MachineOption {
 	}
 }
 
+func MachineStatusWithInstalledPackages(pkg []lifecyclev1alpha1.PackageVersion) MachineOption {
+	return func(o *lifecyclev1alpha1.Machine) {
+		o.Status.InstalledPackages = pkg
+	}
+}
+
 func NewMachineObject(name, namespace string, opts ...MachineOption) *lifecyclev1alpha1.Machine {
 	o := &lifecyclev1alpha1.Machine{
 		TypeMeta: metav1.TypeMeta{
