@@ -31,7 +31,8 @@ message Machine {
 }
 
 message ListMachinesRequest {
-  common.v1alpha1.Filter filter = 1;
+  string namespace = 1;
+  common.v1alpha1.Filter filter = 2;
 }
 
 message ListMachinesResponse {

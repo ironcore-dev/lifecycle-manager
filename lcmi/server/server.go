@@ -6,15 +6,14 @@ package server
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"time"
 
-	"github.com/go-logr/logr"
+	protov "github.com/bufbuild/protovalidate-go"
+	"github.com/jellydator/ttlcache/v3"
 	"google.golang.org/grpc"
 	"k8s.io/client-go/rest"
-	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/jellydator/ttlcache/v3"
 
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
@@ -27,7 +26,7 @@ import (
 const cacheCapacity = 1024
 
 type LifecycleGRPCServer struct {
-	log                    logr.Logger
+	log                    *slog.Logger
 	machineGrpcService     *machine.GrpcService
 	machinetypeGrpcService *machinetype.GrpcService
 	storageGrpcService     *storage.GrpcService
@@ -38,7 +37,7 @@ type LifecycleGRPCServer struct {
 
 type Options struct {
 	Cfg        *rest.Config
-	Log        logr.Logger
+	Log        *slog.Logger
 	Port       int
 	Namespace  string
 	ScanPeriod time.Duration
@@ -76,13 +75,26 @@ func NewLifecycleGRPCServer(opts Options) *LifecycleGRPCServer {
 func (s *LifecycleGRPCServer) Start(ctx context.Context) error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", s.port))
 	if err != nil {
-		s.log.Error(err, "failed to bind port for listener", "port", s.port)
+		s.log.Error("failed to bind port for listener", "error", err.Error())
 		return err
 	}
 
-	// todo: run scheduler for scan/install jobs
+	validator, err := protov.New(protov.WithFailFast(true))
+	if err != nil {
+		s.log.Error("failed to create validator", "error", err.Error())
+		return err
+	}
 
-	srv := grpc.NewServer(grpc.UnaryInterceptor(s.addLogger))
+	srv := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			UnaryServerLoggerInterceptor(s.log),
+			UnaryServerValidatorInterceptor(validator),
+		),
+		grpc.ChainStreamInterceptor(
+			StreamServerLoggingInterceptor(s.log),
+			StreamServerValidatorInterceptor(validator),
+		),
+	)
 	machinev1alpha1.RegisterMachineServiceServer(srv, s.machineGrpcService)
 	machinetypev1alpha1.RegisterMachineTypeServiceServer(srv, s.machinetypeGrpcService)
 	storagev1alpha1.RegisterFirmwareStorageServiceServer(srv, s.storageGrpcService)
@@ -91,35 +103,20 @@ func (s *LifecycleGRPCServer) Start(ctx context.Context) error {
 		defer func() {
 			s.machineCache.Stop()
 			s.machinetypeCache.Stop()
-			s.log.V(0).Info("stopping server", "kind", "lifecycle-grpc-server")
+			s.log.Debug("stopping server", "kind", "lifecycle-grpc-server")
 			srv.GracefulStop()
-			s.log.V(0).Info("stopped")
+			s.log.Info("server stopped")
 		}()
 		<-ctx.Done()
 	}()
 
+	// todo: run scheduler for scan/install jobs
 	go s.machineCache.Start()
 	go s.machinetypeCache.Start()
 
-	s.log.V(0).Info("starting server", "kind", "lifecycle-grpc-server", "addr", listener.Addr().String())
+	s.log.Debug("starting server", "kind", "lifecycle-grpc-server", "addr", listener.Addr().String())
 	if err = srv.Serve(listener); err != nil {
-		s.log.Error(err, "failed to serve")
+		s.log.Error("failed to serve", "error", err.Error())
 	}
 	return nil
-}
-
-func (s *LifecycleGRPCServer) addLogger(
-	ctx context.Context,
-	req interface{},
-	info *grpc.UnaryServerInfo,
-	handler grpc.UnaryHandler,
-) (interface{}, error) {
-	log := s.log.WithName(info.FullMethod)
-	ctx = ctrl.LoggerInto(ctx, log)
-	log.V(0).Info("request")
-	resp, err := handler(ctx, req)
-	if err != nil {
-		log.Error(err, "failed to handle request")
-	}
-	return resp, err
 }

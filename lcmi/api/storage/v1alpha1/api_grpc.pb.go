@@ -4,7 +4,7 @@
 // - protoc             (unknown)
 // source: storage/v1alpha1/api.proto
 
-package v1alpha1
+package commonv1alpha1
 
 import (
 	context "context"

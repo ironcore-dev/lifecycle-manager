@@ -84,16 +84,15 @@ func (s *GrpcService) ListMachines(
 	req *machinev1alpha1.ListMachinesRequest,
 ) (*machinev1alpha1.ListMachinesResponse, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	if req.Filter == nil {
-		return nil, status.Error(codes.InvalidArgument, "filter is mandatory field")
-	}
-	namespace := req.Filter.Namespace
+	namespace := req.GetNamespace()
 	if namespace == "" {
 		namespace = s.namespace
 	}
+
 	opts := metav1.ListOptions{}
-	if req.Filter.LabelSelector != nil {
-		opts.LabelSelector = labels.Set(req.Filter.LabelSelector.MatchLabels).String()
+	reqSelector := req.Filter.GetLabelSelector()
+	if reqSelector != nil {
+		opts.LabelSelector = labels.Set(reqSelector.MatchLabels).String()
 	}
 	machines, err := s.cl.LifecycleV1alpha1().Machines(namespace).List(ctx, opts)
 	if err != nil {

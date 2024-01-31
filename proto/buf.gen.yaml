@@ -1,6 +1,11 @@
 version: v1
 managed:
   enabled: true
+  go_package_prefix:
+    default: github.com/ironcore-dev/lifecycle-manager/lcmi/api
+    except:
+      - buf.build/bufbuild/protovalidate
+      - buf.build/k8s/api
 plugins:
   - plugin: buf.build/protocolbuffers/go:v1.32.0
     out: ../lcmi/api
