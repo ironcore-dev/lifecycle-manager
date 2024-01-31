@@ -1,0 +1,70 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+categories:
+  - title: '⚠️ Breaking'
+    labels:
+      - 'breaking'
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+      - 'enhancement'
+      - 'api-change'
+      - 'controllers'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'chore'
+      - 'dependencies'
+      - 'marketing'
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
+exclude-labels:
+  - 'skip-changelog'
+autolabeler:
+  - label: 'breaking'
+    title:
+      - '/BREAKING\/.+'
+  - label: 'api-change'
+    files:
+      - '/api/*'
+      - '*.proto'
+  - label: 'controllers'
+    files:
+      - '/controllers/*'
+  - label: 'documentation'
+    files:
+      - '*.md'
+    branch:
+      - '/docs{0,1}\/.+/'
+  - label: 'bug'
+    branch:
+      - '/fix\/.+/'
+      - '/bug\/.+/'
+      - '/bugfix\/.+/'
+  - label: 'feature'
+    branch:
+      - '/feature\/.+/'
+  - label: 'enhancement'
+    branch:
+      - '/enh\/.+/'
+  - label: 'chore'
+    branch:
+      - '/chore\/.+/'
+template: |
+  ## Changes
+  $CHANGES
