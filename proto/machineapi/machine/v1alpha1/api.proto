@@ -31,7 +31,8 @@ message Machine {
 }
 
 message ListMachinesRequest {
-  common.v1alpha1.Filter filter = 1;
+  string namespace = 1;
+  k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector label_selector = 2;
 }
 
 message ListMachinesResponse {

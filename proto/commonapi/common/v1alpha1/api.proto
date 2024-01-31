@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package common.v1alpha1;
 
-import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
+import "buf/validate/validate.proto";
 
 option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1";
 
@@ -19,13 +19,15 @@ enum ScanResult {
   SCAN_RESULT_FAILURE = 2;
 }
 
-message Filter {
-  string name = 1;
-  string namespace = 2;
-  k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector label_selector = 3;
-}
-
 message PackageVersion {
+  option (buf.validate.message).cel = {
+    id: "package_version.name",
+    expression: "!has(this.name) ? 'name is mandatory field' : ''"
+  };
+  option (buf.validate.message).cel = {
+    id: "package_version.version",
+    expression: "!has(this.version) ? 'version is mandatory field' : ''"
+  };
   string name = 1;
   string version = 2;
 }

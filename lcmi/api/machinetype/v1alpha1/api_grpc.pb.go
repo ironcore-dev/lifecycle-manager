@@ -4,7 +4,7 @@
 // - protoc             (unknown)
 // source: machinetype/v1alpha1/api.proto
 
-package v1alpha1
+package machinetypev1alpha1
 
 import (
 	context "context"
