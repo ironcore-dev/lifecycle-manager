@@ -52,7 +52,8 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "lifecycle-service",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return Run(context.TODO(), opts)
+			ctx := cmd.Context()
+			return Run(ctx, opts)
 		},
 	}
 
