@@ -107,7 +107,7 @@ func (s *LifecycleGRPCServer) Start(ctx context.Context) error {
 		defer func() {
 			s.machineCache.Stop()
 			s.machinetypeCache.Stop()
-			s.log.Debug("stopping server", "kind", "lifecycle-grpc-server")
+			s.log.Debug("stopping server", "kind", "lifecycle-service")
 			srv.GracefulStop()
 			s.log.Info("server stopped")
 		}()
@@ -118,7 +118,7 @@ func (s *LifecycleGRPCServer) Start(ctx context.Context) error {
 	go s.machineCache.Start()
 	go s.machinetypeCache.Start()
 
-	s.log.Debug("starting server", "kind", "lifecycle-grpc-server", "addr", listener.Addr().String())
+	s.log.Debug("starting server", "kind", "lifecycle-service", "addr", listener.Addr().String())
 	if err = srv.Serve(listener); err != nil {
 		s.log.Error("failed to serve", "error", err.Error())
 	}
