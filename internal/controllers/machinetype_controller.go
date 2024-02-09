@@ -17,7 +17,6 @@ import (
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 )
 
 // MachineTypeReconciler reconciles a MachineType object.
@@ -100,7 +99,6 @@ func (r *MachineTypeReconciler) reconcile(
 		obj.Status.Message = StatusMessageScanRequestFailed
 		return ctrl.Result{}, nil
 	}
-	obj.Status = apiutil.MachineTypeStatusToKubeAPI(resp.Status)
 	return ctrl.Result{}, nil
 }
 

@@ -62,7 +62,11 @@ func NewLifecycleGRPCServer(opts Options) *LifecycleGRPCServer {
 		machine.WithHorizon(opts.Horizon),
 		machine.WithScanPeriod(opts.ScanPeriod),
 		machine.WithCache(machineCache))
-	machinetypeGrpcService := machinetype.NewGrpcService()
+	machinetypeGrpcService := machinetype.NewGrpcService(opts.Cfg,
+		machinetype.WithNamespace(opts.Namespace),
+		machinetype.WithHorizon(opts.Horizon),
+		machinetype.WithScanPeriod(opts.ScanPeriod),
+		machinetype.WithCache(machinetypeCache))
 	storageGrpcService := storage.NewGrpcService()
 	srv.machineCache = machineCache
 	srv.machinetypeCache = machinetypeCache

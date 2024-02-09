@@ -55,7 +55,6 @@ message ScanRequest {
 
 message ScanResponse {
   common.v1alpha1.RequestResult result = 1;
-  MachineTypeStatus status = 2;
 }
 
 message UpdateMachineTypeStatusRequest {
