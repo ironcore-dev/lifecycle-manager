@@ -24,7 +24,6 @@ import (
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 )
 
 // MachineReconciler reconciles a Machine object.
@@ -122,7 +121,6 @@ func (r *MachineReconciler) reconcileInstall(ctx context.Context, obj *lifecycle
 	installResponse, err := r.Install(ctx, &machinev1alpha1.InstallRequest{
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
-		Packages:  apiutil.PackageVersionsToGrpcAPI(packagesToInstall),
 	})
 	if err != nil {
 		log.Error(err, "failed to send install request")

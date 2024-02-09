@@ -51,7 +51,6 @@ message ScanMachineResponse {
 message InstallRequest {
   string name = 1;
   string namespace = 2;
-  repeated common.v1alpha1.PackageVersion packages = 3;
 }
 
 message InstallResponse {

@@ -27,14 +27,28 @@ import (
 	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 )
 
+type Operation string
+
+type Scheduler interface {
+	ScanScheduled(key types.NamespacedName) bool
+	InstallScheduled(key types.NamespacedName) bool
+	ScheduleScan(key types.NamespacedName, spec lifecyclev1alpha1.MachineSpec, next time.Duration)
+	ScheduleInstall(key types.NamespacedName, spec lifecyclev1alpha1.MachineSpec)
+	DropJobFromCache(key types.NamespacedName)
+}
+
 const (
 	AddPackageFailureReason = "package already in the list"
 	SetPackageFailureReason = "package is not in the list"
+
+	Scan    Operation = "scan"
+	Install Operation = "install"
 )
 
 type GrpcService struct {
 	machinev1alpha1.UnimplementedMachineServiceServer
 	cl         *lifecycle.Clientset
+	scheduler  Scheduler
 	cache      *ttlcache.Cache[string, *machinev1alpha1.MachineStatus]
 	horizon    time.Duration
 	scanPeriod time.Duration
@@ -132,17 +146,15 @@ func (s *GrpcService) ScanMachine(
 
 	key := types.NamespacedName{Name: req.Name, Namespace: namespace}
 	cacheItem := s.cache.Get(uuidutil.UUIDFromObjectKey(key))
-	if cacheItem == nil {
-		// todo: if scan job already scheduled, return, otherwise send to scheduler
-		log.V(1).Info("scan scheduled")
-		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
-	}
-	entry := cacheItem.Value()
+
 	switch {
-	case !lastScanTimeInHorizon(s.horizon, entry.LastScanTime), !installedPackagesEqual(machine.Status, entry):
-		// todo: if scan job already scheduled, return, otherwise send to scheduler
+	case cacheItem == nil:
+		fallthrough
+	case !lastScanTimeInHorizon(s.horizon, cacheItem.Value().LastScanTime):
+		fallthrough
+	case !installedPackagesEqual(machine.Status, cacheItem.Value()):
 		log.V(1).Info("scan scheduled")
-		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
+		resp.Result = s.scheduleOperation(Scan, key, machine.Spec)
 	default:
 		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS
 	}
@@ -164,9 +176,15 @@ func (s *GrpcService) Install(
 	}
 	log := logr.FromContextOrDiscard(ctx).WithValues("name", req.Name, "namespace", namespace)
 
-	// todo: if install task already scheduled, return, otherwise send to scheduler
-	log.V(1).Info("packages installation scheduled")
+	machine, err := s.cl.LifecycleV1alpha1().Machines(namespace).Get(ctx, req.Name, metav1.GetOptions{})
+	if err != nil {
+		log.Error(err, "failed to get machine")
+		return nil, status.Errorf(codes.Internal, "%s", err.Error())
+	}
+	key := types.NamespacedName{Name: req.Name, Namespace: namespace}
+	s.scheduleOperation(Install, key, machine.Spec)
 	resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
+	log.V(1).Info("packages installation scheduled")
 	return resp, nil
 }
 
@@ -198,6 +216,7 @@ func (s *GrpcService) UpdateMachineStatus(
 	}
 	key := types.NamespacedName{Name: req.Name, Namespace: namespace}
 	s.cache.Set(uuidutil.UUIDFromObjectKey(key), req.Status, ttlcache.DefaultTTL)
+	s.scheduler.DropJobFromCache(key)
 	return &machinev1alpha1.UpdateMachineStatusResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 	}, nil
@@ -346,4 +365,22 @@ func removePackage(src []*commonv1alpha1.PackageVersion, index int) []*commonv1a
 	}
 	result = append(result, src[index+1:]...)
 	return result
+}
+
+func (s *GrpcService) scheduleOperation(
+	op Operation,
+	key types.NamespacedName,
+	spec lifecyclev1alpha1.MachineSpec,
+) commonv1alpha1.RequestResult {
+	switch op {
+	case Scan:
+		if !s.scheduler.ScanScheduled(key) {
+			s.scheduler.ScheduleScan(key, spec, s.scanPeriod)
+		}
+	case Install:
+		if !s.scheduler.InstallScheduled(key) {
+			s.scheduler.ScheduleInstall(key, spec)
+		}
+	}
+	return commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
 }
