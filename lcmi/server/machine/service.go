@@ -150,7 +150,7 @@ func (s *GrpcService) ScanMachine(
 	switch {
 	case cacheItem == nil:
 		fallthrough
-	case !lastScanTimeInHorizon(s.horizon, cacheItem.Value().LastScanTime):
+	case time.Since(cacheItem.Value().LastScanTime.Time) > s.horizon:
 		fallthrough
 	case !installedPackagesEqual(machine.Status, cacheItem.Value()):
 		log.V(1).Info("scan scheduled")
@@ -334,10 +334,6 @@ func (s *GrpcService) RemovePackageVersion(
 		Reason: "",
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 	}, nil
-}
-
-func lastScanTimeInHorizon(horizon time.Duration, timestamp *metav1.Time) bool {
-	return time.Since(timestamp.Time) < horizon
 }
 
 func installedPackagesEqual(

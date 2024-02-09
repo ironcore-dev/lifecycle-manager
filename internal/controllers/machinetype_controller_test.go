@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
 	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 
@@ -114,7 +113,6 @@ var _ = Describe("MachineType controller", func() {
 			reconciledMachineType := &lifecyclev1alpha1.MachineType{}
 			err = machinetypeRec.Get(context.Background(), machinetypeKey, reconciledMachineType)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(reconciledMachineType.Status).To(Equal(apiutil.MachineTypeStatusToKubeAPI(entry)))
 		})
 	})
 })

@@ -102,6 +102,28 @@ func MachineTypeStatusToKubeAPI(src *machinetypev1alpha1.MachineTypeStatus) life
 	return status
 }
 
+func MachineTypeStatusToApplyConfiguration(
+	src *machinetypev1alpha1.MachineTypeStatus,
+) *lifecycleapplyv1alpha1.MachineTypeStatusApplyConfiguration {
+	return lifecycleapplyv1alpha1.MachineTypeStatus().
+		WithMessage(src.Message).
+		WithAvailablePackages(AvailablePackagesToApplyConfiguration(src.AvailablePackages)...).
+		WithLastScanResult(lifecyclev1alpha1.ScanResult(src.LastScanResult)).
+		WithLastScanTime(*src.LastScanTime)
+}
+
+func AvailablePackagesToApplyConfiguration(
+	src []*machinetypev1alpha1.AvailablePackageVersions,
+) []*lifecycleapplyv1alpha1.AvailablePackageVersionsApplyConfiguration {
+	result := make([]*lifecycleapplyv1alpha1.AvailablePackageVersionsApplyConfiguration, len(src))
+	for i, item := range src {
+		result[i] = lifecycleapplyv1alpha1.AvailablePackageVersions().
+			WithName(item.Name).
+			WithVersions(item.Versions...)
+	}
+	return result
+}
+
 func AvailablePackageVersionsToKubeAPI(
 	src []*machinetypev1alpha1.AvailablePackageVersions,
 ) []lifecyclev1alpha1.AvailablePackageVersions {
