@@ -147,7 +147,7 @@ $(GEN_CRD_API_REFERENCE_DOCS): $(LOCAL_BIN)
 
 .PHONY: models-schema
 models-schema: $(MODELS_SCHEMA)
-$(MODELS_SCHEMA): $(LOCALBIN)
+$(MODELS_SCHEMA): $(LOCAL_BIN)
 	@test -s $(MODELS_SCHEMA) || GOBIN=$(LOCAL_BIN) go install github.com/ironcore-dev/ironcore/models-schema@$(MODELS_SCHEMA_VERSION)
 
 .PHONY: openapi-gen
@@ -157,12 +157,12 @@ $(OPENAPI_GEN): $(LOCAL_BIN)
 
 .PHONY: applyconfiguration-gen
 applyconfiguration-gen: $(APPLYCONFIGURATION_GEN) ## Download applyconfiguration-gen locally if necessary.
-$(APPLYCONFIGURATION_GEN): $(LOCALBIN)
+$(APPLYCONFIGURATION_GEN): $(LOCAL_BIN)
 	@test -s $(APPLYCONFIGURATION_GEN) || GOBIN=$(LOCAL_BIN) go install k8s.io/code-generator/cmd/applyconfiguration-gen@$(CODE_GENERATOR_VERSION)
 
 .PHONY: client-gen
 client-gen: $(CLIENT_GEN) ## Download client-gen locally if necessary.
-$(CLIENT_GEN): $(LOCALBIN)
+$(CLIENT_GEN): $(LOCAL_BIN)
 	@test -s $(CLIENT_GEN) || GOBIN=$(LOCAL_BIN) go install k8s.io/code-generator/cmd/client-gen@$(CODE_GENERATOR_VERSION)
 
 .PHONY: kustomize
