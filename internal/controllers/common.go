@@ -58,12 +58,6 @@ var LCIMScanResultToString = map[commonv1alpha1.ScanResult]v1alpha1.ScanResult{
 	commonv1alpha1.ScanResult_SCAN_RESULT_FAILURE:     v1alpha1.ScanFailure,
 }
 
-// var LCIMInstallResultToString = map[commonv1alpha1.InstallResult]string{
-// 	commonv1alpha1.InstallResult_INSTALL_RESULT_UNSPECIFIED: "",
-// 	commonv1alpha1.InstallResult_INSTALL_RESULT_SCHEDULED:   InstallScheduled,
-// 	commonv1alpha1.InstallResult_INSTALL_RESULT_FAILURE:     InstallFailed,
-// }
-
 var LCIMRequestResultToString = map[commonv1alpha1.RequestResult]RequestResult{
 	commonv1alpha1.RequestResult_REQUEST_RESULT_UNSPECIFIED: "",
 	commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED:   RequestResultScheduled,

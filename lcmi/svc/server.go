@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"connectrpc.com/grpchealth"
+	"connectrpc.com/grpcreflect"
 	"connectrpc.com/validate"
 	machineapiv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1/machinev1alpha1connect"
@@ -75,6 +77,8 @@ func NewGrpcServer(opts Options) *GrpcServer {
 
 func (s *GrpcServer) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
+	reflector := grpcreflect.NewStaticReflector(machinesvcv1alpha1.Names...)
+	checker := grpchealth.NewStaticChecker(machinesvcv1alpha1.Names...)
 
 	validator, err := validate.NewInterceptor()
 	if err != nil {
@@ -83,13 +87,19 @@ func (s *GrpcServer) Start(ctx context.Context) error {
 	}
 	logger := interceptor.NewLoggerInterceptor(s.log)
 
-	machinePath, machineHandler := machinev1alpha1connect.NewMachineServiceHandler(s.machineService,
-		connect.WithInterceptors(logger, validator))
-	machineTypePath, machineTypeHandler := machinetypev1alpha1connect.NewMachineTypeServiceHandler(s.machineTypeService,
-		connect.WithInterceptors(logger, validator))
+	// enable services
+	mux.Handle(machinev1alpha1connect.NewMachineServiceHandler(s.machineService,
+		connect.WithInterceptors(logger, validator)))
+	mux.Handle(machinetypev1alpha1connect.NewMachineTypeServiceHandler(s.machineTypeService,
+		connect.WithInterceptors(logger, validator)))
 
-	mux.Handle(machinePath, machineHandler)
-	mux.Handle(machineTypePath, machineTypeHandler)
+	// enable health checks
+	mux.Handle(grpchealth.NewHandler(checker))
+
+	// enable reflection for gRPC server
+	mux.Handle(grpcreflect.NewHandlerV1(reflector))
+	mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
+
 	srv := &http2.Server{}
 
 	go func() {

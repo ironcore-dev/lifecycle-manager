@@ -7,12 +7,12 @@ toolchain go1.22.0
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.32.0-20240221180331-f05a6f4403ce.1
 	connectrpc.com/connect v1.15.0
+	connectrpc.com/grpchealth v1.3.0
+	connectrpc.com/grpcreflect v1.2.0
 	connectrpc.com/validate v0.1.0
-	github.com/bufbuild/protovalidate-go v0.6.0
 	github.com/go-logr/logr v1.4.1
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/uuid v1.6.0
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/ironcore-dev/oob v0.5.0
 	github.com/jellydator/ttlcache/v3 v3.2.0
 	github.com/onsi/ginkgo/v2 v2.15.0
@@ -37,6 +37,7 @@ require (
 require (
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bufbuild/protovalidate-go v0.6.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.11.3 // indirect

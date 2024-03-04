@@ -14,6 +14,12 @@ import (
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
 )
 
+var LCIMScanResultToString = map[commonv1alpha1.ScanResult]lifecyclev1alpha1.ScanResult{
+	commonv1alpha1.ScanResult_SCAN_RESULT_UNSPECIFIED: lifecyclev1alpha1.Unspecified,
+	commonv1alpha1.ScanResult_SCAN_RESULT_SUCCESS:     lifecyclev1alpha1.ScanSuccess,
+	commonv1alpha1.ScanResult_SCAN_RESULT_FAILURE:     lifecyclev1alpha1.ScanFailure,
+}
+
 func MachineToKubeAPI(src *machinev1alpha1.Machine) *lifecyclev1alpha1.Machine {
 	return nil
 }
@@ -34,12 +40,15 @@ func MachineStatusToKubeAPI(src *machinev1alpha1.MachineStatus) lifecyclev1alpha
 func MachineStatusToApplyConfiguration(
 	src *machinev1alpha1.MachineStatus,
 ) *lifecycleapplyv1alpha1.MachineStatusApplyConfiguration {
-	return lifecycleapplyv1alpha1.MachineStatus().
+	apply := lifecycleapplyv1alpha1.MachineStatus().
 		WithMessage(src.Message).
 		WithConditions(ConditionsToApplyConfiguration(src.Conditions)...).
 		WithInstalledPackages(PackageVersionsToApplyConfiguration(src.InstalledPackages)...).
-		WithLastScanResult(lifecyclev1alpha1.ScanResult(src.LastScanResult)).
-		WithLastScanTime(*src.LastScanTime)
+		WithLastScanResult(LCIMScanResultToString[src.LastScanResult])
+	if src.LastScanTime != nil {
+		apply = apply.WithLastScanTime(*src.LastScanTime)
+	}
+	return apply
 }
 
 func ConditionsToApplyConfiguration(

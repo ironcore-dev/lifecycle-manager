@@ -11,6 +11,9 @@ import (
 	"time"
 
 	protov "github.com/bufbuild/protovalidate-go"
+	"github.com/ironcore-dev/lifecycle-manager/_scrapeyard/server/machine"
+	"github.com/ironcore-dev/lifecycle-manager/_scrapeyard/server/machinetype"
+	"github.com/ironcore-dev/lifecycle-manager/_scrapeyard/server/storage"
 	"github.com/jellydator/ttlcache/v3"
 	"google.golang.org/grpc"
 	"k8s.io/client-go/rest"
@@ -18,9 +21,6 @@ import (
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
 	storagev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/storage/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/server/machine"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/server/machinetype"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/server/storage"
 )
 
 const cacheCapacity = 1024

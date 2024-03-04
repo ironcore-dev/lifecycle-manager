@@ -10,12 +10,13 @@ import (
 	"syscall"
 )
 
-var shutdownSignals = []os.Signal{os.Interrupt, syscall.SIGTERM}
-var onlyOneSignalHandler = make(chan struct{})
+var (
+	shutdownSignals      = []os.Signal{os.Interrupt, syscall.SIGTERM}
+	onlyOneSignalHandler = make(chan struct{})
+)
 
 // SetupSignalHandler registers for SIGTERM and SIGINT. A context is returned
-// which is canceled on one of these signals. If a second signal is caught, the program
-// is terminated with exit code 1.
+// which is canceled on one of these signals.
 func SetupSignalHandler() context.Context {
 	close(onlyOneSignalHandler) // panics when called twice
 

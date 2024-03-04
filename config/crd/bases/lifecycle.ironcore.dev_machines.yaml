@@ -179,8 +179,6 @@ spec:
               message:
                 description: Message contains verbose message explaining current state
                 type: string
-            required:
-            - conditions
             type: object
         type: object
     served: true

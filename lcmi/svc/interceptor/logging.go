@@ -12,17 +12,17 @@ import (
 	"github.com/go-logr/logr"
 )
 
-type LoggerInterceptor struct {
+type LogInterceptor struct {
 	logger *slog.Logger
 }
 
 func NewLoggerInterceptor(log *slog.Logger) connect.Interceptor {
-	return &LoggerInterceptor{logger: log}
+	return &LogInterceptor{logger: log}
 }
 
-func (l *LoggerInterceptor) WrapUnary(unaryFunc connect.UnaryFunc) connect.UnaryFunc {
+func (l *LogInterceptor) WrapUnary(unaryFunc connect.UnaryFunc) connect.UnaryFunc {
 	return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
-		l.logger.Info(req.Spec().Procedure, "request", req.Any())
+		l.logger.Info("request", "endpoint", req.Spec().Procedure, "request_body", req.Any())
 		reqCtx := logr.NewContextWithSlogLogger(ctx, l.logger)
 		response, err := unaryFunc(reqCtx, req)
 		if err != nil {
@@ -32,7 +32,7 @@ func (l *LoggerInterceptor) WrapUnary(unaryFunc connect.UnaryFunc) connect.Unary
 	}
 }
 
-func (l *LoggerInterceptor) WrapStreamingClient(clientFunc connect.StreamingClientFunc) connect.StreamingClientFunc {
+func (l *LogInterceptor) WrapStreamingClient(clientFunc connect.StreamingClientFunc) connect.StreamingClientFunc {
 	return func(ctx context.Context, spec connect.Spec) connect.StreamingClientConn {
 		return &streamingClientInterceptor{
 			StreamingClientConn: clientFunc(ctx, spec),
@@ -41,7 +41,7 @@ func (l *LoggerInterceptor) WrapStreamingClient(clientFunc connect.StreamingClie
 	}
 }
 
-func (l *LoggerInterceptor) WrapStreamingHandler(handlerFunc connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
+func (l *LogInterceptor) WrapStreamingHandler(handlerFunc connect.StreamingHandlerFunc) connect.StreamingHandlerFunc {
 	return func(ctx context.Context, conn connect.StreamingHandlerConn) error {
 		return handlerFunc(ctx, &streamingHandlerInterceptor{
 			StreamingHandlerConn: conn,

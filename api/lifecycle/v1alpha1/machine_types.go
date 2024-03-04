@@ -47,6 +47,7 @@ type MachineStatus struct {
 	Message string `json:"message"`
 
 	// Conditions reflects Machine conditions and their state
+	// +kubebuilder:validation:Optional
 	Conditions []metav1.Condition `json:"conditions"`
 }
 
