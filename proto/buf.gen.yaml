@@ -11,7 +11,7 @@ plugins:
     out: ../lcmi/api
     opt:
       - paths=source_relative
-  - plugin: buf.build/grpc/go:v1.3.0
+  - plugin: buf.build/connectrpc/go:v1.15.0
     out: ../lcmi/api
     opt:
       - paths=source_relative

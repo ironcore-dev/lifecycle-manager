@@ -6,7 +6,7 @@ package testutil
 import (
 	"time"
 
-	oobv1alpha1 "github.com/onmetal/oob-operator/api/v1alpha1"
+	oobv1alpha1 "github.com/ironcore-dev/oob/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

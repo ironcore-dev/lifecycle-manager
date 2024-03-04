@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/server"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/svc"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -30,6 +30,7 @@ type Options struct {
 	kubeconfig string
 	logLevel   string
 	logFormat  string
+	host       string
 	port       int
 	namespace  string
 	scanPeriod time.Duration
@@ -40,6 +41,7 @@ func (o *Options) addFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.kubeconfig, "kubeconfig", "", "path to kubeconfig file")
 	fs.StringVar(&o.logLevel, "log-level", "info", "logging level")
 	fs.StringVar(&o.logFormat, "log-format", "json", "logging format")
+	fs.StringVar(&o.host, "host", "localhost", "bind host")
 	fs.IntVar(&o.port, "port", 26500, "bind port")
 	fs.StringVar(&o.namespace, "namespace", "default", "default namespace name")
 	fs.DurationVar(&o.scanPeriod, "scan-period", time.Hour*24, "scan period")
@@ -70,15 +72,16 @@ func Run(ctx context.Context, opts Options) error {
 		return err
 	}
 
-	srvOpts := server.Options{
+	srvOpts := svc.Options{
 		Cfg:        cfg,
 		Log:        setupLogger(LogFormat(opts.logFormat), logLevelMapping[opts.logLevel]),
+		Host:       opts.host,
 		Port:       opts.port,
 		Namespace:  opts.namespace,
 		ScanPeriod: opts.scanPeriod,
 		Horizon:    opts.horizon,
 	}
-	srv := server.NewLifecycleGRPCServer(srvOpts)
+	srv := svc.NewGrpcServer(srvOpts)
 	return srv.Start(ctx)
 }
 
