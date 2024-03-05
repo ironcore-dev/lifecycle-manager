@@ -26,7 +26,7 @@ message AvailablePackageVersions {
 }
 
 message MachineTypeStatus {
-  k8s.io.apimachinery.pkg.apis.meta.v1.Time last_scan_time = 1;
+  k8s.io.apimachinery.pkg.apis.meta.v1.Timestamp last_scan_time = 1;
   common.v1alpha1.ScanResult last_scan_result = 2;
   repeated AvailablePackageVersions available_packages = 3;
   string message = 4;

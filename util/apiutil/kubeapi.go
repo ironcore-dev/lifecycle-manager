@@ -42,7 +42,7 @@ func MachineSpecToGrpcAPI(src lifecyclev1alpha1.MachineSpec) *machinev1alpha1.Ma
 
 func MachineStatusToGrpcAPI(src lifecyclev1alpha1.MachineStatus) *machinev1alpha1.MachineStatus {
 	s := &machinev1alpha1.MachineStatus{
-		LastScanTime:      &src.LastScanTime,
+		LastScanTime:      &metav1.Timestamp{Seconds: src.LastScanTime.Unix()},
 		LastScanResult:    ScanResultToInt[src.LastScanResult],
 		InstalledPackages: PackageVersionsToGrpcAPI(src.InstalledPackages),
 		Message:           src.Message,
@@ -63,14 +63,14 @@ func PackageVersionsToGrpcAPI(src []lifecyclev1alpha1.PackageVersion) []*commonv
 	return result
 }
 
-func ConditionsToGrpcAPI(src []metav1.Condition) []*metav1.Condition {
-	result := make([]*metav1.Condition, len(src))
+func ConditionsToGrpcAPI(src []metav1.Condition) []*commonv1alpha1.Condition {
+	result := make([]*commonv1alpha1.Condition, len(src))
 	for i, item := range src {
-		el := &metav1.Condition{
+		el := &commonv1alpha1.Condition{
 			Type:               item.Type,
-			Status:             item.Status,
+			Status:             string(item.Status),
 			ObservedGeneration: item.ObservedGeneration,
-			LastTransitionTime: item.LastTransitionTime,
+			LastTransitionTime: &metav1.Timestamp{Seconds: item.LastTransitionTime.Unix()},
 			Reason:             item.Reason,
 			Message:            item.Message,
 		}
@@ -114,7 +114,7 @@ func MachineGroupsToGrpcAPI(src []lifecyclev1alpha1.MachineGroup) []*machinetype
 
 func MachineTypeStatusToGrpcAPI(src lifecyclev1alpha1.MachineTypeStatus) *machinetypev1alpha1.MachineTypeStatus {
 	s := &machinetypev1alpha1.MachineTypeStatus{
-		LastScanTime:      src.LastScanTime.DeepCopy(),
+		LastScanTime:      &metav1.Timestamp{Seconds: src.LastScanTime.Unix()},
 		LastScanResult:    ScanResultToInt[src.LastScanResult],
 		AvailablePackages: AvailablePackagesToGrpcAPI(src.AvailablePackages),
 		Message:           src.Message,

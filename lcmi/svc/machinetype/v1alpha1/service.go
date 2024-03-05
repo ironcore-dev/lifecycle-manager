@@ -118,7 +118,8 @@ func (s *MachineTypeService) Scan(
 	switch {
 	case cacheItem == nil:
 		fallthrough
-	case time.Since(cacheItem.Value().LastScanTime.Time) > s.horizon:
+	case time.Since(time.Unix(
+		cacheItem.Value().LastScanTime.Seconds, int64(cacheItem.Value().LastScanTime.Nanos))) > s.horizon:
 		// todo: result should be returned by the call to scheduler, like
 		//  resp.Result = s.scheduleJob()
 		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED

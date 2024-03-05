@@ -3,6 +3,7 @@ syntax = "proto3";
 package common.v1alpha1;
 
 import "buf/validate/validate.proto";
+import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
 
 option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1";
 
@@ -30,4 +31,13 @@ message PackageVersion {
   };
   string name = 1;
   string version = 2;
+}
+
+message Condition {
+  string type = 1;
+  string status = 2;
+  string reason = 3;
+  string message = 4;
+  int64 observed_generation = 5;
+  k8s.io.apimachinery.pkg.apis.meta.v1.Timestamp last_transition_time = 6;
 }

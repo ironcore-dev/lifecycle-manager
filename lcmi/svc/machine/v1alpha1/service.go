@@ -107,7 +107,8 @@ func (s *MachineService) ScanMachine(
 	switch {
 	case cacheItem == nil:
 		fallthrough
-	case time.Since(cacheItem.Value().LastScanTime.Time) > s.horizon:
+	case time.Since(time.Unix(
+		cacheItem.Value().LastScanTime.Seconds, int64(cacheItem.Value().LastScanTime.Nanos))) > s.horizon:
 		fallthrough
 	case !installedPackagesEqual(machine.Status, cacheItem.Value()):
 		// todo: result should be returned by the call to scheduler, like

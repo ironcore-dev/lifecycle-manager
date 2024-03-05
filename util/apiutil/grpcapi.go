@@ -4,6 +4,8 @@
 package apiutil
 
 import (
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
@@ -29,7 +31,7 @@ func MachineStatusToKubeAPI(src *machinev1alpha1.MachineStatus) lifecyclev1alpha
 		return lifecyclev1alpha1.MachineStatus{}
 	}
 	status := lifecyclev1alpha1.MachineStatus{
-		LastScanTime:      *src.LastScanTime,
+		LastScanTime:      metav1.Time{Time: time.Unix(src.LastScanTime.Seconds, int64(src.LastScanTime.Nanos))},
 		LastScanResult:    lifecyclev1alpha1.ScanResult(src.LastScanResult),
 		InstalledPackages: PackageVersionsToKubeAPI(src.InstalledPackages),
 		Message:           src.Message,
@@ -46,13 +48,14 @@ func MachineStatusToApplyConfiguration(
 		WithInstalledPackages(PackageVersionsToApplyConfiguration(src.InstalledPackages)...).
 		WithLastScanResult(LCIMScanResultToString[src.LastScanResult])
 	if src.LastScanTime != nil {
-		apply = apply.WithLastScanTime(*src.LastScanTime)
+		apply = apply.WithLastScanTime(metav1.Time{
+			Time: time.Unix(src.LastScanTime.Seconds, int64(src.LastScanTime.Nanos))})
 	}
 	return apply
 }
 
 func ConditionsToApplyConfiguration(
-	src []*metav1.Condition,
+	src []*commonv1alpha1.Condition,
 ) []*v1.ConditionApplyConfiguration {
 	result := make([]*v1.ConditionApplyConfiguration, len(src))
 	for i, item := range src {
@@ -61,8 +64,9 @@ func ConditionsToApplyConfiguration(
 			WithReason(item.Reason).
 			WithType(item.Type).
 			WithObservedGeneration(item.ObservedGeneration).
-			WithLastTransitionTime(item.LastTransitionTime).
-			WithStatus(item.Status)
+			WithLastTransitionTime(metav1.Time{
+				Time: time.Unix(item.LastTransitionTime.Seconds, int64(item.LastTransitionTime.Nanos))}).
+			WithStatus(metav1.ConditionStatus(item.Status))
 	}
 	return result
 }
@@ -103,7 +107,7 @@ func MachineTypeStatusToKubeAPI(src *machinetypev1alpha1.MachineTypeStatus) life
 		return lifecyclev1alpha1.MachineTypeStatus{}
 	}
 	status := lifecyclev1alpha1.MachineTypeStatus{
-		LastScanTime:      *src.LastScanTime,
+		LastScanTime:      metav1.Time{Time: time.Unix(src.LastScanTime.Seconds, int64(src.LastScanTime.Nanos))},
 		LastScanResult:    lifecyclev1alpha1.ScanResult(src.LastScanResult),
 		AvailablePackages: AvailablePackageVersionsToKubeAPI(src.AvailablePackages),
 		Message:           src.Message,
@@ -114,11 +118,15 @@ func MachineTypeStatusToKubeAPI(src *machinetypev1alpha1.MachineTypeStatus) life
 func MachineTypeStatusToApplyConfiguration(
 	src *machinetypev1alpha1.MachineTypeStatus,
 ) *lifecycleapplyv1alpha1.MachineTypeStatusApplyConfiguration {
-	return lifecycleapplyv1alpha1.MachineTypeStatus().
+	apply := lifecycleapplyv1alpha1.MachineTypeStatus().
 		WithMessage(src.Message).
 		WithAvailablePackages(AvailablePackagesToApplyConfiguration(src.AvailablePackages)...).
-		WithLastScanResult(lifecyclev1alpha1.ScanResult(src.LastScanResult)).
-		WithLastScanTime(*src.LastScanTime)
+		WithLastScanResult(lifecyclev1alpha1.ScanResult(src.LastScanResult))
+	if src.LastScanTime != nil {
+		apply = apply.WithLastScanTime(metav1.Time{
+			Time: time.Unix(src.LastScanTime.Seconds, int64(src.LastScanTime.Nanos))})
+	}
+	return apply
 }
 
 func AvailablePackagesToApplyConfiguration(
