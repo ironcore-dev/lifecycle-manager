@@ -15,6 +15,7 @@ import (
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/lifecycle"
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1/machinev1alpha1connect"
 	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 	"github.com/jellydator/ttlcache/v3"
@@ -31,7 +32,7 @@ const (
 )
 
 type MachineService struct {
-	machinev1alpha1.UnimplementedMachineServiceServer
+	machinev1alpha1connect.UnimplementedMachineServiceHandler
 	c         *lifecycle.Clientset
 	cache     *ttlcache.Cache[string, *machinev1alpha1.MachineStatus]
 	horizon   time.Duration
@@ -78,7 +79,7 @@ func WithCache(cache *ttlcache.Cache[string, *machinev1alpha1.MachineStatus]) Op
 // state is in service's cache. If cache entry is found, it checks whether last
 // scan timestamp is within defined horizon. If not, scan job will be spawned.
 // Otherwise, cached state will be returned in response.
-func (s MachineService) ScanMachine(
+func (s *MachineService) ScanMachine(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.ScanMachineRequest],
 ) (*connect.Response[machinev1alpha1.ScanMachineResponse], error) {
@@ -119,7 +120,7 @@ func (s MachineService) ScanMachine(
 }
 
 // Install schedules package installation for target Machine.
-func (s MachineService) Install(
+func (s *MachineService) Install(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.InstallRequest],
 ) (*connect.Response[machinev1alpha1.InstallResponse], error) {
@@ -149,7 +150,7 @@ func (s MachineService) Install(
 // UpdateMachineStatus request initialized by the spawned Job and should update
 // the status of processed Machine. If request succeed, Job exits with exit code 0,
 // otherwise, Job will stop with non-zero exit code.
-func (s MachineService) UpdateMachineStatus(
+func (s *MachineService) UpdateMachineStatus(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.UpdateMachineStatusRequest],
 ) (*connect.Response[machinev1alpha1.UpdateMachineStatusResponse], error) {
@@ -183,7 +184,7 @@ func (s MachineService) UpdateMachineStatus(
 }
 
 // ListMachines returns the list of Machine objects.
-func (s MachineService) ListMachines(
+func (s *MachineService) ListMachines(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.ListMachinesRequest],
 ) (*connect.Response[machinev1alpha1.ListMachinesResponse], error) {
@@ -210,7 +211,7 @@ func (s MachineService) ListMachines(
 	return connect.NewResponse(resp), nil
 }
 
-func (s MachineService) AddPackageVersion(
+func (s *MachineService) AddPackageVersion(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.AddPackageVersionRequest],
 ) (*connect.Response[machinev1alpha1.AddPackageVersionResponse], error) {
@@ -250,7 +251,7 @@ func (s MachineService) AddPackageVersion(
 	}), nil
 }
 
-func (s MachineService) SetPackageVersion(
+func (s *MachineService) SetPackageVersion(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.SetPackageVersionRequest],
 ) (*connect.Response[machinev1alpha1.SetPackageVersionResponse], error) {
@@ -290,7 +291,7 @@ func (s MachineService) SetPackageVersion(
 	}), nil
 }
 
-func (s MachineService) RemovePackageVersion(
+func (s *MachineService) RemovePackageVersion(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.RemovePackageVersionRequest],
 ) (*connect.Response[machinev1alpha1.RemovePackageVersionResponse], error) {

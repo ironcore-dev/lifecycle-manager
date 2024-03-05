@@ -4,6 +4,8 @@
 package apiutil
 
 import (
+	"slices"
+
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
@@ -78,9 +80,58 @@ func ConditionsToGrpcAPI(src []metav1.Condition) []*metav1.Condition {
 }
 
 func MachineTypeToGrpcAPI(src *lifecyclev1alpha1.MachineType) *machinetypev1alpha1.MachineType {
-	return nil
+	m := &machinetypev1alpha1.MachineType{
+		TypeMeta:   &src.TypeMeta,
+		ObjectMeta: &src.ObjectMeta,
+		Spec:       MachineTypeSpecToGrpcAPI(src.Spec),
+		Status:     MachineTypeStatusToGrpcAPI(src.Status),
+	}
+	return m
+}
+
+func MachineTypeSpecToGrpcAPI(src lifecyclev1alpha1.MachineTypeSpec) *machinetypev1alpha1.MachineTypeSpec {
+	s := &machinetypev1alpha1.MachineTypeSpec{
+		Manufacturer:  src.Manufacturer,
+		Type:          src.Type,
+		ScanPeriod:    &src.ScanPeriod,
+		MachineGroups: MachineGroupsToGrpcAPI(src.MachineGroups),
+	}
+	return s
+}
+
+func MachineGroupsToGrpcAPI(src []lifecyclev1alpha1.MachineGroup) []*machinetypev1alpha1.MachineGroup {
+	result := make([]*machinetypev1alpha1.MachineGroup, len(src))
+	for i, item := range src {
+		el := &machinetypev1alpha1.MachineGroup{
+			Name:            item.Name,
+			MachineSelector: item.MachineSelector.DeepCopy(),
+			Packages:        PackageVersionsToGrpcAPI(item.Packages),
+		}
+		result[i] = el
+	}
+	return result
 }
 
 func MachineTypeStatusToGrpcAPI(src lifecyclev1alpha1.MachineTypeStatus) *machinetypev1alpha1.MachineTypeStatus {
-	return nil
+	s := &machinetypev1alpha1.MachineTypeStatus{
+		LastScanTime:      src.LastScanTime.DeepCopy(),
+		LastScanResult:    ScanResultToInt[src.LastScanResult],
+		AvailablePackages: AvailablePackagesToGrpcAPI(src.AvailablePackages),
+		Message:           src.Message,
+	}
+	return s
+}
+
+func AvailablePackagesToGrpcAPI(
+	src []lifecyclev1alpha1.AvailablePackageVersions,
+) []*machinetypev1alpha1.AvailablePackageVersions {
+	result := make([]*machinetypev1alpha1.AvailablePackageVersions, len(src))
+	for i, item := range src {
+		el := &machinetypev1alpha1.AvailablePackageVersions{
+			Name:     item.Name,
+			Versions: slices.Clone(item.Versions),
+		}
+		result[i] = el
+	}
+	return result
 }

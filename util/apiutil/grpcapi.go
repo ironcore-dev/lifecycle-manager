@@ -149,3 +149,37 @@ func AvailablePackageVersionsToKubeAPI(
 	}
 	return result
 }
+
+func MachineGroupsToApplyConfiguration(
+	src []*machinetypev1alpha1.MachineGroup,
+) []*lifecycleapplyv1alpha1.MachineGroupApplyConfiguration {
+	result := make([]*lifecycleapplyv1alpha1.MachineGroupApplyConfiguration, len(src))
+	for i, item := range src {
+		result[i] = lifecycleapplyv1alpha1.MachineGroup().
+			WithName(item.Name).
+			WithPackages(PackageVersionsToApplyConfiguration(item.Packages)...).
+			WithMachineSelector(LabelSelectorToApplyConfiguration(item.MachineSelector))
+	}
+	return result
+}
+
+func LabelSelectorToApplyConfiguration(
+	src *metav1.LabelSelector,
+) *v1.LabelSelectorApplyConfiguration {
+	return v1.LabelSelector().
+		WithMatchLabels(src.MatchLabels).
+		WithMatchExpressions(MatchExpressionToApplyConfiguration(src.MatchExpressions)...)
+}
+
+func MatchExpressionToApplyConfiguration(
+	src []metav1.LabelSelectorRequirement,
+) []*v1.LabelSelectorRequirementApplyConfiguration {
+	result := make([]*v1.LabelSelectorRequirementApplyConfiguration, len(src))
+	for i, item := range src {
+		result[i] = v1.LabelSelectorRequirement().
+			WithKey(item.Key).
+			WithOperator(item.Operator).
+			WithValues(item.Values...)
+	}
+	return result
+}

@@ -69,16 +69,22 @@ func NewGrpcServer(opts Options) *GrpcServer {
 		machinesvcv1alpha1.WithHorizon(opts.Horizon),
 		machinesvcv1alpha1.WithScanPeriod(opts.ScanPeriod),
 		machinesvcv1alpha1.WithCache(machineCache))
+	machinetypeService := machinetypesvcv1alpha1.NewService(opts.Cfg,
+		machinetypesvcv1alpha1.WithNamespace(opts.Namespace),
+		machinetypesvcv1alpha1.WithHorizon(opts.Horizon),
+		machinetypesvcv1alpha1.WithScanPeriod(opts.ScanPeriod),
+		machinetypesvcv1alpha1.WithCache(machinetypeCache))
 	srv.machineCache = machineCache
 	srv.machinetypeCache = machinetypeCache
 	srv.machineService = machineService
+	srv.machineTypeService = machinetypeService
 	return srv
 }
 
 func (s *GrpcServer) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
-	reflector := grpcreflect.NewStaticReflector(machinesvcv1alpha1.Names...)
-	checker := grpchealth.NewStaticChecker(machinesvcv1alpha1.Names...)
+	reflector := grpcreflect.NewStaticReflector(Names...)
+	checker := grpchealth.NewStaticChecker(Names...)
 
 	validator, err := validate.NewInterceptor()
 	if err != nil {
