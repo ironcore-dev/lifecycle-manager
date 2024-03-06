@@ -1,5 +1,4 @@
 IMG ?= controller:latest
-DOCKERFILE ?= .
 
 .PHONY: fmt
 fmt: goimports
@@ -56,12 +55,12 @@ docs: gen-crd-api-reference-docs ## Run go generate to generate API reference do
 
 ### BUILD IMAGES ###
 .PHONY: docker-build-controller-manager
-docker-build: ## Build docker image with the manager.
-	docker build . -t ${IMG}
+docker-build-controller-manager: ## Build docker image with the manager.
+	docker build . -t ${IMG} -f .docker/lifecycle-controller-manager/Dockerfile
 
 .PHONY: docker-build-lifecycle-service
-docker-build-lcmi: ## Build docker image with the manager.
-	docker build . -t ${IMG} -f ${DOCKERFILE}
+docker-build-lifecycle-service: ## Build docker image with the manager.
+	docker build . -t ${IMG} -f .docker/lifecycle-service/Dockerfile
 
 ### INSTALL AND DEPLOY ###
 .PHONY: install
@@ -73,21 +72,21 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
 .PHONY: deploy-controller-manager
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy-controller-manager: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: undeploy-controller-manager
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
+undeploy-controller-manager: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
 .PHONY: deploy-lifecycle-service
-deploy-lcmi: kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy-lifecycle-service: kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/lcmi/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/lcmi/default | kubectl apply -f -
 
 .PHONY: undeploy-lifecycle-service
-undeploy-lcmi: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
+undeploy-lifecycle-service: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/lcmi/default | kubectl delete -f -
 
 ### AUXILIARY ###
