@@ -93,7 +93,10 @@ func (r *MachineReconciler) reconcileRequired(
 	return ctrl.Result{}, nil
 }
 
-func (r *MachineReconciler) reconcileScan(ctx context.Context, obj *lifecyclev1alpha1.Machine) (ctrl.Result, error) {
+func (r *MachineReconciler) reconcileScan(
+	ctx context.Context,
+	obj *lifecyclev1alpha1.Machine,
+) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	resp, err := r.ScanMachine(ctx, connect.NewRequest(&machinev1alpha1.ScanMachineRequest{
 		Name:      obj.Name,
@@ -115,7 +118,10 @@ func (r *MachineReconciler) reconcileScan(ctx context.Context, obj *lifecyclev1a
 	return r.reconcileInstall(ctx, obj)
 }
 
-func (r *MachineReconciler) reconcileInstall(ctx context.Context, obj *lifecyclev1alpha1.Machine) (ctrl.Result, error) {
+func (r *MachineReconciler) reconcileInstall(
+	ctx context.Context,
+	obj *lifecyclev1alpha1.Machine,
+) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	packagesToInstall, err := r.packagesToInstall(ctx, obj)
 	if err != nil {

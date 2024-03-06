@@ -6,9 +6,6 @@ package controllers
 import (
 	"time"
 
-	"k8s.io/utils/ptr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 )
@@ -43,13 +40,6 @@ func (r RequestResult) IsSuccess() bool {
 
 func (r RequestResult) IsFailure() bool {
 	return r == RequestResultFailure
-}
-
-var patchOpts = &client.SubResourcePatchOptions{
-	PatchOptions: client.PatchOptions{
-		Force:        ptr.To(true),
-		FieldManager: "lifecycle-manager",
-	},
 }
 
 var LCIMScanResultToString = map[commonv1alpha1.ScanResult]v1alpha1.ScanResult{
