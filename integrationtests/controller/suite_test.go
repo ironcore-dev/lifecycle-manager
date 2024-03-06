@@ -100,9 +100,9 @@ var _ = BeforeSuite(func() {
 		ScanPeriod:    scanPeriod,
 	}).SetupWithManager(k8sManager)).To(Succeed())
 	Expect((&controllers.MachineTypeReconciler{
-		Client: k8sClient,
-		Scheme: scheme,
-		Broker: nil, // todo: setup broker client
+		Client:                   k8sClient,
+		Scheme:                   scheme,
+		MachineTypeServiceClient: nil, // todo: setup broker client
 	}).SetupWithManager(k8sManager)).To(Succeed())
 	Expect((&controllers.MachineReconciler{
 		Client:               k8sClient,

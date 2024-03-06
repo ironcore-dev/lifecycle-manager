@@ -6,7 +6,9 @@ package controllers
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/go-logr/logr"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1/machinetypev1alpha1connect"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -22,7 +24,7 @@ import (
 // MachineTypeReconciler reconciles a MachineType object.
 type MachineTypeReconciler struct {
 	client.Client
-	Broker machinetypev1alpha1.MachineTypeServiceClient
+	machinetypev1alpha1connect.MachineTypeServiceClient
 
 	Log    logr.Logger
 	Scheme *runtime.Scheme
@@ -58,7 +60,7 @@ func (r *MachineTypeReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		log.V(1).Info("reconciliation interrupted by an error")
 		return result, err
 	}
-	if err = r.Status().Patch(ctx, obj, client.Apply, patchOpts); err != nil {
+	if err = r.Status().Update(ctx, obj); err != nil {
 		if apierrors.IsConflict(err) {
 			return ctrl.Result{RequeueAfter: requeuePeriod}, nil
 		}
@@ -86,16 +88,20 @@ func (r *MachineTypeReconciler) reconcile(
 	obj *lifecyclev1alpha1.MachineType,
 ) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	resp, err := r.Broker.Scan(ctx, &machinetypev1alpha1.ScanRequest{Name: obj.Name, Namespace: obj.Namespace})
+	resp, err := r.Scan(ctx, connect.NewRequest(&machinetypev1alpha1.ScanRequest{
+		Name:      obj.Name,
+		Namespace: obj.Namespace,
+	}))
+	scanResponse := resp.Msg
 	if err != nil {
 		log.Error(err, "failed to send scan request")
 		return ctrl.Result{}, err
 	}
-	if LCIMRequestResultToString[resp.Result].IsScheduled() {
+	if LCIMRequestResultToString[scanResponse.Result].IsScheduled() {
 		obj.Status.Message = StatusMessageScanRequestSubmitted
 		return ctrl.Result{}, nil
 	}
-	if LCIMRequestResultToString[resp.Result].IsFailure() {
+	if LCIMRequestResultToString[scanResponse.Result].IsFailure() {
 		obj.Status.Message = StatusMessageScanRequestFailed
 		return ctrl.Result{}, nil
 	}

@@ -8,8 +8,11 @@ import (
 	"reflect"
 	"slices"
 
+	"connectrpc.com/connect"
 	"github.com/go-logr/logr"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1/machinev1alpha1connect"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -29,7 +32,7 @@ import (
 // MachineReconciler reconciles a Machine object.
 type MachineReconciler struct {
 	client.Client
-	machinev1alpha1.MachineServiceClient
+	machinev1alpha1connect.MachineServiceClient
 
 	Namespace string
 
@@ -67,7 +70,10 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		log.V(1).Info("reconciliation interrupted by an error")
 		return result, err
 	}
-	if err = r.Status().Patch(ctx, obj, client.Apply, patchOpts); err != nil {
+	if err = r.Status().Update(ctx, obj); err != nil {
+		if apierrors.IsConflict(err) {
+			return ctrl.Result{RequeueAfter: requeuePeriod}, nil
+		}
 		log.Error(err, "failed to update object status")
 		return ctrl.Result{}, err
 	}
@@ -89,10 +95,11 @@ func (r *MachineReconciler) reconcileRequired(
 
 func (r *MachineReconciler) reconcileScan(ctx context.Context, obj *lifecyclev1alpha1.Machine) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	scanResponse, err := r.ScanMachine(ctx, &machinev1alpha1.ScanMachineRequest{
+	resp, err := r.ScanMachine(ctx, connect.NewRequest(&machinev1alpha1.ScanMachineRequest{
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
-	})
+	}))
+	scanResponse := resp.Msg
 	if err != nil {
 		log.Error(err, "failed to send scan request")
 		return ctrl.Result{}, err
@@ -118,10 +125,11 @@ func (r *MachineReconciler) reconcileInstall(ctx context.Context, obj *lifecycle
 		log.V(1).Info("install packages versions match desired state")
 		return ctrl.Result{}, nil
 	}
-	installResponse, err := r.Install(ctx, &machinev1alpha1.InstallRequest{
+	resp, err := r.Install(ctx, connect.NewRequest(&machinev1alpha1.InstallRequest{
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
-	})
+	}))
+	installResponse := resp.Msg
 	if err != nil {
 		log.Error(err, "failed to send install request")
 		return ctrl.Result{}, err

@@ -6,6 +6,7 @@ package controllers
 import (
 	"context"
 
+	"github.com/ironcore-dev/lifecycle-manager/util/testutil/mock"
 	oobv1alpha1 "github.com/ironcore-dev/oob/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -34,7 +35,7 @@ var _ = Describe("Onboarding controller", func() {
 	Context("When OOB object's status is empty", func() {
 		It("Should requeue OOB object's reconciliation", func() {
 			s := testutil.SetupScheme(testutil.WithGroupVersion(oobv1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewOOBObject("sample", "default")))
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(mock.NewOOBObject("sample", "default")))
 			onboardingRec := NewOnboardingReconciler(c, s)
 			req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "sample"}}
 			res, err := onboardingRec.Reconcile(context.Background(), req)
@@ -46,9 +47,9 @@ var _ = Describe("Onboarding controller", func() {
 	Context("When OOB object is being deleted", func() {
 		It("Should interrupt reconciliation and return empty result with no error", func() {
 			s := testutil.SetupScheme(testutil.WithGroupVersion(oobv1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewOOBObject("sample", "default",
-				testutil.OOBWithDeletionTimestamp(),
-				testutil.OOBWithFinalizer(),
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(mock.NewOOBObject("sample", "default",
+				mock.OOBWithDeletionTimestamp(),
+				mock.OOBWithFinalizer(),
 			)))
 			onboardingRec := NewOnboardingReconciler(c, s)
 			req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "sample"}}
@@ -66,7 +67,7 @@ var _ = Describe("Onboarding controller", func() {
 				testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme),
 			)
 			c := testutil.SetupClient(s, testutil.WithRuntimeObject(
-				testutil.NewOOBObject("sample", "default", testutil.OOBWithStatus())))
+				mock.NewOOBObject("sample", "default", mock.OOBWithStatus())))
 			onboardingRec := NewOnboardingReconciler(c, s)
 			onboardedMachineType := &lifecyclev1alpha1.MachineType{}
 			err := onboardingRec.Get(context.Background(), expectedMachineTypeKey, onboardedMachineType)
@@ -89,7 +90,7 @@ var _ = Describe("Onboarding controller", func() {
 				testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme),
 			)
 			c := testutil.SetupClient(s, testutil.WithRuntimeObject(
-				testutil.NewOOBObject("sample", "default", testutil.OOBWithStatus())))
+				mock.NewOOBObject("sample", "default", mock.OOBWithStatus())))
 			onboardingRec := NewOnboardingReconciler(c, s)
 			onboardedMachine := &lifecyclev1alpha1.Machine{}
 			err := onboardingRec.Get(context.Background(), expectedMachineKey, onboardedMachine)
