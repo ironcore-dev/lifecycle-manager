@@ -155,9 +155,6 @@ spec:
                 type: array
               lastScanResult:
                 description: LastScanResult reflects the result of the last scan.
-                enum:
-                - Success
-                - Failure
                 type: string
               lastScanTime:
                 description: LastScanTime reflects the timestamp when the last scan

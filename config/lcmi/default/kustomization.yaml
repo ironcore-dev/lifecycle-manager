@@ -1,0 +1,7 @@
+namespace: lifecycle-manager-system
+namePrefix: lifecycle-
+resources:
+  - ../rbac
+  - ../manager
+patches:
+  - path: manager_auth_proxy_patch.yaml

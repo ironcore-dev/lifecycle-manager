@@ -33,6 +33,8 @@ type MachineTypeReconciler struct {
 // +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=machinetypes,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=machinetypes/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=machinetypes/finalizers,verbs=update
+// +kubebuilder:rbac:groups=ironcore.dev,resources=oobs,verbs=get;list;watch
+// +kubebuilder:rbac:groups=ironcore.dev,resources=oobs/status,verbs=get;list;watch
 
 func (r *MachineTypeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var (
@@ -68,7 +70,7 @@ func (r *MachineTypeReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 	log.V(1).Info("reconciliation finished")
-	return result, err
+	return result, nil
 }
 
 func (r *MachineTypeReconciler) reconcileRequired(

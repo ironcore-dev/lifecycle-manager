@@ -50,7 +50,6 @@ type MachineTypeStatus struct {
 
 	// LastScanResult reflects the result of the last scan.
 	// +kubebuilder:validation:Optional
-	// +kubebuilder:validation:Enum=Success;Failure
 	LastScanResult ScanResult `json:"lastScanResult"`
 
 	// AvailablePackages reflects the list of AvailablePackageVersion

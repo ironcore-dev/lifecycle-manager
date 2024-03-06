@@ -1,8 +1,9 @@
 resources:
 - manager.yaml
+- service.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
 - name: controller
-  newName: ironcore-dev/lifecycle-controller-manager
-  newTag: v0.0.1-dev-202403061527
+  newName: ironcore-dev/lifecycle-service
+  newTag: v0.0.1
