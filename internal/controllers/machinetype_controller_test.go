@@ -5,8 +5,10 @@ package controllers
 
 import (
 	"context"
-	"time"
 
+	"github.com/ironcore-dev/lifecycle-manager/util/convertutil"
+	"github.com/ironcore-dev/lifecycle-manager/util/testutil/fake"
+	"github.com/ironcore-dev/lifecycle-manager/util/testutil/mock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,7 +20,6 @@ import (
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/fake"
 )
 
 var _ = Describe("MachineType controller", func() {
@@ -37,9 +38,9 @@ var _ = Describe("MachineType controller", func() {
 	Context("When MachineType object is being deleted", func() {
 		It("Should interrupt reconciliation and return empty result with no error", func() {
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineTypeObject("sample", "default",
-				testutil.MachineTypeWithDeletionTimestamp(),
-				testutil.MachineTypeWithFinalizer(),
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(mock.NewMachineTypeObject("sample", "default",
+				mock.MachineTypeWithDeletionTimestamp(),
+				mock.MachineTypeWithFinalizer(),
 			)))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
 			req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "sample"}}
@@ -53,15 +54,15 @@ var _ = Describe("MachineType controller", func() {
 		It("Should update MachineType object's status with corresponding message", func() {
 			machinetypeKey := types.NamespacedName{Namespace: "default", Name: "sample"}
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineTypeObject("sample", "default")))
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(mock.NewMachineTypeObject("sample", "default")))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
 			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{})
-			machinetypeRec.Broker = brokerClient
+			machinetypeRec.MachineTypeServiceClient = brokerClient
 			req := ctrl.Request{NamespacedName: machinetypeKey}
 			res, err := machinetypeRec.Reconcile(context.Background(), req)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).To(Equal(ctrl.Result{}))
-			broker, _ := machinetypeRec.Broker.(*fake.MachineTypeClient)
+			broker, _ := machinetypeRec.MachineTypeServiceClient.(*fake.MachineTypeClient)
 			entry := broker.ReadCache(uuidutil.UUIDFromObjectKey(machinetypeKey))
 			Expect(entry).NotTo(BeNil())
 			reconciledMachineType := &lifecyclev1alpha1.MachineType{}
@@ -75,10 +76,10 @@ var _ = Describe("MachineType controller", func() {
 		It("Should interrupt reconciliation and return empty result with error", func() {
 			machinetypeKey := types.NamespacedName{Namespace: "default", Name: "failed-scan"}
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineTypeObject("failed-scan", "default")))
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(mock.NewMachineTypeObject("failed-scan", "default")))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
 			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{})
-			machinetypeRec.Broker = brokerClient
+			machinetypeRec.MachineTypeServiceClient = brokerClient
 			req := ctrl.Request{NamespacedName: machinetypeKey}
 			res, err := machinetypeRec.Reconcile(context.Background(), req)
 			Expect(err).To(HaveOccurred())
@@ -88,26 +89,26 @@ var _ = Describe("MachineType controller", func() {
 
 	Context("When scan response received", func() {
 		It("Should update MachineType object's status with scan timestamp and result", func() {
-			now := time.Unix(time.Now().Unix(), 0)
+			now := metav1.Now()
 			machinetypeKey := types.NamespacedName{Namespace: "default", Name: "sample"}
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(testutil.NewMachineTypeObject("sample", "default")))
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(mock.NewMachineTypeObject("sample", "default")))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
 			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{
 				uuidutil.UUIDFromObjectKey(machinetypeKey): {
-					LastScanTime:   &metav1.Time{Time: now},
+					LastScanTime:   convertutil.TimeToTimestampPtr(now),
 					LastScanResult: 1,
 					AvailablePackages: []*machinetypev1alpha1.AvailablePackageVersions{
 						{Name: "raid", Versions: []string{"2.9.0", "3.0.0", "3.2.1"}},
 					},
 				},
 			})
-			machinetypeRec.Broker = brokerClient
+			machinetypeRec.MachineTypeServiceClient = brokerClient
 			req := ctrl.Request{NamespacedName: machinetypeKey}
 			res, err := machinetypeRec.Reconcile(context.Background(), req)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).To(Equal(ctrl.Result{}))
-			broker, _ := machinetypeRec.Broker.(*fake.MachineTypeClient)
+			broker, _ := machinetypeRec.MachineTypeServiceClient.(*fake.MachineTypeClient)
 			entry := broker.ReadCache(uuidutil.UUIDFromObjectKey(machinetypeKey))
 			Expect(entry).NotTo(BeNil())
 			reconciledMachineType := &lifecyclev1alpha1.MachineType{}

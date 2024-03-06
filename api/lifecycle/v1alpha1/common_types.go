@@ -22,6 +22,7 @@ type PackageVersion struct {
 type ScanResult string
 
 const (
+	Unspecified ScanResult = ""
 	ScanFailure ScanResult = "Failure"
 	ScanSuccess ScanResult = "Success"
 )

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	oobv1alpha1 "github.com/onmetal/oob-operator/api/v1alpha1"
+	oobv1alpha1 "github.com/ironcore-dev/oob/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -100,9 +100,9 @@ var _ = BeforeSuite(func() {
 		ScanPeriod:    scanPeriod,
 	}).SetupWithManager(k8sManager)).To(Succeed())
 	Expect((&controllers.MachineTypeReconciler{
-		Client: k8sClient,
-		Scheme: scheme,
-		Broker: nil, // todo: setup broker client
+		Client:                   k8sClient,
+		Scheme:                   scheme,
+		MachineTypeServiceClient: nil, // todo: setup broker client
 	}).SetupWithManager(k8sManager)).To(Succeed())
 	Expect((&controllers.MachineReconciler{
 		Client:               k8sClient,

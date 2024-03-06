@@ -10,7 +10,7 @@ option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinet
 message MachineGroup {
   string name = 1;
   k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector machine_selector = 2;
-  common.v1alpha1.PackageVersion packages = 3;
+  repeated common.v1alpha1.PackageVersion packages = 3;
 }
 
 message MachineTypeSpec {
@@ -26,7 +26,7 @@ message AvailablePackageVersions {
 }
 
 message MachineTypeStatus {
-  k8s.io.apimachinery.pkg.apis.meta.v1.Time last_scan_time = 1;
+  k8s.io.apimachinery.pkg.apis.meta.v1.Timestamp last_scan_time = 1;
   common.v1alpha1.ScanResult last_scan_result = 2;
   repeated AvailablePackageVersions available_packages = 3;
   string message = 4;

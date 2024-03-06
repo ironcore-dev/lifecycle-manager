@@ -1,12 +1,12 @@
-// SPDX-FileCopyrightText: 2023 SAP SE or an SAP affiliate company and IronCore contributors
+// SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and IronCore contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package testutil
+package mock
 
 import (
 	"time"
 
-	oobv1alpha1 "github.com/onmetal/oob-operator/api/v1alpha1"
+	oobv1alpha1 "github.com/ironcore-dev/oob/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

@@ -1,3 +1,6 @@
+IMG ?= controller:latest
+DOCKERFILE ?= .
+
 .PHONY: fmt
 fmt: goimports
 	go fmt ./...
@@ -51,6 +54,42 @@ format: generate manifests add-license fmt lint-fix
 docs: gen-crd-api-reference-docs ## Run go generate to generate API reference documentation.
 	$(GEN_CRD_API_REFERENCE_DOCS) -api-dir ./api/lifecycle/v1alpha1 -config ./hack/api-reference/config.json -template-dir ./hack/api-reference/template -out-file ./docs/api-reference/lifecycle.md
 
+### BUILD IMAGES ###
+.PHONY: docker-build-controller-manager
+docker-build: ## Build docker image with the manager.
+	docker build . -t ${IMG}
+
+.PHONY: docker-build-lifecycle-service
+docker-build-lcmi: ## Build docker image with the manager.
+	docker build . -t ${IMG} -f ${DOCKERFILE}
+
+### INSTALL AND DEPLOY ###
+.PHONY: install
+install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+
+.PHONY: uninstall
+uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+
+.PHONY: deploy-controller-manager
+deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
+
+.PHONY: undeploy-controller-manager
+undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/default | kubectl delete -f -
+
+.PHONY: deploy-lifecycle-service
+deploy-lcmi: kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	cd config/lcmi/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/lcmi/default | kubectl apply -f -
+
+.PHONY: undeploy-lifecycle-service
+undeploy-lcmi: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
+	$(KUSTOMIZE) build config/lcmi/default | kubectl delete -f -
+
 ### AUXILIARY ###
 LOCAL_BIN ?= $(shell pwd)/bin
 $(LOCAL_BIN):
@@ -74,6 +113,7 @@ MODELS_SCHEMA ?= $(LOCAL_BIN)/models-schema
 VGOPATH ?= $(LOCAL_BIN)/vgopath
 GEN_CRD_API_REFERENCE_DOCS ?= $(LOCAL_BIN)/gen-crd-api-reference-docs
 BUF ?= $(LOCAL_BIN)/buf
+KUSTOMIZE ?= $(LOCAL_BIN)/kustomize
 
 ## Tools versions
 ADDLICENSE_VERSION ?= v1.1.1
@@ -86,6 +126,7 @@ VGOPATH_VERSION ?= v0.1.3
 GEN_CRD_API_REFERENCE_DOCS_VERSION ?= v0.3.0
 MODELS_SCHEMA_VERSION ?= main
 BUF_VERSION ?= v1.29.0
+KUSTOMIZE_VERSION ?= v5.3.0
 
 .PHONY: code-gen
 code-gen: vgopath deepcopy-gen models-schema openapi-gen applyconfiguration-gen client-gen
@@ -168,7 +209,7 @@ $(CLIENT_GEN): $(LOCAL_BIN)
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE)
 $(KUSTOMIZE): $(LOCAL_BIN)
-	@test -s $(KUSTOMIZE) || GOBIN=$(LOCAL_BIN) go install sigs.k8s.io/kustomize/kustomize/v4@$(KUSTOMIZE_VERSION)
+	@test -s $(KUSTOMIZE) || GOBIN=$(LOCAL_BIN) go install sigs.k8s.io/kustomize/kustomize/v5@$(KUSTOMIZE_VERSION)
 
 .PHONY: buf
 buf: $(BUF)

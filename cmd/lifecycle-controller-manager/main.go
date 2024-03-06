@@ -4,10 +4,19 @@
 package main
 
 import (
+	"context"
+	"crypto/tls"
 	"flag"
+	"net"
+	"net/http"
 	"os"
 	"time"
 
+	"connectrpc.com/connect"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1/machinev1alpha1connect"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1/machinetypev1alpha1connect"
+	oobv1alpha1 "github.com/ironcore-dev/oob/api/v1alpha1"
+	"golang.org/x/net/http2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
@@ -30,11 +39,14 @@ import (
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
+
+	lcmiEndpoint = "http://lifecycle-service-svc:8080"
 )
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(lifecyclev1alpha1.AddToScheme(scheme))
+	utilruntime.Must(oobv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -42,6 +54,8 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	var lcmiServiceAddr string
+	flag.StringVar(&lcmiServiceAddr, "lcmi-address", lcmiEndpoint, "The address lifecycle-service running on.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -67,7 +81,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = setupControllers(mgr); err != nil {
+	if err = setupControllers(mgr, lcmiServiceAddr); err != nil {
 		os.Exit(1)
 	}
 	if err = setupHandlers(mgr); err != nil {
@@ -81,19 +95,22 @@ func main() {
 	}
 }
 
-func setupControllers(mgr ctrl.Manager) error {
+func setupControllers(mgr ctrl.Manager, endpoint string) error {
+	httpClient := setupHTTPClient()
 	if err := (&controllers.MachineReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Log:    mgr.GetLogger().WithName("lifecycle-machine-controller"),
+		Client:               mgr.GetClient(),
+		Scheme:               mgr.GetScheme(),
+		Log:                  mgr.GetLogger().WithName("lifecycle-machine-controller"),
+		MachineServiceClient: setupMachineClient(endpoint, httpClient),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Machine")
 		return err
 	}
 	if err := (&controllers.MachineTypeReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-		Log:    mgr.GetLogger().WithName("lifecycle-machinetype-controller"),
+		Client:                   mgr.GetClient(),
+		Scheme:                   mgr.GetScheme(),
+		Log:                      mgr.GetLogger().WithName("lifecycle-machinetype-controller"),
+		MachineTypeServiceClient: setupMachineTypeClient(endpoint, httpClient),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MachineType")
 		return err
@@ -122,4 +139,23 @@ func setupHandlers(mgr ctrl.Manager) error {
 		return err
 	}
 	return nil
+}
+
+func setupHTTPClient() *http.Client {
+	return &http.Client{
+		Transport: &http2.Transport{
+			AllowHTTP: true,
+			DialTLSContext: func(_ context.Context, network, addr string, _ *tls.Config) (net.Conn, error) {
+				return net.Dial(network, addr)
+			},
+		},
+	}
+}
+
+func setupMachineClient(endpoint string, cl *http.Client) machinev1alpha1connect.MachineServiceClient {
+	return machinev1alpha1connect.NewMachineServiceClient(cl, endpoint, connect.WithGRPC())
+}
+
+func setupMachineTypeClient(endpoint string, cl *http.Client) machinetypev1alpha1connect.MachineTypeServiceClient {
+	return machinetypev1alpha1connect.NewMachineTypeServiceClient(cl, endpoint, connect.WithGRPC())
 }
