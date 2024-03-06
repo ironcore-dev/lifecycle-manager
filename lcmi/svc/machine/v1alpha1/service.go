@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/go-logr/logr"
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/applyconfiguration/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/lifecycle"
@@ -83,6 +84,8 @@ func (s *MachineService) ScanMachine(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.ScanMachineRequest],
 ) (*connect.Response[machinev1alpha1.ScanMachineResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.GetNamespace()
 	if namespace == "" {
@@ -125,6 +128,8 @@ func (s *MachineService) Install(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.InstallRequest],
 ) (*connect.Response[machinev1alpha1.InstallResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.Namespace
 	if namespace == "" {
@@ -155,6 +160,8 @@ func (s *MachineService) UpdateMachineStatus(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.UpdateMachineStatusRequest],
 ) (*connect.Response[machinev1alpha1.UpdateMachineStatusResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.Namespace
 	if namespace == "" {
@@ -189,6 +196,8 @@ func (s *MachineService) ListMachines(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.ListMachinesRequest],
 ) (*connect.Response[machinev1alpha1.ListMachinesResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.GetNamespace()
 	if namespace == "" {
@@ -216,6 +225,8 @@ func (s *MachineService) AddPackageVersion(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.AddPackageVersionRequest],
 ) (*connect.Response[machinev1alpha1.AddPackageVersionResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.GetNamespace()
 	if namespace == "" {
@@ -256,6 +267,8 @@ func (s *MachineService) SetPackageVersion(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.SetPackageVersionRequest],
 ) (*connect.Response[machinev1alpha1.SetPackageVersionResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.GetNamespace()
 	if namespace == "" {
@@ -296,6 +309,8 @@ func (s *MachineService) RemovePackageVersion(
 	ctx context.Context,
 	c *connect.Request[machinev1alpha1.RemovePackageVersionRequest],
 ) (*connect.Response[machinev1alpha1.RemovePackageVersionResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.GetNamespace()
 	if namespace == "" {

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/go-logr/logr"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/applyconfiguration/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/lifecycle"
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
@@ -76,6 +77,8 @@ func (s *MachineTypeService) ListMachineTypes(
 	ctx context.Context,
 	c *connect.Request[machinetypev1alpha1.ListMachineTypesRequest],
 ) (*connect.Response[machinetypev1alpha1.ListMachineTypesResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.GetNamespace()
 	if namespace == "" {
@@ -101,9 +104,11 @@ func (s *MachineTypeService) ListMachineTypes(
 }
 
 func (s *MachineTypeService) Scan(
-	_ context.Context,
+	ctx context.Context,
 	c *connect.Request[machinetypev1alpha1.ScanRequest],
 ) (*connect.Response[machinetypev1alpha1.ScanResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.GetNamespace()
 	if namespace == "" {
@@ -133,6 +138,8 @@ func (s *MachineTypeService) UpdateMachineTypeStatus(
 	ctx context.Context,
 	c *connect.Request[machinetypev1alpha1.UpdateMachineTypeStatusRequest],
 ) (*connect.Response[machinetypev1alpha1.UpdateMachineTypeStatusResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.GetNamespace()
 	if namespace == "" {
@@ -166,6 +173,8 @@ func (s *MachineTypeService) AddMachineGroup(
 	ctx context.Context,
 	c *connect.Request[machinetypev1alpha1.AddMachineGroupRequest],
 ) (*connect.Response[machinetypev1alpha1.AddMachineGroupResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.GetNamespace()
 	if namespace == "" {
@@ -180,17 +189,17 @@ func (s *MachineTypeService) AddMachineGroup(
 		}
 		return nil, connect.NewError(errCode, err)
 	}
-	mgroups := apiutil.MachineGroupsToGrpcAPI(machinetype.Spec.MachineGroups)
-	if machineGroupIndex(req.MachineGroup.Name, mgroups) > -1 {
+	machineGroups := apiutil.MachineGroupsToGrpcAPI(machinetype.Spec.MachineGroups)
+	if machineGroupIndex(req.MachineGroup.Name, machineGroups) > -1 {
 		return connect.NewResponse(&machinetypev1alpha1.AddMachineGroupResponse{
 			Reason: AddMachineGroupFailureReason,
 			Result: commonv1alpha1.RequestResult_REQUEST_RESULT_FAILURE,
 		}), nil
 	}
-	mgroups = slices.Grow(mgroups, 1)
-	mgroups = append(mgroups, req.MachineGroup)
+	machineGroups = slices.Grow(machineGroups, 1)
+	machineGroups = append(machineGroups, req.MachineGroup)
 	machinetypeApply := v1alpha1.MachineType(machinetype.Name, machinetype.Namespace).WithSpec(
-		v1alpha1.MachineTypeSpec().WithMachineGroups(apiutil.MachineGroupsToApplyConfiguration(mgroups)...))
+		v1alpha1.MachineTypeSpec().WithMachineGroups(apiutil.MachineGroupsToApplyConfiguration(machineGroups)...))
 	if _, err = s.c.LifecycleV1alpha1().MachineTypes(namespace).Apply(ctx, machinetypeApply, metav1.ApplyOptions{
 		FieldManager: "lifecycle.ironcore.dev/lifecycle-manager",
 		Force:        true,
@@ -206,6 +215,8 @@ func (s *MachineTypeService) RemoveMachineGroup(
 	ctx context.Context,
 	c *connect.Request[machinetypev1alpha1.RemoveMachineGroupRequest],
 ) (*connect.Response[machinetypev1alpha1.RemoveMachineGroupResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
 	req := c.Msg
 	namespace := req.GetNamespace()
 	if namespace == "" {
@@ -220,16 +231,16 @@ func (s *MachineTypeService) RemoveMachineGroup(
 		}
 		return nil, connect.NewError(errCode, err)
 	}
-	mgroups := apiutil.MachineGroupsToGrpcAPI(machinetype.Spec.MachineGroups)
+	machineGroups := apiutil.MachineGroupsToGrpcAPI(machinetype.Spec.MachineGroups)
 	var idx int
-	if idx = machineGroupIndex(req.GroupName, mgroups); idx == -1 {
+	if idx = machineGroupIndex(req.GroupName, machineGroups); idx == -1 {
 		return connect.NewResponse(&machinetypev1alpha1.RemoveMachineGroupResponse{
 			Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 		}), nil
 	}
-	mgroups = removeMachineGroup(mgroups, idx)
+	machineGroups = removeMachineGroup(machineGroups, idx)
 	machinetypeApply := v1alpha1.MachineType(machinetype.Name, machinetype.Namespace).WithSpec(
-		v1alpha1.MachineTypeSpec().WithMachineGroups(apiutil.MachineGroupsToApplyConfiguration(mgroups)...))
+		v1alpha1.MachineTypeSpec().WithMachineGroups(apiutil.MachineGroupsToApplyConfiguration(machineGroups)...))
 	if _, err = s.c.LifecycleV1alpha1().MachineTypes(namespace).Apply(ctx, machinetypeApply, metav1.ApplyOptions{
 		FieldManager: "lifecycle.ironcore.dev/lifecycle-manager",
 		Force:        true,

@@ -22,12 +22,14 @@ func NewLoggerInterceptor(log *slog.Logger) connect.Interceptor {
 
 func (l *LogInterceptor) WrapUnary(unaryFunc connect.UnaryFunc) connect.UnaryFunc {
 	return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
-		l.logger.Info("request", "endpoint", req.Spec().Procedure, "request_body", req.Any())
-		reqCtx := logr.NewContextWithSlogLogger(ctx, l.logger)
+		log := l.logger.With("peer", req.Peer(), "endpoint", req.Spec().Procedure)
+		reqCtx := logr.NewContextWithSlogLogger(ctx, log)
 		response, err := unaryFunc(reqCtx, req)
 		if err != nil {
-			l.logger.Error(err.Error())
+			log.Error("request failed", "error", err.Error())
+			return response, err
 		}
+		log.Debug("request finished", "response", response.Any())
 		return response, err
 	}
 }
