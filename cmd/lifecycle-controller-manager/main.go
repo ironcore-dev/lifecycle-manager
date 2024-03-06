@@ -40,7 +40,7 @@ var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 
-	defaultLCMIServiceEndpoint = "http://lifecycle-service-svc:8080"
+	lcmiEndpoint = "http://lifecycle-service-svc:8080"
 )
 
 func init() {
@@ -54,8 +54,8 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
-	var lifecycleServiceAddr string
-	flag.StringVar(&lifecycleServiceAddr, "lcmi-address", defaultLCMIServiceEndpoint, "The address lifecycle-service running on.")
+	var lcmiServiceAddr string
+	flag.StringVar(&lcmiServiceAddr, "lcmi-address", lcmiEndpoint, "The address lifecycle-service running on.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -81,7 +81,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = setupControllers(mgr, lifecycleServiceAddr); err != nil {
+	if err = setupControllers(mgr, lcmiServiceAddr); err != nil {
 		os.Exit(1)
 	}
 	if err = setupHandlers(mgr); err != nil {
