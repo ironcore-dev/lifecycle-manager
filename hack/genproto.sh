@@ -17,7 +17,7 @@ pushd "$SCRIPT_DIR/.." > /dev/null
 ROOT=$(pwd)
 popd > /dev/null
 
-pushd "$SCRIPT_DIR/../proto" > /dev/null
+pushd "$SCRIPT_DIR/../lcmi" > /dev/null
 export PATH=$PATH:$ROOT/bin
 
 echo "Generating ${blue}proto${normal}"

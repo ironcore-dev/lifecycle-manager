@@ -8,10 +8,10 @@ managed:
       - buf.build/k8s/api
 plugins:
   - plugin: buf.build/protocolbuffers/go:v1.32.0
-    out: ../lcmi/api
+    out: api
     opt:
       - paths=source_relative
   - plugin: buf.build/connectrpc/go:v1.15.0
-    out: ../lcmi/api
+    out: api
     opt:
       - paths=source_relative
