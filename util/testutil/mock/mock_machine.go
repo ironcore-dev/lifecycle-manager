@@ -4,27 +4,36 @@
 package mock
 
 import (
-	"time"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 )
 
+type MachineMockBuilder struct {
+	inner *lifecyclev1alpha1.Machine
+}
+
+func (b *MachineMockBuilder) WithMachineTypeRef(name string) *MachineMockBuilder {
+	b.inner.Spec.MachineTypeRef.Name = name
+	return b
+}
+
+func (b *MachineMockBuilder) WithOOBMachineRef(name string) *MachineMockBuilder {
+	b.inner.Spec.OOBMachineRef.Name = name
+	return b
+}
+
+func (b *MachineMockBuilder) WithInstalledPackages(pkg []lifecyclev1alpha1.PackageVersion) *MachineMockBuilder {
+	b.inner.Status.InstalledPackages = pkg
+	return b
+}
+
+func (b *MachineMockBuilder) Complete() *lifecyclev1alpha1.Machine {
+	return b.inner
+}
+
 type MachineOption func(*lifecyclev1alpha1.Machine)
-
-func MachineWithDeletionTimestamp() MachineOption {
-	return func(o *lifecyclev1alpha1.Machine) {
-		o.DeletionTimestamp = &metav1.Time{Time: time.Now()}
-	}
-}
-
-func MachineWithFinalizer() MachineOption {
-	return func(o *lifecyclev1alpha1.Machine) {
-		o.Finalizers = []string{"test-suite-finalizer"}
-	}
-}
 
 func MachineWithLabels(lbl map[string]string) MachineOption {
 	return func(o *lifecyclev1alpha1.Machine) {
