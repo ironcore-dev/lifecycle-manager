@@ -45,7 +45,7 @@ var _ = Describe("Machine controller", func() {
 					WithNamespace("default").
 					WithDeletionTimestamp(&now).
 					WithFinalizers([]string{"test-suite-finalizer"}).
-					ToMachine().Complete()
+					MachineFromUnstructured().Complete()
 				Expect(machine).NotTo(BeNil())
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 				c := testutil.SetupClient(s, testutil.WithRuntimeObject(machine))
@@ -63,7 +63,7 @@ var _ = Describe("Machine controller", func() {
 				machine := mock.NewUnstructuredBuilder().
 					WithName("sample").
 					WithNamespace("default").
-					ToMachine().WithMachineTypeRef("sample").Complete()
+					MachineFromUnstructured().WithMachineTypeRef("sample").Complete()
 				Expect(machine).NotTo(BeNil())
 				machineKey := types.NamespacedName{Namespace: "default", Name: "sample"}
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
@@ -91,7 +91,7 @@ var _ = Describe("Machine controller", func() {
 				machine := mock.NewUnstructuredBuilder().
 					WithName("sample").
 					WithNamespace("default").
-					ToMachine().Complete()
+					MachineFromUnstructured().Complete()
 				Expect(machine).NotTo(BeNil())
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 				c := testutil.SetupClient(s, testutil.WithRuntimeObject(machine))
@@ -119,7 +119,7 @@ var _ = Describe("Machine controller", func() {
 				machine := mock.NewUnstructuredBuilder().
 					WithName("failed-scan").
 					WithNamespace("default").
-					ToMachine().Complete()
+					MachineFromUnstructured().Complete()
 				Expect(machine).NotTo(BeNil())
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 				c := testutil.SetupClient(s, testutil.WithRuntimeObject(machine))
@@ -141,15 +141,19 @@ var _ = Describe("Machine controller", func() {
 					WithName("sample").
 					WithNamespace("default").
 					WithLabels(map[string]string{"env": "test"}).
-					ToMachine().
+					MachineFromUnstructured().
 					WithMachineTypeRef("sample").
 					WithInstalledPackages(apiutil.PackageVersionsToKubeAPI(expectedPackages)).Complete()
 				Expect(machine).NotTo(BeNil())
-				machineType := mock.NewMachineTypeObject("sample", "default",
-					mock.MachineTypeWithGroup(lifecyclev1alpha1.MachineGroup{
+				machineType := mock.NewUnstructuredBuilder().
+					WithName("sample").
+					WithNamespace("default").
+					MachineTypeFromUnstructured().
+					WithMachineGroups([]lifecyclev1alpha1.MachineGroup{{
 						MachineSelector: metav1.LabelSelector{MatchLabels: map[string]string{"env": "test"}},
-						Packages:        apiutil.PackageVersionsToKubeAPI(expectedPackages)}))
-
+						Packages:        apiutil.PackageVersionsToKubeAPI(expectedPackages)}}).
+					Complete()
+				Expect(machineType).NotTo(BeNil())
 				machineKey := types.NamespacedName{Namespace: "default", Name: "sample"}
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 				c := testutil.SetupClient(s,
@@ -183,13 +187,17 @@ var _ = Describe("Machine controller", func() {
 					WithName("sample").
 					WithNamespace("default").
 					WithLabels(map[string]string{"env": "test"}).
-					ToMachine().WithMachineTypeRef("sample").Complete()
+					MachineFromUnstructured().WithMachineTypeRef("sample").Complete()
 				Expect(machine).NotTo(BeNil())
-				machineType := mock.NewMachineTypeObject("sample", "default",
-					mock.MachineTypeWithGroup(lifecyclev1alpha1.MachineGroup{
+				machineType := mock.NewUnstructuredBuilder().
+					WithName("sample").
+					WithNamespace("default").
+					MachineTypeFromUnstructured().
+					WithMachineGroups([]lifecyclev1alpha1.MachineGroup{{
 						MachineSelector: metav1.LabelSelector{MatchLabels: map[string]string{"env": "test"}},
-						Packages:        desiredPackages}))
-
+						Packages:        desiredPackages}}).
+					Complete()
+				Expect(machineType).NotTo(BeNil())
 				machineKey := types.NamespacedName{Namespace: "default", Name: "sample"}
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 				c := testutil.SetupClient(s,
@@ -222,13 +230,15 @@ var _ = Describe("Machine controller", func() {
 					WithName("failed-install").
 					WithNamespace("default").
 					WithLabels(map[string]string{"env": "test"}).
-					ToMachine().WithMachineTypeRef("sample").Complete()
+					MachineFromUnstructured().WithMachineTypeRef("sample").Complete()
 				Expect(machine).NotTo(BeNil())
-				machineType := mock.NewMachineTypeObject("sample", "default",
-					mock.MachineTypeWithGroup(lifecyclev1alpha1.MachineGroup{
+				machineType := mock.NewUnstructuredBuilder().
+					WithName("sample").WithNamespace("default").MachineTypeFromUnstructured().
+					WithMachineGroups([]lifecyclev1alpha1.MachineGroup{{
 						MachineSelector: metav1.LabelSelector{MatchLabels: map[string]string{"env": "test"}},
-						Packages:        desiredPackages}))
-
+						Packages:        desiredPackages}}).
+					Complete()
+				Expect(machineType).NotTo(BeNil())
 				machineKey := types.NamespacedName{Namespace: "default", Name: "failed-install"}
 				s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 				c := testutil.SetupClient(s,

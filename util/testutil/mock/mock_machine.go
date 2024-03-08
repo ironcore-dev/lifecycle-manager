@@ -4,14 +4,21 @@
 package mock
 
 import (
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 )
 
 type MachineMockBuilder struct {
 	inner *lifecyclev1alpha1.Machine
+}
+
+func (b *UnstructuredBuilder) MachineFromUnstructured() *MachineMockBuilder {
+	var m lifecyclev1alpha1.Machine
+	b.inner.SetAPIVersion("lifecycle.ironcore.dev/v1alpha1")
+	b.inner.SetKind("Machine")
+	_ = runtime.DefaultUnstructuredConverter.FromUnstructured(b.inner.Object, &m)
+	return &MachineMockBuilder{inner: &m}
 }
 
 func (b *MachineMockBuilder) WithMachineTypeRef(name string) *MachineMockBuilder {
@@ -31,41 +38,4 @@ func (b *MachineMockBuilder) WithInstalledPackages(pkg []lifecyclev1alpha1.Packa
 
 func (b *MachineMockBuilder) Complete() *lifecyclev1alpha1.Machine {
 	return b.inner
-}
-
-type MachineOption func(*lifecyclev1alpha1.Machine)
-
-func MachineWithLabels(lbl map[string]string) MachineOption {
-	return func(o *lifecyclev1alpha1.Machine) {
-		o.Labels = lbl
-	}
-}
-
-func MachineWithMachineTypeRef(name string) MachineOption {
-	return func(o *lifecyclev1alpha1.Machine) {
-		o.Spec.MachineTypeRef = corev1.LocalObjectReference{Name: name}
-	}
-}
-
-func MachineStatusWithInstalledPackages(pkg []lifecyclev1alpha1.PackageVersion) MachineOption {
-	return func(o *lifecyclev1alpha1.Machine) {
-		o.Status.InstalledPackages = pkg
-	}
-}
-
-func NewMachineObject(name, namespace string, opts ...MachineOption) *lifecyclev1alpha1.Machine {
-	o := &lifecyclev1alpha1.Machine{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Machine",
-			APIVersion: "v1alpha1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-	}
-	for _, opt := range opts {
-		opt(o)
-	}
-	return o
 }

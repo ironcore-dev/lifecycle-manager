@@ -37,11 +37,16 @@ var _ = Describe("MachineType controller", func() {
 
 	Context("When MachineType object is being deleted", func() {
 		It("Should interrupt reconciliation and return empty result with no error", func() {
+			now := metav1.Now()
+			machineType := mock.NewUnstructuredBuilder().
+				WithName("sample").
+				WithNamespace("default").
+				WithDeletionTimestamp(&now).
+				WithFinalizers([]string{"test-suite-finalizer"}).
+				MachineTypeFromUnstructured().Complete()
+			Expect(machineType).NotTo(BeNil())
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(mock.NewMachineTypeObject("sample", "default",
-				mock.MachineTypeWithDeletionTimestamp(),
-				mock.MachineTypeWithFinalizer(),
-			)))
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(machineType))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
 			req := ctrl.Request{NamespacedName: types.NamespacedName{Namespace: "default", Name: "sample"}}
 			res, err := machinetypeRec.Reconcile(context.Background(), req)
@@ -53,8 +58,13 @@ var _ = Describe("MachineType controller", func() {
 	Context("When new scan request submitted", func() {
 		It("Should update MachineType object's status with corresponding message", func() {
 			machinetypeKey := types.NamespacedName{Namespace: "default", Name: "sample"}
+			machineType := mock.NewUnstructuredBuilder().
+				WithName("sample").
+				WithNamespace("default").
+				MachineTypeFromUnstructured().Complete()
+			Expect(machineType).NotTo(BeNil())
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(mock.NewMachineTypeObject("sample", "default")))
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(machineType))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
 			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{})
 			machinetypeRec.MachineTypeServiceClient = brokerClient
@@ -75,8 +85,13 @@ var _ = Describe("MachineType controller", func() {
 	Context("When failed to send scan request", func() {
 		It("Should interrupt reconciliation and return empty result with error", func() {
 			machinetypeKey := types.NamespacedName{Namespace: "default", Name: "failed-scan"}
+			machineType := mock.NewUnstructuredBuilder().
+				WithName("failed-scan").
+				WithNamespace("default").
+				MachineTypeFromUnstructured().Complete()
+			Expect(machineType).NotTo(BeNil())
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(mock.NewMachineTypeObject("failed-scan", "default")))
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(machineType))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
 			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{})
 			machinetypeRec.MachineTypeServiceClient = brokerClient
@@ -91,8 +106,13 @@ var _ = Describe("MachineType controller", func() {
 		It("Should update MachineType object's status with scan timestamp and result", func() {
 			now := metav1.Now()
 			machinetypeKey := types.NamespacedName{Namespace: "default", Name: "sample"}
+			machineType := mock.NewUnstructuredBuilder().
+				WithName("sample").
+				WithNamespace("default").
+				MachineTypeFromUnstructured().Complete()
+			Expect(machineType).NotTo(BeNil())
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(mock.NewMachineTypeObject("sample", "default")))
+			c := testutil.SetupClient(s, testutil.WithRuntimeObject(machineType))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
 			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{
 				uuidutil.UUIDFromObjectKey(machinetypeKey): {
