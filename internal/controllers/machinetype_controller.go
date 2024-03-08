@@ -94,11 +94,11 @@ func (r *MachineTypeReconciler) reconcile(
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
 	}))
-	scanResponse := resp.Msg
 	if err != nil {
 		log.Error(err, "failed to send scan request")
 		return ctrl.Result{}, err
 	}
+	scanResponse := resp.Msg
 	if LCIMRequestResultToString[scanResponse.Result].IsScheduled() {
 		obj.Status.Message = StatusMessageScanRequestSubmitted
 		return ctrl.Result{}, nil

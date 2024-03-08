@@ -38,7 +38,7 @@ func (c *MachineTypeClient) ListMachineTypes(
 }
 
 func (c *MachineTypeClient) Scan(
-	ctx context.Context,
+	_ context.Context,
 	req *connect.Request[machinetypeapiv1alpha1.ScanRequest],
 ) (*connect.Response[machinetypeapiv1alpha1.ScanResponse], error) {
 	in := req.Msg
@@ -53,7 +53,6 @@ func (c *MachineTypeClient) Scan(
 			Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 		}), nil
 	}
-	c.cache[uid] = &machinetypeapiv1alpha1.MachineTypeStatus{}
 	return connect.NewResponse(&machinetypeapiv1alpha1.ScanResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED,
 	}), nil

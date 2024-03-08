@@ -72,9 +72,6 @@ var _ = Describe("MachineType controller", func() {
 			res, err := machinetypeRec.Reconcile(context.Background(), req)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).To(Equal(ctrl.Result{}))
-			broker, _ := machinetypeRec.MachineTypeServiceClient.(*fake.MachineTypeClient)
-			entry := broker.ReadCache(uuidutil.UUIDFromObjectKey(machinetypeKey))
-			Expect(entry).NotTo(BeNil())
 			reconciledMachineType := &lifecyclev1alpha1.MachineType{}
 			err = machinetypeRec.Get(context.Background(), machinetypeKey, reconciledMachineType)
 			Expect(err).NotTo(HaveOccurred())
@@ -128,12 +125,10 @@ var _ = Describe("MachineType controller", func() {
 			res, err := machinetypeRec.Reconcile(context.Background(), req)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).To(Equal(ctrl.Result{}))
-			broker, _ := machinetypeRec.MachineTypeServiceClient.(*fake.MachineTypeClient)
-			entry := broker.ReadCache(uuidutil.UUIDFromObjectKey(machinetypeKey))
-			Expect(entry).NotTo(BeNil())
 			reconciledMachineType := &lifecyclev1alpha1.MachineType{}
 			err = machinetypeRec.Get(context.Background(), machinetypeKey, reconciledMachineType)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(reconciledMachineType.Status).To(Equal(machineType.Status))
 		})
 	})
 })
