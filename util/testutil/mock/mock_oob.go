@@ -4,46 +4,32 @@
 package mock
 
 import (
-	"time"
-
 	oobv1alpha1 "github.com/ironcore-dev/oob/api/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
-type OOBObjectOption func(*oobv1alpha1.OOB)
-
-func OOBWithDeletionTimestamp() OOBObjectOption {
-	return func(o *oobv1alpha1.OOB) {
-		o.DeletionTimestamp = &metav1.Time{Time: time.Now()}
-	}
+type OOBMockBuilder struct {
+	inner *oobv1alpha1.OOB
 }
 
-func OOBWithFinalizer() OOBObjectOption {
-	return func(o *oobv1alpha1.OOB) {
-		o.Finalizers = []string{"test-suite-finalizer"}
-	}
+func (b *UnstructuredBuilder) OOBFromUnstructured() *OOBMockBuilder {
+	var o oobv1alpha1.OOB
+	b.inner.SetAPIVersion("ironcore.dev/v1alpha1")
+	b.inner.SetKind("OOB")
+	_ = runtime.DefaultUnstructuredConverter.FromUnstructured(b.inner.Object, &o)
+	return &OOBMockBuilder{inner: &o}
 }
 
-func OOBWithStatus() OOBObjectOption {
-	return func(o *oobv1alpha1.OOB) {
-		o.Status.Manufacturer = "Sample"
-		o.Status.SKU = "0000X0000"
-	}
+func (b *OOBMockBuilder) WithManufacturer(manufacturer string) *OOBMockBuilder {
+	b.inner.Status.Manufacturer = manufacturer
+	return b
 }
 
-func NewOOBObject(name, namespace string, opts ...OOBObjectOption) *oobv1alpha1.OOB {
-	o := &oobv1alpha1.OOB{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "OOB",
-			APIVersion: "v1alpha1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-	}
-	for _, opt := range opts {
-		opt(o)
-	}
-	return o
+func (b *OOBMockBuilder) WithSKU(sku string) *OOBMockBuilder {
+	b.inner.Status.SKU = sku
+	return b
+}
+
+func (b *OOBMockBuilder) Complete() *oobv1alpha1.OOB {
+	return b.inner
 }

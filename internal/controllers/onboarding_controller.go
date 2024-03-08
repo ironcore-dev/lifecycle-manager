@@ -6,6 +6,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -101,7 +102,7 @@ func (r *OnboardingReconciler) onboardMachineType(ctx context.Context, obj *oobv
 	typeName := obj.Status.SKU[:4]
 	machineType := &v1alpha1.MachineType{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s", manufacturer, typeName),
+			Name:      fmt.Sprintf("%s-%s", strings.ToLower(manufacturer), strings.ToLower(typeName)),
 			Namespace: obj.Namespace,
 		},
 		Spec: v1alpha1.MachineTypeSpec{
@@ -132,9 +133,11 @@ func (r *OnboardingReconciler) onboardMachine(ctx context.Context, obj *oobv1alp
 			Namespace: obj.Namespace,
 		},
 		Spec: v1alpha1.MachineSpec{
-			MachineTypeRef: corev1.LocalObjectReference{Name: fmt.Sprintf("%s-%s", manufacturer, typeName)},
-			OOBMachineRef:  corev1.LocalObjectReference{Name: obj.Name},
-			ScanPeriod:     r.ScanPeriod,
+			MachineTypeRef: corev1.LocalObjectReference{
+				Name: fmt.Sprintf("%s-%s", strings.ToLower(manufacturer), strings.ToLower(typeName)),
+			},
+			OOBMachineRef: corev1.LocalObjectReference{Name: obj.Name},
+			ScanPeriod:    r.ScanPeriod,
 		},
 	}
 	if err := r.Create(ctx, machine); err != nil {

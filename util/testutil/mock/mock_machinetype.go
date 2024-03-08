@@ -4,46 +4,28 @@
 package mock
 
 import (
-	"time"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 )
 
-type MachineTypeOption func(*lifecyclev1alpha1.MachineType)
-
-func MachineTypeWithDeletionTimestamp() MachineTypeOption {
-	return func(o *lifecyclev1alpha1.MachineType) {
-		o.DeletionTimestamp = &metav1.Time{Time: time.Now()}
-	}
+type MachineTypeMockBuilder struct {
+	inner *lifecyclev1alpha1.MachineType
 }
 
-func MachineTypeWithFinalizer() MachineTypeOption {
-	return func(o *lifecyclev1alpha1.MachineType) {
-		o.Finalizers = []string{"test-suite-finalizer"}
-	}
+func (b *UnstructuredBuilder) MachineTypeFromUnstructured() *MachineTypeMockBuilder {
+	var m lifecyclev1alpha1.MachineType
+	b.inner.SetAPIVersion("lifecycle.ironcore.dev/v1alpha1")
+	b.inner.SetKind("MachineType")
+	_ = runtime.DefaultUnstructuredConverter.FromUnstructured(b.inner.Object, &m)
+	return &MachineTypeMockBuilder{inner: &m}
 }
 
-func MachineTypeWithGroup(group lifecyclev1alpha1.MachineGroup) MachineTypeOption {
-	return func(o *lifecyclev1alpha1.MachineType) {
-		o.Spec.MachineGroups = append(o.Spec.MachineGroups, group)
-	}
+func (b *MachineTypeMockBuilder) WithMachineGroups(groups []lifecyclev1alpha1.MachineGroup) *MachineTypeMockBuilder {
+	b.inner.Spec.MachineGroups = groups
+	return b
 }
 
-func NewMachineTypeObject(name, namespace string, opts ...MachineTypeOption) *lifecyclev1alpha1.MachineType {
-	o := &lifecyclev1alpha1.MachineType{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "MachineType",
-			APIVersion: "v1alpha1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-	}
-	for _, opt := range opts {
-		opt(o)
-	}
-	return o
+func (b *MachineTypeMockBuilder) Complete() *lifecyclev1alpha1.MachineType {
+	return b.inner
 }

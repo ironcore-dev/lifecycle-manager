@@ -4,59 +4,38 @@
 package mock
 
 import (
-	"time"
-
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 )
 
-type MachineOption func(*lifecyclev1alpha1.Machine)
-
-func MachineWithDeletionTimestamp() MachineOption {
-	return func(o *lifecyclev1alpha1.Machine) {
-		o.DeletionTimestamp = &metav1.Time{Time: time.Now()}
-	}
+type MachineMockBuilder struct {
+	inner *lifecyclev1alpha1.Machine
 }
 
-func MachineWithFinalizer() MachineOption {
-	return func(o *lifecyclev1alpha1.Machine) {
-		o.Finalizers = []string{"test-suite-finalizer"}
-	}
+func (b *UnstructuredBuilder) MachineFromUnstructured() *MachineMockBuilder {
+	var m lifecyclev1alpha1.Machine
+	b.inner.SetAPIVersion("lifecycle.ironcore.dev/v1alpha1")
+	b.inner.SetKind("Machine")
+	_ = runtime.DefaultUnstructuredConverter.FromUnstructured(b.inner.Object, &m)
+	return &MachineMockBuilder{inner: &m}
 }
 
-func MachineWithLabels(lbl map[string]string) MachineOption {
-	return func(o *lifecyclev1alpha1.Machine) {
-		o.Labels = lbl
-	}
+func (b *MachineMockBuilder) WithMachineTypeRef(name string) *MachineMockBuilder {
+	b.inner.Spec.MachineTypeRef.Name = name
+	return b
 }
 
-func MachineWithMachineTypeRef(name string) MachineOption {
-	return func(o *lifecyclev1alpha1.Machine) {
-		o.Spec.MachineTypeRef = corev1.LocalObjectReference{Name: name}
-	}
+func (b *MachineMockBuilder) WithOOBMachineRef(name string) *MachineMockBuilder {
+	b.inner.Spec.OOBMachineRef.Name = name
+	return b
 }
 
-func MachineStatusWithInstalledPackages(pkg []lifecyclev1alpha1.PackageVersion) MachineOption {
-	return func(o *lifecyclev1alpha1.Machine) {
-		o.Status.InstalledPackages = pkg
-	}
+func (b *MachineMockBuilder) WithInstalledPackages(pkg []lifecyclev1alpha1.PackageVersion) *MachineMockBuilder {
+	b.inner.Status.InstalledPackages = pkg
+	return b
 }
 
-func NewMachineObject(name, namespace string, opts ...MachineOption) *lifecyclev1alpha1.Machine {
-	o := &lifecyclev1alpha1.Machine{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Machine",
-			APIVersion: "v1alpha1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-	}
-	for _, opt := range opts {
-		opt(o)
-	}
-	return o
+func (b *MachineMockBuilder) Complete() *lifecyclev1alpha1.Machine {
+	return b.inner
 }
