@@ -46,7 +46,6 @@ func (c *MachineClient) ScanMachine(
 			Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 		}), nil
 	}
-	c.cache[uid] = &machineapiv1alpha1.MachineStatus{}
 	return connect.NewResponse(&machineapiv1alpha1.ScanMachineResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED,
 	}), nil

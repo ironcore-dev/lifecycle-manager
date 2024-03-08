@@ -102,11 +102,11 @@ func (r *MachineReconciler) reconcileScan(
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
 	}))
-	scanResponse := resp.Msg
 	if err != nil {
 		log.Error(err, "failed to send scan request")
 		return ctrl.Result{}, err
 	}
+	scanResponse := resp.Msg
 	if LCIMRequestResultToString[scanResponse.Result].IsScheduled() {
 		obj.Status.Message = StatusMessageScanRequestSubmitted
 		return ctrl.Result{}, nil
@@ -135,11 +135,11 @@ func (r *MachineReconciler) reconcileInstall(
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
 	}))
-	installResponse := resp.Msg
 	if err != nil {
 		log.Error(err, "failed to send install request")
 		return ctrl.Result{}, err
 	}
+	installResponse := resp.Msg
 	if LCIMRequestResultToString[installResponse.Result].IsScheduled() {
 		obj.Status.Message = StatusMessageInstallationScheduled
 		return ctrl.Result{}, nil
