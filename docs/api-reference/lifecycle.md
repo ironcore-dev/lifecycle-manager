@@ -9,47 +9,11 @@
 <p>Package v1alpha1 is the v1alpha1 version of the API.</p>
 </div>
 Resource Types:
-<ul></ul>
-<h3 id="lifecycle.ironcore.dev/v1alpha1.AvailablePackageVersions">AvailablePackageVersions
-</h3>
-<p>
-(<em>Appears on:</em><a href="#lifecycle.ironcore.dev/v1alpha1.MachineTypeStatus">MachineTypeStatus</a>)
-</p>
-<div>
-<p>AvailablePackageVersions defines a number of versions for concrete firmware package.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name reflects the name of the firmware package</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>versions</code><br/>
-<em>
-[]string
-</em>
-</td>
-<td>
-<p>Versions reflects the list of discovered package versions available for installation.</p>
-</td>
-</tr>
-</tbody>
-</table>
+<ul><li>
+<a href="#lifecycle.ironcore.dev/v1alpha1.Machine">Machine</a>
+</li><li>
+<a href="#lifecycle.ironcore.dev/v1alpha1.MachineType">MachineType</a>
+</li></ul>
 <h3 id="lifecycle.ironcore.dev/v1alpha1.Machine">Machine
 </h3>
 <div>
@@ -63,6 +27,23 @@ string
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+lifecycle.ironcore.dev/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>Machine</code></td>
+</tr>
 <tr>
 <td>
 <code>metadata</code><br/>
@@ -159,6 +140,168 @@ MachineStatus
 </tr>
 </tbody>
 </table>
+<h3 id="lifecycle.ironcore.dev/v1alpha1.MachineType">MachineType
+</h3>
+<div>
+<p>MachineType is the Schema for the machinetypes API.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br/>
+string</td>
+<td>
+<code>
+lifecycle.ironcore.dev/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br/>
+string
+</td>
+<td><code>MachineType</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br/>
+<em>
+<a href="#lifecycle.ironcore.dev/v1alpha1.MachineTypeSpec">
+MachineTypeSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>manufacturer</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Manufacturer refers to manufacturer, e.g. Lenovo, Dell etc.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>type</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Type refers to machine type, e.g. 7z21 for Lenovo, R440 for Dell etc.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scanPeriod</code><br/>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#duration-v1-meta">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<p>ScanPeriod defines the interval between scans.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>machineGroups</code><br/>
+<em>
+<a href="#lifecycle.ironcore.dev/v1alpha1.MachineGroup">
+[]MachineGroup
+</a>
+</em>
+</td>
+<td>
+<p>MachineGroups defines list of MachineGroup</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br/>
+<em>
+<a href="#lifecycle.ironcore.dev/v1alpha1.MachineTypeStatus">
+MachineTypeStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="lifecycle.ironcore.dev/v1alpha1.AvailablePackageVersions">AvailablePackageVersions
+</h3>
+<p>
+(<em>Appears on:</em><a href="#lifecycle.ironcore.dev/v1alpha1.MachineTypeStatus">MachineTypeStatus</a>)
+</p>
+<div>
+<p>AvailablePackageVersions defines a number of versions for concrete firmware package.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name reflects the name of the firmware package</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>versions</code><br/>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>Versions reflects the list of discovered package versions available for installation.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="lifecycle.ironcore.dev/v1alpha1.MachineGroup">MachineGroup
 </h3>
 <p>
@@ -176,6 +319,17 @@ and a list of firmware packages versions which should be installed by default.</
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>name</code><br/>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name defines machine group name</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>machineSelector</code><br/>
@@ -341,109 +495,17 @@ string
 <p>Message contains verbose message explaining current state</p>
 </td>
 </tr>
-</tbody>
-</table>
-<h3 id="lifecycle.ironcore.dev/v1alpha1.MachineType">MachineType
-</h3>
-<div>
-<p>MachineType is the Schema for the machinetypes API.</p>
-</div>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
 <tr>
 <td>
-<code>metadata</code><br/>
+<code>conditions</code><br/>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#condition-v1-meta">
+[]Kubernetes meta/v1.Condition
 </a>
 </em>
 </td>
 <td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code><br/>
-<em>
-<a href="#lifecycle.ironcore.dev/v1alpha1.MachineTypeSpec">
-MachineTypeSpec
-</a>
-</em>
-</td>
-<td>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>manufacturer</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Manufacturer refers to manufacturer, e.g. Lenovo, Dell etc.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>type</code><br/>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Type refers to machine type, e.g. 7z21 for Lenovo, R440 for Dell etc.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scanPeriod</code><br/>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#duration-v1-meta">
-Kubernetes meta/v1.Duration
-</a>
-</em>
-</td>
-<td>
-<p>ScanPeriod defines the interval between scans.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>machineGroups</code><br/>
-<em>
-<a href="#lifecycle.ironcore.dev/v1alpha1.MachineGroup">
-[]MachineGroup
-</a>
-</em>
-</td>
-<td>
-<p>MachineGroups defines list of MachineGroup</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code><br/>
-<em>
-<a href="#lifecycle.ironcore.dev/v1alpha1.MachineTypeStatus">
-MachineTypeStatus
-</a>
-</em>
-</td>
-<td>
+<p>Conditions reflects Machine conditions and their state</p>
 </td>
 </tr>
 </tbody>
@@ -639,6 +701,8 @@ string
 <tbody><tr><td><p>&#34;Failure&#34;</p></td>
 <td></td>
 </tr><tr><td><p>&#34;Success&#34;</p></td>
+<td></td>
+</tr><tr><td><p>&#34;&#34;</p></td>
 <td></td>
 </tr></tbody>
 </table>
