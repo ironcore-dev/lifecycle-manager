@@ -13,11 +13,6 @@ on:
   pull_request:
     branches:
       - main
-  workflow_run:
-    workflows:
-      - "Commit check"
-    types:
-      - completed
 
 permissions:
   contents: read
@@ -29,8 +24,28 @@ env:
   registry: ghcr.io
 
 jobs:
+  commit-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup golang
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Generate
+        run: make generate manifests add-license
+
+      - name: Check diff
+        run: |
+          [[ $(git diff) ]] && return 1 || return 0
+
   go-lint:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs: [ commit-check ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -49,6 +64,7 @@ jobs:
           args: -e S1008 --timeout 15m
 
   go-test:
+    needs: [ commit-check ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
