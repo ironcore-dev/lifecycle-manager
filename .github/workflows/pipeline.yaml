@@ -24,7 +24,32 @@ env:
   registry: ghcr.io
 
 jobs:
+  commit-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup golang
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Generate
+        run: make generate manifests add-license
+
+      - name: Check diff
+        run: |
+          if [ "$(git diff --ignore-cr-at-eol --ignore-space-at-eol | wc -l)" -gt 0 ]; then 
+            echo "Uncommitted changes detected:"
+            git diff
+            exit 1
+          fi
+
   go-lint:
+    needs: [ commit-check ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,6 +68,7 @@ jobs:
           args: -e S1008 --timeout 15m
 
   go-test:
+    needs: [ commit-check ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
