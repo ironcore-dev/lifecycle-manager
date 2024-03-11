@@ -42,7 +42,7 @@ jobs:
 
       - name: Check diff
         run: |
-          if [ "$(git diff --ignore-cr-at-eol --ignore-space-at-eol) | wc -l" -gt "0"  ]; then
+          if [ "$(git diff --ignore-cr-at-eol --ignore-space-at-eol | wc -l)" -gt 0 ]; then 
             echo "Uncommitted changes detected:"
             git diff
             exit 1
