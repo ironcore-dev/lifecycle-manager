@@ -13,6 +13,11 @@ on:
   pull_request:
     branches:
       - main
+  workflow_run:
+    workflows:
+      - "Commit check"
+    types:
+      - completed
 
 permissions:
   contents: read
@@ -25,6 +30,7 @@ env:
 
 jobs:
   go-lint:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
