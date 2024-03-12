@@ -24,10 +24,12 @@ const (
 )
 
 const (
-	StatusMessageScanRequestSubmitted  = "scan request submitted"
-	StatusMessageScanRequestFailed     = "scan request failed"
-	StatusMessageInstallRequestFailed  = "install request failed"
-	StatusMessageInstallationScheduled = "packages installation scheduled"
+	StatusMessageScanRequestProcessing    = "scanning is in progress"
+	StatusMessageScanRequestSuccessful    = "scan request submitted"
+	StatusMessageScanRequestFailed        = "scan request failed"
+	StatusMessageInstallRequestFailed     = "install request failed"
+	StatusMessageInstallRequestProcessing = "installation is in progress"
+	StatusMessageInstallRequestSuccessful = "install request submitted"
 )
 
 func (r RequestResult) IsScheduled() bool {

@@ -55,6 +55,8 @@ func main() {
 	var enableLeaderElection bool
 	var probeAddr string
 	var lcmiServiceAddr string
+	var horizon time.Duration
+	flag.DurationVar(&horizon, "scan-horizon", time.Minute*10, "The period within which scan results considered to be valid.")
 	flag.StringVar(&lcmiServiceAddr, "lcmi-address", lcmiEndpoint, "The address lifecycle-service running on.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -81,7 +83,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = setupControllers(mgr, lcmiServiceAddr); err != nil {
+	if err = setupControllers(mgr, lcmiServiceAddr, horizon); err != nil {
 		os.Exit(1)
 	}
 	if err = setupHandlers(mgr); err != nil {
@@ -95,13 +97,14 @@ func main() {
 	}
 }
 
-func setupControllers(mgr ctrl.Manager, endpoint string) error {
+func setupControllers(mgr ctrl.Manager, endpoint string, horizon time.Duration) error {
 	httpClient := setupHTTPClient()
 	if err := (&controllers.MachineReconciler{
 		Client:               mgr.GetClient(),
 		Scheme:               mgr.GetScheme(),
 		Log:                  mgr.GetLogger().WithName("lifecycle-machine-controller"),
 		MachineServiceClient: setupMachineClient(endpoint, httpClient),
+		Horizon:              horizon,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Machine")
 		return err

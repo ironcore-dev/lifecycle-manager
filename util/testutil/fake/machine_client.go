@@ -9,25 +9,14 @@ import (
 	"connectrpc.com/connect"
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 	machineapiv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 type MachineClient struct {
-	cache map[string]*machineapiv1alpha1.MachineStatus
 }
 
-func NewMachineClient(cache map[string]*machineapiv1alpha1.MachineStatus) *MachineClient {
-	return &MachineClient{cache: cache}
-}
-
-func (c *MachineClient) WriteCache(id string, item *machineapiv1alpha1.MachineStatus) {
-	c.cache[id] = item
-}
-
-func (c *MachineClient) ReadCache(id string) *machineapiv1alpha1.MachineStatus {
-	return c.cache[id]
+func NewMachineClient() *MachineClient {
+	return &MachineClient{}
 }
 
 func (c *MachineClient) ScanMachine(
@@ -35,16 +24,13 @@ func (c *MachineClient) ScanMachine(
 	req *connect.Request[machineapiv1alpha1.ScanMachineRequest],
 ) (*connect.Response[machineapiv1alpha1.ScanMachineResponse], error) {
 	in := req.Msg
-	if in.Name == "failed-scan" {
-		return nil, errors.New("fake error")
-	}
-	key := types.NamespacedName{Name: in.Name, Namespace: in.Namespace}
-	uid := uuidutil.UUIDFromObjectKey(key)
-	_, ok := c.cache[uid]
-	if ok {
+	switch {
+	case in.Name == "sample-scan-submitted":
 		return connect.NewResponse(&machineapiv1alpha1.ScanMachineResponse{
 			Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 		}), nil
+	case in.Name == "failed-scan":
+		return nil, errors.New("fake error")
 	}
 	return connect.NewResponse(&machineapiv1alpha1.ScanMachineResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED,
@@ -56,23 +42,18 @@ func (c *MachineClient) Install(
 	req *connect.Request[machineapiv1alpha1.InstallRequest],
 ) (*connect.Response[machineapiv1alpha1.InstallResponse], error) {
 	in := req.Msg
-	if in.Name == "failed-install" {
+	switch {
+	case in.Name == "sample-install-submitted":
+		return connect.NewResponse(&machineapiv1alpha1.InstallResponse{
+			Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED,
+		}), nil
+	case in.Name == "failed-install":
 		return nil, connect.NewError(connect.CodeInternal, errors.New("fake error"))
-	}
-	if in.Name == "fake-failure" {
+	case in.Name == "fake-failure":
 		return connect.NewResponse(&machineapiv1alpha1.InstallResponse{
 			Result: commonv1alpha1.RequestResult_REQUEST_RESULT_FAILURE,
 		}), nil
 	}
-	key := types.NamespacedName{Name: in.Name, Namespace: in.Namespace}
-	uid := uuidutil.UUIDFromObjectKey(key)
-	_, ok := c.cache[uid]
-	if ok {
-		return connect.NewResponse(&machineapiv1alpha1.InstallResponse{
-			Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED,
-		}), nil
-	}
-	c.cache[uid] = &machineapiv1alpha1.MachineStatus{}
 	return connect.NewResponse(&machineapiv1alpha1.InstallResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_UNSPECIFIED,
 	}), nil

@@ -10,14 +10,15 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/go-logr/logr"
+	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/applyconfiguration/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/lifecycle"
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1/machinetypev1alpha1connect"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/svc/scheduler"
 	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
-	"github.com/jellydator/ttlcache/v3"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -32,9 +33,8 @@ const (
 type MachineTypeService struct {
 	machinetypev1alpha1connect.UnimplementedMachineTypeServiceHandler
 	c         *lifecycle.Clientset
-	cache     *ttlcache.Cache[string, *machinetypev1alpha1.MachineTypeStatus]
+	scheduler *scheduler.Scheduler[*lifecyclev1alpha1.MachineType]
 	horizon   time.Duration
-	period    time.Duration
 	namespace string
 }
 
@@ -61,16 +61,14 @@ func WithHorizon(horizon time.Duration) Option {
 	}
 }
 
-func WithScanPeriod(period time.Duration) Option {
+func WithScheduler(scheduler *scheduler.Scheduler[*lifecyclev1alpha1.MachineType]) Option {
 	return func(svc *MachineTypeService) {
-		svc.period = period
+		svc.scheduler = scheduler
 	}
 }
 
-func WithCache(cache *ttlcache.Cache[string, *machinetypev1alpha1.MachineTypeStatus]) Option {
-	return func(svc *MachineTypeService) {
-		svc.cache = cache
-	}
+func (s *MachineTypeService) StartScheduler(ctx context.Context) {
+	s.scheduler.Start(ctx)
 }
 
 func (s *MachineTypeService) ListMachineTypes(
@@ -118,19 +116,17 @@ func (s *MachineTypeService) Scan(
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_UNSPECIFIED,
 	}
 
-	key := types.NamespacedName{Name: req.Name, Namespace: namespace}
-	cacheItem := s.cache.Get(uuidutil.UUIDFromObjectKey(key))
-	switch {
-	case cacheItem == nil:
-		fallthrough
-	case time.Since(time.Unix(
-		cacheItem.Value().LastScanTime.Seconds, int64(cacheItem.Value().LastScanTime.Nanos))) > s.horizon:
-		// todo: result should be returned by the call to scheduler, like
-		//  resp.Result = s.scheduleJob()
-		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
-	default:
-		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS
+	machineType, err := s.c.LifecycleV1alpha1().MachineTypes(namespace).Get(ctx, req.Name, metav1.GetOptions{})
+	if err != nil {
+		errCode := connect.CodeInternal
+		if apierrors.IsNotFound(err) {
+			errCode = connect.CodeNotFound
+		}
+		return nil, connect.NewError(errCode, err)
 	}
+	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
+	resp.Result = s.scheduler.Schedule(
+		scheduler.NewTask[*lifecyclev1alpha1.MachineType](key, scheduler.ScanJob, machineType))
 	return connect.NewResponse(resp), nil
 }
 
@@ -162,8 +158,8 @@ func (s *MachineTypeService) UpdateMachineTypeStatus(
 	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
-	key := types.NamespacedName{Name: req.Name, Namespace: namespace}
-	s.cache.Set(uuidutil.UUIDFromObjectKey(key), req.Status, ttlcache.DefaultTTL)
+	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
+	s.scheduler.ForgetFinishedJob(key)
 	return connect.NewResponse(&machinetypev1alpha1.UpdateMachineTypeStatusResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 	}), nil

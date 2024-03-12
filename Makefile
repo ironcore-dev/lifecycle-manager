@@ -33,8 +33,8 @@ check-license: addlicense ## Check license header presence in all .go files in p
 	@find . -name '*.go' -exec $(ADDLICENSE) -check -c 'IronCore authors' {} +
 
 .PHONY: test-controllers
-test-controllers:
-	@go test ./internal/... -coverprofile cover.out
+test-controllers: ## Run tests excluding generated code and integration tests
+	@go test $(shell go list ./... | grep -v clientgo | grep -v integrationtests) -coverprofile cover.out
 
 .PHONY: test-integration
 test-integration: envtest
@@ -117,7 +117,7 @@ KUSTOMIZE ?= $(LOCAL_BIN)/kustomize
 ## Tools versions
 ADDLICENSE_VERSION ?= v1.1.1
 CONTROLLER_GEN_VERSION ?= v0.14.0
-GOLANGCI_LINT_VERSION ?= v1.55.2
+GOLANGCI_LINT_VERSION ?= v1.56.2
 GOIMPORTS_VERSION ?= v0.16.1
 ENVTEST_K8S_VERSION ?= 1.28.3
 CODE_GENERATOR_VERSION ?= v0.28.3

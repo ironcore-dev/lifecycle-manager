@@ -9,25 +9,14 @@ import (
 	"connectrpc.com/connect"
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 	machinetypeapiv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 type MachineTypeClient struct {
-	cache map[string]*machinetypeapiv1alpha1.MachineTypeStatus
 }
 
-func NewMachineTypeClient(cache map[string]*machinetypeapiv1alpha1.MachineTypeStatus) *MachineTypeClient {
-	return &MachineTypeClient{cache: cache}
-}
-
-func (c *MachineTypeClient) WriteCache(id string, item *machinetypeapiv1alpha1.MachineTypeStatus) {
-	c.cache[id] = item
-}
-
-func (c *MachineTypeClient) ReadCache(id string) *machinetypeapiv1alpha1.MachineTypeStatus {
-	return c.cache[id]
+func NewMachineTypeClient() *MachineTypeClient {
+	return &MachineTypeClient{}
 }
 
 func (c *MachineTypeClient) ListMachineTypes(
@@ -42,13 +31,10 @@ func (c *MachineTypeClient) Scan(
 	req *connect.Request[machinetypeapiv1alpha1.ScanRequest],
 ) (*connect.Response[machinetypeapiv1alpha1.ScanResponse], error) {
 	in := req.Msg
-	if in.Name == "failed-scan" {
+	switch {
+	case in.Name == "failed-scan":
 		return nil, connect.NewError(connect.CodeInternal, errors.New("fake error"))
-	}
-	key := types.NamespacedName{Name: in.Name, Namespace: in.Namespace}
-	uid := uuidutil.UUIDFromObjectKey(key)
-	_, ok := c.cache[uid]
-	if ok {
+	case in.Name == "sample-scan-submitted":
 		return connect.NewResponse(&machinetypeapiv1alpha1.ScanResponse{
 			Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 		}), nil

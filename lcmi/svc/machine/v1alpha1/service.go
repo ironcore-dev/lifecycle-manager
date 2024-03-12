@@ -17,9 +17,9 @@ import (
 	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
 	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1/machinev1alpha1connect"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/svc/scheduler"
 	"github.com/ironcore-dev/lifecycle-manager/util/apiutil"
 	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
-	"github.com/jellydator/ttlcache/v3"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -35,9 +35,8 @@ const (
 type MachineService struct {
 	machinev1alpha1connect.UnimplementedMachineServiceHandler
 	c         *lifecycle.Clientset
-	cache     *ttlcache.Cache[string, *machinev1alpha1.MachineStatus]
+	scheduler *scheduler.Scheduler[*lifecyclev1alpha1.Machine]
 	horizon   time.Duration
-	period    time.Duration
 	namespace string
 }
 
@@ -64,16 +63,14 @@ func WithHorizon(horizon time.Duration) Option {
 	}
 }
 
-func WithScanPeriod(period time.Duration) Option {
+func WithScheduler(scheduler *scheduler.Scheduler[*lifecyclev1alpha1.Machine]) Option {
 	return func(svc *MachineService) {
-		svc.period = period
+		svc.scheduler = scheduler
 	}
 }
 
-func WithCache(cache *ttlcache.Cache[string, *machinev1alpha1.MachineStatus]) Option {
-	return func(svc *MachineService) {
-		svc.cache = cache
-	}
+func (s *MachineService) StartScheduler(ctx context.Context) {
+	s.scheduler.Start(ctx)
 }
 
 // ScanMachine runs scan job for target Machine. First it checks whether Machine
@@ -103,23 +100,9 @@ func (s *MachineService) ScanMachine(
 		}
 		return nil, connect.NewError(errCode, err)
 	}
-
-	key := types.NamespacedName{Name: req.Name, Namespace: namespace}
-	cacheItem := s.cache.Get(uuidutil.UUIDFromObjectKey(key))
-
-	switch {
-	case cacheItem == nil:
-		fallthrough
-	case time.Since(time.Unix(
-		cacheItem.Value().LastScanTime.Seconds, int64(cacheItem.Value().LastScanTime.Nanos))) > s.horizon:
-		fallthrough
-	case !installedPackagesEqual(machine.Status, cacheItem.Value()):
-		// todo: result should be returned by the call to scheduler, like
-		//  resp.Result = s.scheduleJob()
-		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
-	default:
-		resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS
-	}
+	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
+	resp.Result = s.scheduler.Schedule(
+		scheduler.NewTask[*lifecyclev1alpha1.Machine](key, scheduler.ScanJob, machine))
 	return connect.NewResponse(resp), nil
 }
 
@@ -139,7 +122,7 @@ func (s *MachineService) Install(
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_UNSPECIFIED,
 	}
 
-	_, err := s.c.LifecycleV1alpha1().Machines(namespace).Get(ctx, req.Name, metav1.GetOptions{})
+	machine, err := s.c.LifecycleV1alpha1().Machines(namespace).Get(ctx, req.Name, metav1.GetOptions{})
 	if err != nil {
 		errCode := connect.CodeInternal
 		if apierrors.IsNotFound(err) {
@@ -147,9 +130,9 @@ func (s *MachineService) Install(
 		}
 		return nil, connect.NewError(errCode, err)
 	}
-	// todo: result should be returned by the call to scheduler, like
-	//  resp.Result = s.scheduleJob()
-	resp.Result = commonv1alpha1.RequestResult_REQUEST_RESULT_SCHEDULED
+	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
+	resp.Result = s.scheduler.Schedule(
+		scheduler.NewTask[*lifecyclev1alpha1.Machine](key, scheduler.InstallJob, machine))
 	return connect.NewResponse(resp), nil
 }
 
@@ -184,8 +167,8 @@ func (s *MachineService) UpdateMachineStatus(
 	}); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
-	key := types.NamespacedName{Name: req.Name, Namespace: namespace}
-	s.cache.Set(uuidutil.UUIDFromObjectKey(key), req.Status, ttlcache.DefaultTTL)
+	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
+	s.scheduler.ForgetFinishedJob(key)
 	return connect.NewResponse(&machinev1alpha1.UpdateMachineStatusResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 	}), nil

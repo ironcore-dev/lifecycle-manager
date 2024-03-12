@@ -15,39 +15,36 @@ import (
 	"connectrpc.com/grpchealth"
 	"connectrpc.com/grpcreflect"
 	"connectrpc.com/validate"
-	machineapiv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
+	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1/machinev1alpha1connect"
-	machinetypeapiv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1/machinetypev1alpha1connect"
 	"github.com/ironcore-dev/lifecycle-manager/lcmi/svc/interceptor"
 	machinesvcv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/svc/machine/v1alpha1"
 	machinetypesvcv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/svc/machinetype/v1alpha1"
-	"github.com/jellydator/ttlcache/v3"
+	"github.com/ironcore-dev/lifecycle-manager/lcmi/svc/scheduler"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"k8s.io/client-go/rest"
 )
-
-const cacheCapacity = 1024
 
 type GrpcServer struct {
 	log                *slog.Logger
 	host               string
 	port               int
 	machineService     *machinesvcv1alpha1.MachineService
-	machineCache       *ttlcache.Cache[string, *machineapiv1alpha1.MachineStatus]
-	machinetypeCache   *ttlcache.Cache[string, *machinetypeapiv1alpha1.MachineTypeStatus]
 	machineTypeService *machinetypesvcv1alpha1.MachineTypeService
 }
 
 type Options struct {
-	Cfg        *rest.Config
-	Log        *slog.Logger
-	Host       string
-	Port       int
-	Namespace  string
-	ScanPeriod time.Duration
-	Horizon    time.Duration
+	Cfg  *rest.Config
+	Log  *slog.Logger
+	Host string
+	Port int
+
+	Namespace     string
+	Workers       uint64
+	Horizon       time.Duration
+	QueueCapacity uint64
 }
 
 func NewGrpcServer(opts Options) *GrpcServer {
@@ -56,28 +53,8 @@ func NewGrpcServer(opts Options) *GrpcServer {
 		host: opts.Host,
 		port: opts.Port,
 	}
-	machineCache := ttlcache.New[string, *machineapiv1alpha1.MachineStatus](
-		ttlcache.WithTTL[string, *machineapiv1alpha1.MachineStatus](opts.ScanPeriod),
-		ttlcache.WithDisableTouchOnHit[string, *machineapiv1alpha1.MachineStatus](),
-		ttlcache.WithCapacity[string, *machineapiv1alpha1.MachineStatus](cacheCapacity))
-	machinetypeCache := ttlcache.New[string, *machinetypeapiv1alpha1.MachineTypeStatus](
-		ttlcache.WithTTL[string, *machinetypeapiv1alpha1.MachineTypeStatus](opts.ScanPeriod),
-		ttlcache.WithDisableTouchOnHit[string, *machinetypeapiv1alpha1.MachineTypeStatus](),
-		ttlcache.WithCapacity[string, *machinetypeapiv1alpha1.MachineTypeStatus](cacheCapacity))
-	machineService := machinesvcv1alpha1.NewService(opts.Cfg,
-		machinesvcv1alpha1.WithNamespace(opts.Namespace),
-		machinesvcv1alpha1.WithHorizon(opts.Horizon),
-		machinesvcv1alpha1.WithScanPeriod(opts.ScanPeriod),
-		machinesvcv1alpha1.WithCache(machineCache))
-	machinetypeService := machinetypesvcv1alpha1.NewService(opts.Cfg,
-		machinetypesvcv1alpha1.WithNamespace(opts.Namespace),
-		machinetypesvcv1alpha1.WithHorizon(opts.Horizon),
-		machinetypesvcv1alpha1.WithScanPeriod(opts.ScanPeriod),
-		machinetypesvcv1alpha1.WithCache(machinetypeCache))
-	srv.machineCache = machineCache
-	srv.machinetypeCache = machinetypeCache
-	srv.machineService = machineService
-	srv.machineTypeService = machinetypeService
+	srv.machineService = setupMachineService(opts)
+	srv.machineTypeService = setupMachineTypeService(opts)
 	return srv
 }
 
@@ -111,17 +88,41 @@ func (s *GrpcServer) Start(ctx context.Context) error {
 	go func() {
 		defer func() {
 			s.log.Debug("stopping server", "kind", "lifecycle-service")
-			s.machineCache.Stop()
-			s.machinetypeCache.Stop()
 			s.log.Info("server stopped")
 			os.Exit(0)
 		}()
 		<-ctx.Done()
 	}()
 
-	go s.machineCache.Start()
-	go s.machinetypeCache.Start()
+	go s.machineService.StartScheduler(ctx)
+	go s.machineTypeService.StartScheduler(ctx)
 
 	s.log.Info("start serving", "addr", fmt.Sprintf("%s:%d", s.host, s.port))
 	return http.ListenAndServe(fmt.Sprintf("%s:%d", s.host, s.port), h2c.NewHandler(mux, srv))
+}
+
+func setupMachineService(opts Options) *machinesvcv1alpha1.MachineService {
+	machineScheduler := scheduler.NewScheduler[*lifecyclev1alpha1.Machine](
+		opts.Log.With("scheduler", "Machine"), opts.Cfg, opts.Namespace,
+		scheduler.WithWorkerCount[*lifecyclev1alpha1.Machine](opts.Workers),
+		scheduler.WithActiveJobCache[*lifecyclev1alpha1.Machine](opts.Workers, opts.Horizon),
+		scheduler.WithQueueCapacity[*lifecyclev1alpha1.Machine](opts.QueueCapacity))
+	machineService := machinesvcv1alpha1.NewService(opts.Cfg,
+		machinesvcv1alpha1.WithNamespace(opts.Namespace),
+		machinesvcv1alpha1.WithHorizon(opts.Horizon),
+		machinesvcv1alpha1.WithScheduler(machineScheduler))
+	return machineService
+}
+
+func setupMachineTypeService(opts Options) *machinetypesvcv1alpha1.MachineTypeService {
+	machinetypeScheduler := scheduler.NewScheduler[*lifecyclev1alpha1.MachineType](
+		opts.Log.With("scheduler", "MachineType"), opts.Cfg, opts.Namespace,
+		scheduler.WithWorkerCount[*lifecyclev1alpha1.MachineType](opts.Workers),
+		scheduler.WithActiveJobCache[*lifecyclev1alpha1.MachineType](opts.Workers, opts.Horizon),
+		scheduler.WithQueueCapacity[*lifecyclev1alpha1.MachineType](opts.QueueCapacity))
+	machinetypeService := machinetypesvcv1alpha1.NewService(opts.Cfg,
+		machinetypesvcv1alpha1.WithNamespace(opts.Namespace),
+		machinetypesvcv1alpha1.WithHorizon(opts.Horizon),
+		machinetypesvcv1alpha1.WithScheduler(machinetypeScheduler))
+	return machinetypeService
 }

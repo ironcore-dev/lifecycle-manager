@@ -4,6 +4,7 @@
 package mock
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
@@ -31,8 +32,20 @@ func (b *MachineMockBuilder) WithOOBMachineRef(name string) *MachineMockBuilder 
 	return b
 }
 
+func (b *MachineMockBuilder) WithDesiredPackages(packages ...lifecyclev1alpha1.PackageVersion) *MachineMockBuilder {
+	for _, pkg := range packages {
+		b.inner.Spec.Packages = append(b.inner.Spec.Packages, pkg)
+	}
+	return b
+}
+
 func (b *MachineMockBuilder) WithInstalledPackages(pkg []lifecyclev1alpha1.PackageVersion) *MachineMockBuilder {
 	b.inner.Status.InstalledPackages = pkg
+	return b
+}
+
+func (b *MachineMockBuilder) WithLastScanTime(timestamp metav1.Time) *MachineMockBuilder {
+	b.inner.Status.LastScanTime = timestamp
 	return b
 }
 

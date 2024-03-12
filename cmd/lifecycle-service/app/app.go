@@ -38,6 +38,8 @@ type Options struct {
 	namespace  string
 	scanPeriod time.Duration
 	horizon    time.Duration
+	workers    uint64
+	queue      uint64
 	dev        bool
 }
 
@@ -48,8 +50,9 @@ func (o *Options) addFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.host, "host", "", "bind host")
 	fs.IntVar(&o.port, "port", 8080, "bind port")
 	fs.StringVar(&o.namespace, "namespace", "default", "default namespace name")
-	fs.DurationVar(&o.scanPeriod, "scan-period", time.Hour*24, "scan period")
 	fs.DurationVar(&o.horizon, "horizon", time.Minute*30, "allowed lag for scan period check")
+	fs.Uint64Var(&o.workers, "workers", 5, "number of workers to process tasks")
+	fs.Uint64Var(&o.queue, "queue-capacity", 1024, "size of the scheduler's queue")
 	fs.BoolVar(&o.dev, "dev", false, "development mode flag")
 }
 
@@ -78,13 +81,14 @@ func Run(ctx context.Context, opts Options) error {
 	}
 
 	srvOpts := svc.Options{
-		Cfg:        cfg,
-		Log:        setupLogger(LogFormat(opts.logFormat), logLevelMapping[opts.logLevel], opts.dev),
-		Host:       opts.host,
-		Port:       opts.port,
-		Namespace:  opts.namespace,
-		ScanPeriod: opts.scanPeriod,
-		Horizon:    opts.horizon,
+		Cfg:           cfg,
+		Log:           setupLogger(LogFormat(opts.logFormat), logLevelMapping[opts.logLevel], opts.dev),
+		Host:          opts.host,
+		Port:          opts.port,
+		Namespace:     opts.namespace,
+		Horizon:       opts.horizon,
+		Workers:       opts.workers,
+		QueueCapacity: opts.queue,
 	}
 	srv := svc.NewGrpcServer(srvOpts)
 	return srv.Start(ctx)

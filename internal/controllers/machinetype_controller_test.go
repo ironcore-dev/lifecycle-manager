@@ -6,7 +6,6 @@ package controllers
 import (
 	"context"
 
-	"github.com/ironcore-dev/lifecycle-manager/util/convertutil"
 	"github.com/ironcore-dev/lifecycle-manager/util/testutil/fake"
 	"github.com/ironcore-dev/lifecycle-manager/util/testutil/mock"
 	. "github.com/onsi/ginkgo/v2"
@@ -15,11 +14,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
-	"github.com/ironcore-dev/lifecycle-manager/util/uuidutil"
-
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
 )
 
 var _ = Describe("MachineType controller", func() {
@@ -57,16 +53,16 @@ var _ = Describe("MachineType controller", func() {
 
 	Context("When new scan request submitted", func() {
 		It("Should update MachineType object's status with corresponding message", func() {
-			machinetypeKey := types.NamespacedName{Namespace: "default", Name: "sample"}
+			machinetypeKey := types.NamespacedName{Namespace: "default", Name: "sample-scan-submitted"}
 			machineType := mock.NewUnstructuredBuilder().
-				WithName("sample").
+				WithName("sample-scan-submitted").
 				WithNamespace("default").
 				MachineTypeFromUnstructured().Complete()
 			Expect(machineType).NotTo(BeNil())
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 			c := testutil.SetupClient(s, testutil.WithRuntimeObject(machineType))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
-			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{})
+			brokerClient := fake.NewMachineTypeClient()
 			machinetypeRec.MachineTypeServiceClient = brokerClient
 			req := ctrl.Request{NamespacedName: machinetypeKey}
 			res, err := machinetypeRec.Reconcile(context.Background(), req)
@@ -75,7 +71,7 @@ var _ = Describe("MachineType controller", func() {
 			reconciledMachineType := &lifecyclev1alpha1.MachineType{}
 			err = machinetypeRec.Get(context.Background(), machinetypeKey, reconciledMachineType)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(reconciledMachineType.Status.Message).To(Equal(StatusMessageScanRequestSubmitted))
+			Expect(reconciledMachineType.Status.Message).To(Equal(StatusMessageScanRequestSuccessful))
 		})
 	})
 
@@ -90,45 +86,12 @@ var _ = Describe("MachineType controller", func() {
 			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
 			c := testutil.SetupClient(s, testutil.WithRuntimeObject(machineType))
 			machinetypeRec := NewMachineTypeReconciler(c, s)
-			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{})
+			brokerClient := fake.NewMachineTypeClient()
 			machinetypeRec.MachineTypeServiceClient = brokerClient
 			req := ctrl.Request{NamespacedName: machinetypeKey}
 			res, err := machinetypeRec.Reconcile(context.Background(), req)
 			Expect(err).To(HaveOccurred())
 			Expect(res).To(Equal(ctrl.Result{}))
-		})
-	})
-
-	Context("When scan response received", func() {
-		It("Should update MachineType object's status with scan timestamp and result", func() {
-			now := metav1.Now()
-			machinetypeKey := types.NamespacedName{Namespace: "default", Name: "sample"}
-			machineType := mock.NewUnstructuredBuilder().
-				WithName("sample").
-				WithNamespace("default").
-				MachineTypeFromUnstructured().Complete()
-			Expect(machineType).NotTo(BeNil())
-			s := testutil.SetupScheme(testutil.WithGroupVersion(lifecyclev1alpha1.AddToScheme))
-			c := testutil.SetupClient(s, testutil.WithRuntimeObject(machineType))
-			machinetypeRec := NewMachineTypeReconciler(c, s)
-			brokerClient := fake.NewMachineTypeClient(map[string]*machinetypev1alpha1.MachineTypeStatus{
-				uuidutil.UUIDFromObjectKey(machinetypeKey): {
-					LastScanTime:   convertutil.TimeToTimestampPtr(now),
-					LastScanResult: 1,
-					AvailablePackages: []*machinetypev1alpha1.AvailablePackageVersions{
-						{Name: "raid", Versions: []string{"2.9.0", "3.0.0", "3.2.1"}},
-					},
-				},
-			})
-			machinetypeRec.MachineTypeServiceClient = brokerClient
-			req := ctrl.Request{NamespacedName: machinetypeKey}
-			res, err := machinetypeRec.Reconcile(context.Background(), req)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(Equal(ctrl.Result{}))
-			reconciledMachineType := &lifecyclev1alpha1.MachineType{}
-			err = machinetypeRec.Get(context.Background(), machinetypeKey, reconciledMachineType)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(reconciledMachineType.Status).To(Equal(machineType.Status))
 		})
 	})
 })
