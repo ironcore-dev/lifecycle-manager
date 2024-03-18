@@ -24,7 +24,7 @@ require (
 	golang.org/x/mod v0.16.0
 	golang.org/x/net v0.22.0
 	google.golang.org/protobuf v1.33.0
-	k8s.io/api v0.29.2
+	k8s.io/api v0.29.3
 	k8s.io/apimachinery v0.29.3
 	k8s.io/client-go v0.29.2
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340
