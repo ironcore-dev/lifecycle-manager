@@ -13,7 +13,7 @@ require (
 	github.com/go-logr/logr v1.4.1
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/uuid v1.6.0
-	github.com/ironcore-dev/oob v0.5.1
+	github.com/ironcore-dev/oob v0.5.3
 	github.com/jellydator/ttlcache/v3 v3.2.0
 	github.com/onsi/ginkgo/v2 v2.16.0
 	github.com/onsi/gomega v1.31.1
