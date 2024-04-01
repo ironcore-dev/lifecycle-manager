@@ -6,7 +6,7 @@ toolchain go1.22.0
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.33.0-20240221180331-f05a6f4403ce.1
-	connectrpc.com/connect v1.15.0
+	connectrpc.com/connect v1.16.0
 	connectrpc.com/grpchealth v1.3.0
 	connectrpc.com/grpcreflect v1.2.0
 	connectrpc.com/validate v0.1.0
