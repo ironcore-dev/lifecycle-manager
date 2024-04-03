@@ -37,8 +37,6 @@ type Scheduler[T LifecycleObject] struct {
 	workqueue    *RingBufQueue[T]
 	activeJobs   *ttlcache.Cache[string, Task[T]]
 	pendingTasks *FIFOQueue[T]
-	period       time.Duration
-	jobTTL       time.Duration
 	workers      uint64
 
 	done chan struct{}
@@ -144,12 +142,13 @@ func (s *Scheduler[T]) ForgetFinishedJob(key string) {
 	s.activeJobs.Delete(key)
 }
 
-// Start starts the scheduler.
-// It sets up a callback function for when a task is evicted from the active jobs cache.
-// It starts the active jobs cache and initiates the worker goroutines.
-// It then enters a loop where it listens for signals to stop the scheduler or process the queues.
-// If it receives a stop signal, it closes the done channel and waits for all worker goroutines to finish.
-// It then stops the active jobs cache and exits.
+// Start starts the scheduler by performing the following steps:
+// 1. Configures the activeJobs cache to call the dropFinishedJob method on eviction.
+// 2. Starts the activeJobs cache in a separate goroutine.
+// 3. Starts a worker goroutine for each worker in the scheduler's workers list.
+// 5. Starts the schedulingLoop in a separate goroutine.
+// 6. Waits for the schedulingLoop to complete.
+// The context passed to the Start method is used to control the lifecycle of the scheduler.
 func (s *Scheduler[T]) Start(ctx context.Context) {
 	s.activeJobs.OnEviction(s.dropFinishedJob)
 	go s.activeJobs.Start()
@@ -165,6 +164,14 @@ func (s *Scheduler[T]) Start(ctx context.Context) {
 	s.schedulerWaitGroup.Wait()
 }
 
+// schedulingLoop is a method that runs as a Go routine and controls the main logic of the scheduler.
+// It continuously listens for two signals:
+//   - The done signal is received on the `s.done` channel, indicating that a job has finished processing.
+//     Upon receiving this signal, the method calls `s.processQueues()` to check the state of the queues
+//     and trigger necessary actions.
+//   - The context done signal is received on the `ctx.Done()` channel, indicating that the scheduler should stop.
+//     Upon receiving this signal, the method performs cleanup tasks, such as closing the `s.done` channel,
+//     logging queue states, waiting for worker goroutines to finish, stopping the
 func (s *Scheduler[T]) schedulingLoop(ctx context.Context) {
 	for {
 		select {
@@ -184,6 +191,16 @@ func (s *Scheduler[T]) schedulingLoop(ctx context.Context) {
 	}
 }
 
+// workerFunc represents the behavior of a worker in the scheduler.
+// It continuously listens for events on the workqueue and performs the necessary actions
+// based on the received events.
+// If an item is enqueued in the workqueue and there is available capacity for new jobs,
+// it dequeues the item from the workqueue, sets it as an active job, and processes the job
+// by calling the processJob function.
+// If there is an error during job processing, it logs the error and removes the active job
+// from the tracker.
+// If the workerFunc receives a cancellation signal from the context, it  decreases the
+// workersWaitGroup counter, and returns.
 func (s *Scheduler[T]) workerFunc(ctx context.Context) {
 	for {
 		select {
@@ -207,6 +224,16 @@ func (s *Scheduler[T]) workerFunc(ctx context.Context) {
 	}
 }
 
+// processQueues checks the state of the workqueue and the pendingTasks queue, and takes appropriate
+// actions based on the state.
+// If both queues are empty, it logs a message saying there are no pending tasks and returns.
+// If the active jobs tracker is full, it logs a message saying there are no free workers and returns.
+// If the workqueue is full, it triggers as many workers as there are available in the active jobs tracker.
+// It does this by sending a struct{}{} to the s.workqueue.Enqueued channel for each available worker.
+// It then moves as many tasks as possible from the pendingTasks queue to the workqueue.
+// If the pendingTasks queue is empty, it breaks the loop.
+// Lastly, if the workqueue is not empty and there are available workers, it triggers a worker to process
+// a task from the workqueue.
 func (s *Scheduler[T]) processQueues() {
 	s.mu.Lock()
 	defer s.mu.Unlock()

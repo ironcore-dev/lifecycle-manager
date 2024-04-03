@@ -33,9 +33,9 @@ func (b *MachineMockBuilder) WithOOBMachineRef(name string) *MachineMockBuilder 
 }
 
 func (b *MachineMockBuilder) WithDesiredPackages(packages ...lifecyclev1alpha1.PackageVersion) *MachineMockBuilder {
-	for _, pkg := range packages {
-		b.inner.Spec.Packages = append(b.inner.Spec.Packages, pkg)
-	}
+	packagesToApply := make([]lifecyclev1alpha1.PackageVersion, len(packages))
+	copy(packagesToApply, packages)
+	b.inner.Spec.Packages = packagesToApply
 	return b
 }
 

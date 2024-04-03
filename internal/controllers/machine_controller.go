@@ -268,7 +268,8 @@ func machineLabelsCompliant(machineLabels, selectorLabels map[string]string) boo
 func filterPackageVersion(
 	desiredPackages, installedPackages, defaultPackages []lifecyclev1alpha1.PackageVersion,
 ) []lifecyclev1alpha1.PackageVersion {
-	tempPackages := make([]lifecyclev1alpha1.PackageVersion, len(desiredPackages), len(desiredPackages)+len(defaultPackages))
+	tempPackages := make([]lifecyclev1alpha1.PackageVersion,
+		len(desiredPackages), len(desiredPackages)+len(defaultPackages))
 	copy(tempPackages, desiredPackages)
 
 	for _, pv := range defaultPackages {

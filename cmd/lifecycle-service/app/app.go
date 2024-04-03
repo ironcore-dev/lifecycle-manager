@@ -36,11 +36,11 @@ type Options struct {
 	host       string
 	port       int
 	namespace  string
-	scanPeriod time.Duration
-	horizon    time.Duration
-	workers    uint64
-	queue      uint64
-	dev        bool
+	// jobsConfig string
+	horizon time.Duration
+	workers uint64
+	queue   uint64
+	dev     bool
 }
 
 func (o *Options) addFlags(fs *pflag.FlagSet) {
@@ -50,6 +50,7 @@ func (o *Options) addFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.host, "host", "", "bind host")
 	fs.IntVar(&o.port, "port", 8080, "bind port")
 	fs.StringVar(&o.namespace, "namespace", "default", "default namespace name")
+	// fs.StringVar(&o.jobsConfig, "jobs-configmap", "", "name of the config map containing jobs parameters")
 	fs.DurationVar(&o.horizon, "horizon", time.Minute*30, "allowed lag for scan period check")
 	fs.Uint64Var(&o.workers, "workers", 5, "number of workers to process tasks")
 	fs.Uint64Var(&o.queue, "queue-capacity", 1024, "size of the scheduler's queue")

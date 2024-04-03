@@ -5,7 +5,6 @@ package v1alpha1
 
 import (
 	"context"
-	"reflect"
 	"slices"
 	"time"
 
@@ -327,14 +326,6 @@ func (s *MachineService) RemovePackageVersion(
 	return connect.NewResponse(&machinev1alpha1.RemovePackageVersionResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
 	}), nil
-}
-
-func installedPackagesEqual(
-	src lifecyclev1alpha1.MachineStatus,
-	tgt *machinev1alpha1.MachineStatus,
-) bool {
-	conv := apiutil.MachineStatusToKubeAPI(tgt)
-	return reflect.DeepEqual(src, conv)
 }
 
 func packageIndex(pkg string, dst []*commonv1alpha1.PackageVersion) int {

@@ -41,7 +41,8 @@ type Options struct {
 	Host string
 	Port int
 
-	Namespace     string
+	Namespace string
+	// JobsConfig    string
 	Workers       uint64
 	Horizon       time.Duration
 	QueueCapacity uint64
