@@ -50,10 +50,9 @@ linters-settings:
     tab-width: 4
 
 issues:
+  exclude:
+    - clientgo
   exclude-rules:
-    - path: "lcmi/fake"
-      linters:
-        - dupl
     - path: _test\.go
       linters:
         - dupl

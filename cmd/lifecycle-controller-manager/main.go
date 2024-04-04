@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1/machinev1alpha1connect"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1/machinetypev1alpha1connect"
+	"github.com/ironcore-dev/lifecycle-manager/clientgo/connectrpc/machine/v1alpha1/machinev1alpha1connect"
+	"github.com/ironcore-dev/lifecycle-manager/clientgo/connectrpc/machinetype/v1alpha1/machinetypev1alpha1connect"
 	oobv1alpha1 "github.com/ironcore-dev/oob/api/v1alpha1"
 	"golang.org/x/net/http2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,9 +55,15 @@ func main() {
 	var enableLeaderElection bool
 	var probeAddr string
 	var lcmiServiceAddr string
-	flag.StringVar(&lcmiServiceAddr, "lcmi-address", lcmiEndpoint, "The address lifecycle-service running on.")
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
-	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	var horizon time.Duration
+	flag.DurationVar(&horizon, "scan-horizon", time.Minute*10,
+		"The period within which scan results considered to be valid.")
+	flag.StringVar(&lcmiServiceAddr, "lcmi-address", lcmiEndpoint,
+		"The address lifecycle-service running on.")
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080",
+		"The address the metric endpoint binds to.")
+	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081",
+		"The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
@@ -81,7 +87,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = setupControllers(mgr, lcmiServiceAddr); err != nil {
+	if err = setupControllers(mgr, lcmiServiceAddr, horizon); err != nil {
 		os.Exit(1)
 	}
 	if err = setupHandlers(mgr); err != nil {
@@ -95,13 +101,14 @@ func main() {
 	}
 }
 
-func setupControllers(mgr ctrl.Manager, endpoint string) error {
+func setupControllers(mgr ctrl.Manager, endpoint string, horizon time.Duration) error {
 	httpClient := setupHTTPClient()
 	if err := (&controllers.MachineReconciler{
 		Client:               mgr.GetClient(),
 		Scheme:               mgr.GetScheme(),
 		Log:                  mgr.GetLogger().WithName("lifecycle-machine-controller"),
 		MachineServiceClient: setupMachineClient(endpoint, httpClient),
+		Horizon:              horizon,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Machine")
 		return err

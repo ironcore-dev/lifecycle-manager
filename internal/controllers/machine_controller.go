@@ -7,26 +7,27 @@ import (
 	"context"
 	"reflect"
 	"slices"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/go-logr/logr"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1/machinev1alpha1connect"
-	corev1 "k8s.io/api/core/v1"
+	"github.com/ironcore-dev/lifecycle-manager/clientgo/connectrpc/machine/v1alpha1/machinev1alpha1connect"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/tools/reference"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
+	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/machine/v1alpha1"
 )
 
 // MachineReconciler reconciles a Machine object.
@@ -35,6 +36,7 @@ type MachineReconciler struct {
 	machinev1alpha1connect.MachineServiceClient
 
 	Namespace string
+	Horizon   time.Duration
 
 	Log    logr.Logger
 	Scheme *runtime.Scheme
@@ -44,38 +46,26 @@ type MachineReconciler struct {
 // +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=machines/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=lifecycle.ironcore.dev,resources=machines/finalizers,verbs=update
 
-func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	var (
-		result ctrl.Result
-		ref    *corev1.ObjectReference
-		err    error
-	)
-
-	obj := &lifecyclev1alpha1.Machine{}
-	if err = r.Get(ctx, req.NamespacedName, obj); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	ref, err = reference.GetReference(r.Scheme, obj)
-	if err != nil {
-		r.Log.WithValues("request", req.NamespacedName).Error(err, "failed to construct reference")
-		return ctrl.Result{}, err
-	}
-	log := r.Log.WithValues("object", *ref)
+func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (reconcile.Result, error) {
+	log := logr.FromContextOrDiscard(ctx)
 	log.V(1).Info("reconciliation started")
 
-	recCtx := logr.NewContext(ctx, log)
-	result, err = r.reconcileRequired(recCtx, obj)
+	obj := &lifecyclev1alpha1.Machine{}
+	if err := r.Get(ctx, req.NamespacedName, obj); err != nil {
+		return reconcile.Result{}, client.IgnoreNotFound(err)
+	}
+
+	result, err := r.reconcileRequired(ctx, obj)
 	if err != nil {
 		log.V(1).Info("reconciliation interrupted by an error")
 		return result, err
 	}
-	if err = r.Status().Update(ctx, obj); err != nil {
+	if err = r.Status().Patch(ctx, obj, client.Merge); err != nil {
 		if apierrors.IsConflict(err) {
-			return ctrl.Result{RequeueAfter: requeuePeriod}, nil
+			return reconcile.Result{RequeueAfter: requeuePeriod}, nil
 		}
 		log.Error(err, "failed to update object status")
-		return ctrl.Result{}, err
+		return reconcile.Result{}, err
 	}
 	log.V(1).Info("reconciliation finished")
 	return result, err
@@ -84,19 +74,38 @@ func (r *MachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 func (r *MachineReconciler) reconcileRequired(
 	ctx context.Context,
 	obj *lifecyclev1alpha1.Machine,
-) (ctrl.Result, error) {
+) (reconcile.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	if obj.GetDeletionTimestamp().IsZero() {
-		return r.reconcileScan(ctx, obj)
+		return r.reconcile(ctx, obj)
 	}
-	log.V(2).Info("object is being deleted")
-	return ctrl.Result{}, nil
+	log.V(1).Info("object is being deleted")
+	return reconcile.Result{}, nil
 }
 
-func (r *MachineReconciler) reconcileScan(
-	ctx context.Context,
-	obj *lifecyclev1alpha1.Machine,
-) (ctrl.Result, error) {
+func (r *MachineReconciler) reconcile(ctx context.Context, obj *lifecyclev1alpha1.Machine) (reconcile.Result, error) {
+	if obj.Status.LastScanTime.IsZero() {
+		return r.scan(ctx, obj)
+	}
+	if time.Since(obj.Status.LastScanTime.Time) > r.Horizon {
+		return r.scan(ctx, obj)
+	}
+	diff, err := r.packagesToInstall(ctx, obj)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if len(diff) == 0 {
+		obj.Status.Message = ""
+		return reconcile.Result{}, nil
+	}
+	obj.Spec.Packages = mergePackageVersion(obj.Spec.Packages, diff)
+	if err = r.Patch(ctx, obj, client.Merge); err != nil {
+		return reconcile.Result{}, err
+	}
+	return r.install(ctx, obj)
+}
+
+func (r *MachineReconciler) scan(ctx context.Context, obj *lifecyclev1alpha1.Machine) (reconcile.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	resp, err := r.ScanMachine(ctx, connect.NewRequest(&machinev1alpha1.ScanMachineRequest{
 		Name:      obj.Name,
@@ -104,57 +113,63 @@ func (r *MachineReconciler) reconcileScan(
 	}))
 	if err != nil {
 		log.Error(err, "failed to send scan request")
-		return ctrl.Result{}, err
+		return reconcile.Result{}, err
 	}
 	scanResponse := resp.Msg
-	if LCIMRequestResultToString[scanResponse.Result].IsScheduled() {
-		obj.Status.Message = StatusMessageScanRequestSubmitted
-		return ctrl.Result{}, nil
-	}
-	if LCIMRequestResultToString[scanResponse.Result].IsFailure() {
+	result := reconcile.Result{}
+	switch {
+	case LCIMRequestResultToString[scanResponse.Result].IsFailure():
 		obj.Status.Message = StatusMessageScanRequestFailed
-		return ctrl.Result{}, nil
+		result.RequeueAfter = requeuePeriod
+	case LCIMRequestResultToString[scanResponse.Result].IsScheduled():
+		obj.Status.Message = StatusMessageScanRequestProcessing
+	case LCIMRequestResultToString[scanResponse.Result].IsSuccess():
+		obj.Status.Message = StatusMessageScanRequestSuccessful
 	}
-	return r.reconcileInstall(ctx, obj)
+	return result, nil
 }
 
-func (r *MachineReconciler) reconcileInstall(
-	ctx context.Context,
-	obj *lifecyclev1alpha1.Machine,
-) (ctrl.Result, error) {
+func (r *MachineReconciler) install(ctx context.Context, obj *lifecyclev1alpha1.Machine) (reconcile.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
-	packagesToInstall, err := r.packagesToInstall(ctx, obj)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-	if len(packagesToInstall) == 0 {
-		log.V(1).Info("install packages versions match desired state")
-		return ctrl.Result{}, nil
-	}
 	resp, err := r.Install(ctx, connect.NewRequest(&machinev1alpha1.InstallRequest{
 		Name:      obj.Name,
 		Namespace: obj.Namespace,
 	}))
 	if err != nil {
 		log.Error(err, "failed to send install request")
-		return ctrl.Result{}, err
+		return reconcile.Result{}, err
 	}
 	installResponse := resp.Msg
-	if LCIMRequestResultToString[installResponse.Result].IsScheduled() {
-		obj.Status.Message = StatusMessageInstallationScheduled
-		return ctrl.Result{}, nil
-	}
-	if LCIMRequestResultToString[installResponse.Result].IsFailure() {
-		log.V(1).Info(StatusMessageInstallRequestFailed)
+	result := reconcile.Result{}
+	switch {
+	case LCIMRequestResultToString[installResponse.Result].IsFailure():
 		obj.Status.Message = StatusMessageInstallRequestFailed
+		result.RequeueAfter = requeuePeriod
+	case LCIMRequestResultToString[installResponse.Result].IsScheduled():
+		obj.Status.Message = StatusMessageInstallRequestProcessing
+	case LCIMRequestResultToString[installResponse.Result].IsSuccess():
+		obj.Status.Message = StatusMessageInstallRequestSuccessful
 	}
-	return ctrl.Result{}, nil
+	return result, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *MachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	labelPredicate, err := predicate.LabelSelectorPredicate(metav1.LabelSelector{
+		MatchExpressions: []metav1.LabelSelectorRequirement{
+			{
+				Key:      "lifecycle.ironcore.dev/exclude",
+				Operator: "DoesNotExist",
+				Values:   nil,
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&lifecyclev1alpha1.Machine{}).
+		For(&lifecyclev1alpha1.Machine{}, builder.WithPredicates(labelPredicate)).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: 10,
 		}).
@@ -253,20 +268,21 @@ func machineLabelsCompliant(machineLabels, selectorLabels map[string]string) boo
 func filterPackageVersion(
 	desiredPackages, installedPackages, defaultPackages []lifecyclev1alpha1.PackageVersion,
 ) []lifecyclev1alpha1.PackageVersion {
-	tempPackages := make([]lifecyclev1alpha1.PackageVersion, 0)
-	resultPackages := make([]lifecyclev1alpha1.PackageVersion, 0)
-	tempPackages = append(tempPackages, desiredPackages...)
+	tempPackages := make([]lifecyclev1alpha1.PackageVersion,
+		len(desiredPackages), len(desiredPackages)+len(defaultPackages))
+	copy(tempPackages, desiredPackages)
 
 	for _, pv := range defaultPackages {
 		idx := slices.IndexFunc(desiredPackages, func(packageVersion lifecyclev1alpha1.PackageVersion) bool {
 			return pv.Name == packageVersion.Name
 		})
-		if idx < 0 {
-			tempPackages = append(tempPackages, pv)
+		if idx >= 0 {
 			continue
 		}
+		tempPackages = append(tempPackages, pv)
 	}
 
+	resultPackages := make([]lifecyclev1alpha1.PackageVersion, 0, len(tempPackages)+len(installedPackages))
 	for _, pv := range tempPackages {
 		idx := slices.IndexFunc(installedPackages, func(packageVersion lifecyclev1alpha1.PackageVersion) bool {
 			return pv.Name == packageVersion.Name
@@ -279,5 +295,21 @@ func filterPackageVersion(
 			resultPackages = append(resultPackages, pv)
 		}
 	}
-	return resultPackages
+	return slices.Clip(resultPackages)
+}
+
+func mergePackageVersion(base, add []lifecyclev1alpha1.PackageVersion) []lifecyclev1alpha1.PackageVersion {
+	result := make([]lifecyclev1alpha1.PackageVersion, len(base), len(base)+len(add))
+	copy(result, base)
+	for _, pv := range add {
+		idx := slices.IndexFunc(base, func(entry lifecyclev1alpha1.PackageVersion) bool {
+			return entry.Name == pv.Name
+		})
+		if idx >= 0 {
+			result[idx] = pv
+			continue
+		}
+		result = append(result, pv)
+	}
+	return slices.Clip(result)
 }

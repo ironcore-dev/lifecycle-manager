@@ -15,8 +15,9 @@ COPY cmd/lifecycle-service/ cmd/lifecycle-service
 COPY api/ api/
 COPY clientgo/applyconfiguration clientgo/applyconfiguration
 COPY clientgo/lifecycle clientgo/lifecycle
-COPY lcmi/ lcmi/
-COPY util/ util/
+COPY clientgo/connectrpc clientgo/connectrpc
+COPY internal/service internal/service
+COPY internal/util internal/util
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command

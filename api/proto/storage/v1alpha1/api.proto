@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package common.v1alpha1;
+
+option go_package = "github.com/ironcore-dev/lifecycle-manager/api/proto/storage/v1alpha1";
+
+enum TransferStatus {
+  TRANSFER_STATUS_UNSPECIFIED = 0;
+  TRANSFER_STATUS_OK = 1;
+  TRANSFER_STATUS_FAILED = 2;
+}
+
+message Metadata {
+  string manufacturer = 2;
+  string type = 3;
+  string package = 4;
+  string version = 5;
+}
+
+message PackageData {
+  Metadata metadata = 1;
+  string filename = 2;
+  string checksum = 3;
+  int64 size = 4;
+}
+
+message Payload {
+  string id = 1;
+  int64 part = 2;
+  bytes chunk = 3;
+}
+
+message InitUploadRequest {
+  PackageData package_data = 1;
+}
+
+message InitUploadResponse {
+  string id = 1;
+}
+
+message UploadRequest {
+  string id = 1;
+  int64 part = 2;
+  bytes chunk = 3;
+}
+
+message UploadResponse {
+  TransferStatus status = 1;
+}
+
+message InitDownloadRequest {
+  Metadata metadata = 1;
+}
+
+message InitDownloadResponse {
+  PackageData package_data = 1;
+  string id = 2;
+}
+
+message DownloadRequest {
+  string id = 1;
+}
+
+message DownloadResponse {
+  string id = 1;
+  int64 part = 2;
+  bytes chunk = 3;
+}
+
+service FirmwareStorageService {
+  rpc InitUpload(InitUploadRequest) returns (InitUploadResponse) {}
+  rpc Upload(stream UploadRequest) returns (UploadResponse) {}
+  rpc InitDownload(InitDownloadRequest) returns (InitDownloadResponse) {}
+  rpc Download(DownloadRequest) returns (stream DownloadResponse) {}
+}

@@ -1,0 +1,17 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/ironcore-dev/lifecycle-manager/api/proto/
+    except:
+      - buf.build/bufbuild/protovalidate
+      - buf.build/k8s/api
+plugins:
+  - plugin: buf.build/protocolbuffers/go:v1.32.0
+    out: api/proto
+    opt:
+      - paths=source_relative
+  - plugin: buf.build/connectrpc/go:v1.15.0
+    out: clientgo/connectrpc
+    opt:
+      - paths=source_relative

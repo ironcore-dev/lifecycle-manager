@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ironcore-dev/lifecycle-manager/internal/util/testutil"
 	oobv1alpha1 "github.com/ironcore-dev/oob/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -25,7 +26,6 @@ import (
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/internal/controllers"
-	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
 	// +kubebuilder:scaffold:imports
 )
 

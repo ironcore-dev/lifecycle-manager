@@ -5,26 +5,28 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/go-logr/logr"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1/machinetypev1alpha1connect"
-	corev1 "k8s.io/api/core/v1"
+	"github.com/ironcore-dev/lifecycle-manager/clientgo/connectrpc/machinetype/v1alpha1/machinetypev1alpha1connect"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/reference"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
+	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/machinetype/v1alpha1"
 )
 
 // MachineTypeReconciler reconciles a MachineType object.
 type MachineTypeReconciler struct {
 	client.Client
 	machinetypev1alpha1connect.MachineTypeServiceClient
+
+	Horizon time.Duration
 
 	Log    logr.Logger
 	Scheme *runtime.Scheme
@@ -36,38 +38,26 @@ type MachineTypeReconciler struct {
 // +kubebuilder:rbac:groups=ironcore.dev,resources=oobs,verbs=get;list;watch
 // +kubebuilder:rbac:groups=ironcore.dev,resources=oobs/status,verbs=get;list;watch
 
-func (r *MachineTypeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	var (
-		result ctrl.Result
-		ref    *corev1.ObjectReference
-		err    error
-	)
-
-	obj := &lifecyclev1alpha1.MachineType{}
-	if err = r.Get(ctx, req.NamespacedName, obj); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	ref, err = reference.GetReference(r.Scheme, obj)
-	if err != nil {
-		r.Log.WithValues("request", req.NamespacedName).Error(err, "failed to construct reference")
-		return ctrl.Result{}, err
-	}
-	log := r.Log.WithValues("object", *ref)
+func (r *MachineTypeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (reconcile.Result, error) {
+	log := logr.FromContextOrDiscard(ctx)
 	log.V(1).Info("reconciliation started")
 
-	recCtx := logr.NewContext(ctx, log)
-	result, err = r.reconcileRequired(recCtx, obj)
+	obj := &lifecyclev1alpha1.MachineType{}
+	if err := r.Get(ctx, req.NamespacedName, obj); err != nil {
+		return reconcile.Result{}, client.IgnoreNotFound(err)
+	}
+
+	result, err := r.reconcileRequired(ctx, obj)
 	if err != nil {
 		log.V(1).Info("reconciliation interrupted by an error")
 		return result, err
 	}
-	if err = r.Status().Update(ctx, obj); err != nil {
+	if err = r.Status().Patch(ctx, obj, client.Merge); err != nil {
 		if apierrors.IsConflict(err) {
-			return ctrl.Result{RequeueAfter: requeuePeriod}, nil
+			return reconcile.Result{RequeueAfter: requeuePeriod}, nil
 		}
 		log.Error(err, "failed to update object status")
-		return ctrl.Result{}, err
+		return reconcile.Result{}, err
 	}
 	log.V(1).Info("reconciliation finished")
 	return result, nil
@@ -76,19 +66,33 @@ func (r *MachineTypeReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *MachineTypeReconciler) reconcileRequired(
 	ctx context.Context,
 	obj *lifecyclev1alpha1.MachineType,
-) (ctrl.Result, error) {
+) (reconcile.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	if obj.GetDeletionTimestamp().IsZero() {
 		return r.reconcile(ctx, obj)
 	}
-	log.V(2).Info("object is being deleted")
-	return ctrl.Result{}, nil
+	log.V(1).Info("object is being deleted")
+	return reconcile.Result{}, nil
 }
 
 func (r *MachineTypeReconciler) reconcile(
 	ctx context.Context,
 	obj *lifecyclev1alpha1.MachineType,
-) (ctrl.Result, error) {
+) (reconcile.Result, error) {
+	if obj.Status.LastScanTime.IsZero() {
+		return r.scan(ctx, obj)
+	}
+	if time.Since(obj.Status.LastScanTime.Time) > r.Horizon {
+		return r.scan(ctx, obj)
+	}
+	obj.Status.Message = ""
+	return reconcile.Result{}, nil
+}
+
+func (r *MachineTypeReconciler) scan(
+	ctx context.Context,
+	obj *lifecyclev1alpha1.MachineType,
+) (reconcile.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	resp, err := r.Scan(ctx, connect.NewRequest(&machinetypev1alpha1.ScanRequest{
 		Name:      obj.Name,
@@ -96,18 +100,20 @@ func (r *MachineTypeReconciler) reconcile(
 	}))
 	if err != nil {
 		log.Error(err, "failed to send scan request")
-		return ctrl.Result{}, err
+		return reconcile.Result{}, err
 	}
 	scanResponse := resp.Msg
-	if LCIMRequestResultToString[scanResponse.Result].IsScheduled() {
-		obj.Status.Message = StatusMessageScanRequestSubmitted
-		return ctrl.Result{}, nil
-	}
-	if LCIMRequestResultToString[scanResponse.Result].IsFailure() {
+	result := reconcile.Result{}
+	switch {
+	case LCIMRequestResultToString[scanResponse.Result].IsFailure():
 		obj.Status.Message = StatusMessageScanRequestFailed
-		return ctrl.Result{}, nil
+		result.RequeueAfter = requeuePeriod
+	case LCIMRequestResultToString[scanResponse.Result].IsScheduled():
+		obj.Status.Message = StatusMessageScanRequestProcessing
+	case LCIMRequestResultToString[scanResponse.Result].IsSuccess():
+		obj.Status.Message = StatusMessageScanRequestSuccessful
 	}
-	return ctrl.Result{}, nil
+	return result, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

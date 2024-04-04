@@ -15,7 +15,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/reference"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -43,7 +42,6 @@ type OnboardingReconciler struct {
 func (r *OnboardingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var (
 		result ctrl.Result
-		ref    *corev1.ObjectReference
 		err    error
 	)
 
@@ -52,12 +50,7 @@ func (r *OnboardingReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	ref, err = reference.GetReference(r.Scheme, obj)
-	if err != nil {
-		r.Log.WithValues("request", req.NamespacedName).Error(err, "failed to construct reference")
-		return ctrl.Result{}, err
-	}
-	log := r.Log.WithValues("object", *ref)
+	log := logr.FromContextOrDiscard(ctx)
 	log.V(1).Info("reconciliation started")
 
 	recCtx := logr.NewContext(ctx, log)
@@ -72,11 +65,11 @@ func (r *OnboardingReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 func (r *OnboardingReconciler) reconcileRequired(ctx context.Context, obj *oobv1alpha1.OOB) (ctrl.Result, error) {
 	log := logr.FromContextOrDiscard(ctx)
 	if !obj.GetDeletionTimestamp().IsZero() {
-		log.V(2).Info("object is being deleted")
+		log.V(1).Info("object is being deleted")
 		return ctrl.Result{}, nil
 	}
 	if obj.Status.Manufacturer == "" || obj.Status.SKU == "" {
-		log.V(2).Info("object is not processed yet")
+		log.V(1).Info("object is not processed yet")
 		return ctrl.Result{RequeueAfter: r.RequeuePeriod}, nil
 	}
 	return r.reconcile(ctx, obj)
@@ -85,11 +78,11 @@ func (r *OnboardingReconciler) reconcileRequired(ctx context.Context, obj *oobv1
 func (r *OnboardingReconciler) reconcile(ctx context.Context, obj *oobv1alpha1.OOB) (ctrl.Result, error) {
 	var err error
 	log := logr.FromContextOrDiscard(ctx)
-	log.V(2).Info("onboarding machineType object")
+	log.V(1).Info("onboarding machineType object")
 	if err = r.onboardMachineType(ctx, obj); err != nil {
 		return ctrl.Result{}, err
 	}
-	log.V(2).Info("onboarding machine object")
+	log.V(1).Info("onboarding machine object")
 	if err = r.onboardMachine(ctx, obj); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -142,7 +135,7 @@ func (r *OnboardingReconciler) onboardMachine(ctx context.Context, obj *oobv1alp
 	}
 	if err := r.Create(ctx, machine); err != nil {
 		if apierrors.IsAlreadyExists(err) {
-			log.V(2).Info("machine has been already onboarded")
+			log.V(1).Info("machine has been already onboarded")
 			return nil
 		}
 		log.Error(err, "failed to onboard machine")

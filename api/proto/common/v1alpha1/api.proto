@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package common.v1alpha1;
+
+import "buf/validate/validate.proto";
+import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
+
+option go_package = "github.com/ironcore-dev/lifecycle-manager/api/proto/common/v1alpha1";
+
+enum RequestResult {
+  REQUEST_RESULT_UNSPECIFIED = 0;
+  REQUEST_RESULT_SCHEDULED = 1;
+  REQUEST_RESULT_SUCCESS = 2;
+  REQUEST_RESULT_FAILURE = 3;
+}
+
+enum ScanResult {
+  SCAN_RESULT_UNSPECIFIED = 0;
+  SCAN_RESULT_SUCCESS = 1;
+  SCAN_RESULT_FAILURE = 2;
+}
+
+message PackageVersion {
+  option (buf.validate.message).cel = {
+    id: "package_version.name",
+    expression: "!has(this.name) ? 'name is mandatory field' : ''"
+  };
+  option (buf.validate.message).cel = {
+    id: "package_version.version",
+    expression: "!has(this.version) ? 'version is mandatory field' : ''"
+  };
+  string name = 1;
+  string version = 2;
+}
+
+message Condition {
+  string type = 1;
+  string status = 2;
+  string reason = 3;
+  string message = 4;
+  int64 observed_generation = 5;
+  k8s.io.apimachinery.pkg.apis.meta.v1.Timestamp last_transition_time = 6;
+}

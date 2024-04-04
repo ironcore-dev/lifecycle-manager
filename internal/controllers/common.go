@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
+	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/common/v1alpha1"
 )
 
 type RequestResult string
@@ -24,10 +24,12 @@ const (
 )
 
 const (
-	StatusMessageScanRequestSubmitted  = "scan request submitted"
-	StatusMessageScanRequestFailed     = "scan request failed"
-	StatusMessageInstallRequestFailed  = "install request failed"
-	StatusMessageInstallationScheduled = "packages installation scheduled"
+	StatusMessageScanRequestProcessing    = "scanning is in progress"
+	StatusMessageScanRequestSuccessful    = "scan request submitted"
+	StatusMessageScanRequestFailed        = "scan request failed"
+	StatusMessageInstallRequestFailed     = "install request failed"
+	StatusMessageInstallRequestProcessing = "installation is in progress"
+	StatusMessageInstallRequestSuccessful = "install request submitted"
 )
 
 func (r RequestResult) IsScheduled() bool {

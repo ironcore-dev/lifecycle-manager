@@ -11,15 +11,18 @@ Files:
   .github/*
   .gitignore
   .golangci.yml
+  buf.gen.yaml
+  buf.work.yaml
   CODEOWNERS
   Makefile
   PROJECT
+  api/proto/*
   clientgo/openapi/api_violations.report
+  clientgo/connectrpc/*
   config/*
   go.mod
   go.sum
   hack/*
-  lcmi/*
 Copyright: 2024 SAP SE or an SAP affiliate company and IronCore contributors
 License: Apache-2.0
 

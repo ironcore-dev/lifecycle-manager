@@ -42,7 +42,8 @@ func NewMachineTypeReconciler(c client.Client, s *runtime.Scheme) *MachineTypeRe
 
 func NewMachineReconciler(c client.Client, s *runtime.Scheme) *MachineReconciler {
 	return &MachineReconciler{
-		Client: c,
-		Scheme: s,
+		Client:  c,
+		Scheme:  s,
+		Horizon: time.Hour,
 	}
 }

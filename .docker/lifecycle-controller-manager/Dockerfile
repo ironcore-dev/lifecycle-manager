@@ -13,9 +13,8 @@ RUN go mod download
 # Copy the go source
 COPY cmd/lifecycle-controller-manager/main.go cmd/lifecycle-controller-manager/main.go
 COPY api/ api/
-COPY lcmi/ lcmi/
-COPY internal/ internal/
-COPY util/ util/
+COPY internal/controllers internal/controllers
+COPY clientgo/connectrpc clientgo/connectrpc
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command
