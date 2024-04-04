@@ -6,8 +6,9 @@ package controllers
 import (
 	"context"
 
-	"github.com/ironcore-dev/lifecycle-manager/util/testutil/fake"
-	"github.com/ironcore-dev/lifecycle-manager/util/testutil/mock"
+	"github.com/ironcore-dev/lifecycle-manager/internal/util/testutil"
+	"github.com/ironcore-dev/lifecycle-manager/internal/util/testutil/fake"
+	"github.com/ironcore-dev/lifecycle-manager/internal/util/testutil/mock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -16,7 +17,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
 )
 
 var _ = Describe("Machine controller", func() {

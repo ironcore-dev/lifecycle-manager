@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/svc"
+	"github.com/ironcore-dev/lifecycle-manager/internal/service"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
@@ -81,7 +81,7 @@ func Run(ctx context.Context, opts Options) error {
 		return err
 	}
 
-	srvOpts := svc.Options{
+	srvOpts := service.Options{
 		Cfg:           cfg,
 		Log:           setupLogger(LogFormat(opts.logFormat), logLevelMapping[opts.logLevel], opts.dev),
 		Host:          opts.host,
@@ -91,7 +91,7 @@ func Run(ctx context.Context, opts Options) error {
 		Workers:       opts.workers,
 		QueueCapacity: opts.queue,
 	}
-	srv := svc.NewGrpcServer(srvOpts)
+	srv := service.NewGrpcServer(srvOpts)
 	return srv.Start(ctx)
 }
 

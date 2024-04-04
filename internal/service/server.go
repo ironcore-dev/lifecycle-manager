@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 SAP SE or an SAP affiliate company and IronCore contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package svc
+package service
 
 import (
 	"context"
@@ -18,10 +18,10 @@ import (
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/connectrpc/machine/v1alpha1/machinev1alpha1connect"
 	"github.com/ironcore-dev/lifecycle-manager/clientgo/connectrpc/machinetype/v1alpha1/machinetypev1alpha1connect"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/svc/interceptor"
-	machinesvcv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/svc/machine/v1alpha1"
-	machinetypesvcv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/svc/machinetype/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/svc/scheduler"
+	"github.com/ironcore-dev/lifecycle-manager/internal/service/interceptor"
+	machinesvcv1alpha1 "github.com/ironcore-dev/lifecycle-manager/internal/service/machine/v1alpha1"
+	machinetypesvcv1alpha1 "github.com/ironcore-dev/lifecycle-manager/internal/service/machinetype/v1alpha1"
+	"github.com/ironcore-dev/lifecycle-manager/internal/service/scheduler"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"k8s.io/client-go/rest"

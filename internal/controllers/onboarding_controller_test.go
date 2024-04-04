@@ -6,7 +6,8 @@ package controllers
 import (
 	"context"
 
-	"github.com/ironcore-dev/lifecycle-manager/util/testutil/mock"
+	"github.com/ironcore-dev/lifecycle-manager/internal/util/testutil"
+	"github.com/ironcore-dev/lifecycle-manager/internal/util/testutil/mock"
 	oobv1alpha1 "github.com/ironcore-dev/oob/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -17,7 +18,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	"github.com/ironcore-dev/lifecycle-manager/util/testutil"
 )
 
 var _ = Describe("Onboarding controller", func() {
