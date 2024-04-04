@@ -5,7 +5,7 @@ package common.v1alpha1;
 import "buf/validate/validate.proto";
 import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
 
-option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1";
+option go_package = "github.com/ironcore-dev/lifecycle-manager/api/proto/common/v1alpha1";
 
 enum RequestResult {
   REQUEST_RESULT_UNSPECIFIED = 0;

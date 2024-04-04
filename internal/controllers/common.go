@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
+	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/common/v1alpha1"
 )
 
 type RequestResult string

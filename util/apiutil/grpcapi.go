@@ -9,11 +9,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
+	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/common/v1alpha1"
+	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/machine/v1alpha1"
+	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/machinetype/v1alpha1"
 	lifecycleapplyv1alpha1 "github.com/ironcore-dev/lifecycle-manager/clientgo/applyconfiguration/lifecycle/v1alpha1"
 	v1 "github.com/ironcore-dev/lifecycle-manager/clientgo/applyconfiguration/meta/v1"
-	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
-	machinev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1"
-	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
 )
 
 var LCIMScanResultToString = map[commonv1alpha1.ScanResult]lifecyclev1alpha1.ScanResult{

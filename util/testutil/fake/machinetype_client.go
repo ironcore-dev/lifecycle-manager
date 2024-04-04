@@ -7,8 +7,8 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
-	machinetypeapiv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
+	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/common/v1alpha1"
+	machinetypeapiv1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/machinetype/v1alpha1"
 	"github.com/pkg/errors"
 )
 

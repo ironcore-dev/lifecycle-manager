@@ -9,7 +9,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/go-logr/logr"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1/machinetypev1alpha1connect"
+	"github.com/ironcore-dev/lifecycle-manager/clientgo/connectrpc/machinetype/v1alpha1/machinetypev1alpha1connect"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -18,7 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	lifecyclev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/lifecycle/v1alpha1"
-	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
+	machinetypev1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/machinetype/v1alpha1"
 )
 
 // MachineTypeReconciler reconciles a MachineType object.

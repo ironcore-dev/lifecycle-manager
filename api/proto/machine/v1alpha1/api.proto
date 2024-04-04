@@ -6,7 +6,7 @@ import "common/v1alpha1/api.proto";
 import "k8s.io/api/core/v1/generated.proto";
 import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
 
-option go_package = "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1";
+option go_package = "github.com/ironcore-dev/lifecycle-manager/api/proto/machine/v1alpha1";
 
 message MachineSpec {
   k8s.io.api.core.v1.LocalObjectReference machine_type_ref = 1;

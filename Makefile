@@ -139,7 +139,7 @@ code-gen: vgopath deepcopy-gen models-schema openapi-gen applyconfiguration-gen 
 
 .PHONY: proto-gen
 proto-gen: buf
-	@./hack/genproto.sh
+	$(BUF) generate
 #proto-gen: protoc-gen-go protoc-gen-go-grpc protoc-gen-grpc-gateway buf
 #	@./hack/genproto.sh
 

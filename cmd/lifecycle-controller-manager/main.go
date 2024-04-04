@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machine/v1alpha1/machinev1alpha1connect"
-	"github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1/machinetypev1alpha1connect"
+	"github.com/ironcore-dev/lifecycle-manager/clientgo/connectrpc/machine/v1alpha1/machinev1alpha1connect"
+	"github.com/ironcore-dev/lifecycle-manager/clientgo/connectrpc/machinetype/v1alpha1/machinetypev1alpha1connect"
 	oobv1alpha1 "github.com/ironcore-dev/oob/api/v1alpha1"
 	"golang.org/x/net/http2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

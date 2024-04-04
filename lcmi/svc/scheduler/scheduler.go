@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/common/v1alpha1"
+	commonv1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/common/v1alpha1"
 	"github.com/jellydator/ttlcache/v3"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"

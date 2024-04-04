@@ -11,7 +11,7 @@ import (
 	strings "strings"
 
 	connect "connectrpc.com/connect"
-	v1alpha1 "github.com/ironcore-dev/lifecycle-manager/lcmi/api/machinetype/v1alpha1"
+	v1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/machinetype/v1alpha1"
 )
 
 // This is a compile-time assertion to ensure that this generated file and the connect package are

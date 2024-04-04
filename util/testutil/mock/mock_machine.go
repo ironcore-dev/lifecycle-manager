@@ -39,8 +39,10 @@ func (b *MachineMockBuilder) WithDesiredPackages(packages ...lifecyclev1alpha1.P
 	return b
 }
 
-func (b *MachineMockBuilder) WithInstalledPackages(pkg []lifecyclev1alpha1.PackageVersion) *MachineMockBuilder {
-	b.inner.Status.InstalledPackages = pkg
+func (b *MachineMockBuilder) WithInstalledPackages(packages ...lifecyclev1alpha1.PackageVersion) *MachineMockBuilder {
+	packagesToApply := make([]lifecyclev1alpha1.PackageVersion, len(packages))
+	copy(packagesToApply, packages)
+	b.inner.Status.InstalledPackages = packagesToApply
 	return b
 }
 
