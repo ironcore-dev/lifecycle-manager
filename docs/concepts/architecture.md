@@ -32,12 +32,8 @@ The architecture overview is provided in the figure in above. `lifecycle-control
 `lifecycle-service` includes the following services:
 
 - RPC server, which can handle HTTP or gRPC requests;
-- scheduler (**To-Be-Done**), which manage the task queue both for periodical scan jobs and for on-demand scan or install jobs;
+- scheduler, which manage the task queue for on-demand scan or install jobs;
 - storage interface (**To-Be-Done**), which provides capabilities to upload and download firmware packages;
-
-All components are designed to be stateless. Therefore, after restart RPC server and scheduler will "warm up" their 
-internal caches. RPC server will fulfill cache to prevent unnecessary scheduling and scheduler will re-schedule scan 
-jobs for objects which last scan timestamp is out of defined period.
 
 ### lifecycle-service request workflow
 
