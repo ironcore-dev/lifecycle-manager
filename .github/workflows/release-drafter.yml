@@ -7,10 +7,6 @@ on:
       - main
   pull_request_target:
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   update_release_draft:
     runs-on: ubuntu-latest
