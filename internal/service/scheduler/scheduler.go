@@ -5,6 +5,7 @@ package scheduler
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"sync"
 	"time"
@@ -162,6 +163,14 @@ func (s *Scheduler[T]) Start(ctx context.Context) {
 	s.schedulerWaitGroup.Add(1)
 	go s.schedulingLoop(ctx)
 	s.schedulerWaitGroup.Wait()
+}
+
+func (s *Scheduler[T]) GetActiveJob(id string) (Task[T], error) {
+	item := s.activeJobs.Get(id)
+	if item == nil {
+		return Task[T]{}, fmt.Errorf("job with id %s not found", id)
+	}
+	return item.Value(), nil
 }
 
 // schedulingLoop is a method that runs as a Go routine and controls the main logic of the scheduler.

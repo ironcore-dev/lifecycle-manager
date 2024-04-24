@@ -248,6 +248,23 @@ func (s *MachineTypeService) RemoveMachineGroup(
 	}), nil
 }
 
+func (s *MachineTypeService) GetJob(
+	ctx context.Context,
+	c *connect.Request[machinetypev1alpha1.GetJobRequest],
+) (*connect.Response[machinetypev1alpha1.GetJobResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
+	req := c.Msg
+	task, err := s.scheduler.GetActiveJob(req.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(&machinetypev1alpha1.GetJobResponse{
+		JobType: string(task.Type),
+		Target:  apiutil.MachineTypeToGrpcAPI(task.Target),
+	}), nil
+}
+
 func machineGroupIndex(name string, dst []*machinetypev1alpha1.MachineGroup) int {
 	return slices.IndexFunc(dst, func(g *machinetypev1alpha1.MachineGroup) bool {
 		return name == g.Name

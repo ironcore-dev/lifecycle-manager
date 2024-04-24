@@ -62,6 +62,10 @@ docker-build-controller-manager: ## Build docker image with the manager.
 docker-build-lifecycle-service: ## Build docker image with the manager.
 	docker build . -t ${IMG} -f .docker/lifecycle-service/Dockerfile
 
+.PHONY: docker-build-lifecycle-job
+docker-build-lifecycle-job:
+	docker build . -t ${IMG} -f .docker/lifecycle-job/Dockerfile
+
 ### INSTALL AND DEPLOY ###
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.

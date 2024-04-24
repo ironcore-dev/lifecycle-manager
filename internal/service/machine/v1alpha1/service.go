@@ -328,6 +328,23 @@ func (s *MachineService) RemovePackageVersion(
 	}), nil
 }
 
+func (s *MachineService) GetJob(
+	ctx context.Context,
+	c *connect.Request[machinev1alpha1.GetJobRequest],
+) (*connect.Response[machinev1alpha1.GetJobResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
+	req := c.Msg
+	task, err := s.scheduler.GetActiveJob(req.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(&machinev1alpha1.GetJobResponse{
+		JobType: string(task.Type),
+		Target:  apiutil.MachineToGrpcAPI(task.Target),
+	}), nil
+}
+
 func packageIndex(pkg string, dst []*commonv1alpha1.PackageVersion) int {
 	return slices.IndexFunc(dst, func(pv *commonv1alpha1.PackageVersion) bool {
 		return pkg == pv.Name
