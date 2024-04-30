@@ -38,11 +38,15 @@ func (s *Scheduler[T]) processExistingJob(ctx context.Context, task Task[T], job
 }
 
 func (s *Scheduler[T]) createJob(ctx context.Context, task Task[T]) error {
-	namespace := task.Target.GetNamespace()
+	config, err := s.CoreV1().ConfigMaps(s.namespace).Get(ctx, s.jobsConfig, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
 	job := &v1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("%s-", task.Key),
-			Namespace:    namespace,
+			Namespace:    s.namespace,
 			Labels: map[string]string{
 				lifecycleJobIdLabel:   task.Key,
 				lifecycleJobTypeLabel: string(task.Type),
@@ -60,16 +64,21 @@ func (s *Scheduler[T]) createJob(ctx context.Context, task Task[T]) error {
 					Containers: []corev1.Container{
 						{
 							Name:  "lifecycle-job",
-							Image: "",
-							Args:  []string{"--job-id", task.Key},
+							Image: config.Data["image"],
+							Args: []string{
+								"--job-id", task.Key,
+								"--target-type", task.TargetType,
+							},
 						},
 					},
+					RestartPolicy:      corev1.RestartPolicyNever,
+					ServiceAccountName: config.Data["serviceAccountName"],
 				},
 			},
 			TTLSecondsAfterFinished: ptr.To(int32(30)),
 		},
 	}
-	if _, err := s.Clientset.BatchV1().Jobs(namespace).Create(ctx, job, metav1.CreateOptions{}); err != nil {
+	if _, err = s.Clientset.BatchV1().Jobs(s.namespace).Create(ctx, job, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 	s.log.Info("new job initiated", "job", task)

@@ -29,6 +29,8 @@ import (
 const (
 	AddPackageFailureReason = "package already in the list"
 	SetPackageFailureReason = "package is not in the list"
+
+	targetTypeMachine = "machine"
 )
 
 type MachineService struct {
@@ -101,7 +103,7 @@ func (s *MachineService) ScanMachine(
 	}
 	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
 	resp.Result = s.scheduler.Schedule(
-		scheduler.NewTask[*lifecyclev1alpha1.Machine](key, scheduler.ScanJob, machine))
+		scheduler.NewTask[*lifecyclev1alpha1.Machine](key, scheduler.ScanJob, machine, targetTypeMachine))
 	return connect.NewResponse(resp), nil
 }
 
@@ -131,7 +133,7 @@ func (s *MachineService) Install(
 	}
 	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
 	resp.Result = s.scheduler.Schedule(
-		scheduler.NewTask[*lifecyclev1alpha1.Machine](key, scheduler.InstallJob, machine))
+		scheduler.NewTask[*lifecyclev1alpha1.Machine](key, scheduler.InstallJob, machine, targetTypeMachine))
 	return connect.NewResponse(resp), nil
 }
 

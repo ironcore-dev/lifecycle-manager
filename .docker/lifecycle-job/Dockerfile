@@ -15,6 +15,8 @@ COPY cmd/lifecycle-job cmd/lifecycle-job
 COPY api/ api/
 COPY clientgo/lifecycle clientgo/lifecycle
 COPY clientgo/connectrpc clientgo/connectrpc
+COPY internal/job internal/job
+COPY internal/util/convertutil internal/util/convertutil
 
 # Build
 # the GOARCH has not a default value to allow the binary be built according to the host where the command

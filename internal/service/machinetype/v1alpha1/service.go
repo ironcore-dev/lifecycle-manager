@@ -28,6 +28,8 @@ import (
 
 const (
 	AddMachineGroupFailureReason = "machine group already in the list"
+
+	targetTypeMachineType = "machinetype"
 )
 
 type MachineTypeService struct {
@@ -126,7 +128,7 @@ func (s *MachineTypeService) Scan(
 	}
 	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
 	resp.Result = s.scheduler.Schedule(
-		scheduler.NewTask[*lifecyclev1alpha1.MachineType](key, scheduler.ScanJob, machineType))
+		scheduler.NewTask[*lifecyclev1alpha1.MachineType](key, scheduler.ScanJob, machineType, targetTypeMachineType))
 	return connect.NewResponse(resp), nil
 }
 

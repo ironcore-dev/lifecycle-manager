@@ -46,7 +46,8 @@ type Scheduler[T LifecycleObject] struct {
 	schedulerWaitGroup sync.WaitGroup
 	mu                 sync.Mutex
 
-	namespace string
+	namespace  string
+	jobsConfig string
 }
 
 // NewScheduler creates a new Scheduler instance with the given parameters.
@@ -95,6 +96,12 @@ func WithActiveJobCache[T LifecycleObject](capacity uint64, ttl time.Duration) O
 func WithQueueCapacity[T LifecycleObject](capacity uint64) Option[T] {
 	return func(scheduler *Scheduler[T]) {
 		scheduler.pendingTasks = NewFIFOQueue[T](capacity)
+	}
+}
+
+func WithJobConfig[T LifecycleObject](jobConfig string) Option[T] {
+	return func(scheduler *Scheduler[T]) {
+		scheduler.jobsConfig = jobConfig
 	}
 }
 
