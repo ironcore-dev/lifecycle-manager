@@ -90,10 +90,20 @@ message RemoveMachineGroupResponse {
   common.v1alpha1.RequestResult result = 2;
 }
 
+message GetJobRequest {
+  string id = 1;
+}
+
+message GetJobResponse {
+  string job_type = 1;
+  MachineType target = 2;
+}
+
 service MachineTypeService {
   rpc ListMachineTypes(ListMachineTypesRequest) returns (ListMachineTypesResponse) {}
   rpc Scan(ScanRequest) returns (ScanResponse) {}
   rpc UpdateMachineTypeStatus(UpdateMachineTypeStatusRequest) returns (UpdateMachineTypeStatusResponse) {}
   rpc AddMachineGroup(AddMachineGroupRequest) returns (AddMachineGroupResponse) {}
   rpc RemoveMachineGroup(RemoveMachineGroupRequest) returns (RemoveMachineGroupResponse) {}
+  rpc GetJob(GetJobRequest) returns (GetJobResponse) {}
 }

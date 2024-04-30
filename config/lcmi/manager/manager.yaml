@@ -1,4 +1,12 @@
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jobs-config
+data:
+  image: "ironcore-dev/lifecycle-job:dev-202404300717"
+  serviceAccountName: "lifecycle-service-sa"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -37,7 +45,8 @@ spec:
           command:
             - /manager
           args:
-            - --namespace=POD_NAMESPACE
+            - --namespace=$(POD_NAMESPACE)
+            - --jobs-config=lifecycle-jobs-config
           ports:
             - containerPort: 8080
               protocol: TCP

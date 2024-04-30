@@ -29,6 +29,8 @@ import (
 const (
 	AddPackageFailureReason = "package already in the list"
 	SetPackageFailureReason = "package is not in the list"
+
+	targetTypeMachine = "machine"
 )
 
 type MachineService struct {
@@ -101,7 +103,7 @@ func (s *MachineService) ScanMachine(
 	}
 	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
 	resp.Result = s.scheduler.Schedule(
-		scheduler.NewTask[*lifecyclev1alpha1.Machine](key, scheduler.ScanJob, machine))
+		scheduler.NewTask[*lifecyclev1alpha1.Machine](key, scheduler.ScanJob, machine, targetTypeMachine))
 	return connect.NewResponse(resp), nil
 }
 
@@ -131,7 +133,7 @@ func (s *MachineService) Install(
 	}
 	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
 	resp.Result = s.scheduler.Schedule(
-		scheduler.NewTask[*lifecyclev1alpha1.Machine](key, scheduler.InstallJob, machine))
+		scheduler.NewTask[*lifecyclev1alpha1.Machine](key, scheduler.InstallJob, machine, targetTypeMachine))
 	return connect.NewResponse(resp), nil
 }
 
@@ -325,6 +327,23 @@ func (s *MachineService) RemovePackageVersion(
 	}
 	return connect.NewResponse(&machinev1alpha1.RemovePackageVersionResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
+	}), nil
+}
+
+func (s *MachineService) GetJob(
+	ctx context.Context,
+	c *connect.Request[machinev1alpha1.GetJobRequest],
+) (*connect.Response[machinev1alpha1.GetJobResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
+	req := c.Msg
+	task, err := s.scheduler.GetActiveJob(req.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(&machinev1alpha1.GetJobResponse{
+		JobType: string(task.Type),
+		Target:  apiutil.MachineToGrpcAPI(task.Target),
 	}), nil
 }
 

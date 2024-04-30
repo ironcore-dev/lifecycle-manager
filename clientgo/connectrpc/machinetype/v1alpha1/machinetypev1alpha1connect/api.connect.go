@@ -48,6 +48,9 @@ const (
 	// MachineTypeServiceRemoveMachineGroupProcedure is the fully-qualified name of the
 	// MachineTypeService's RemoveMachineGroup RPC.
 	MachineTypeServiceRemoveMachineGroupProcedure = "/machinetype.v1alpha1.MachineTypeService/RemoveMachineGroup"
+	// MachineTypeServiceGetJobProcedure is the fully-qualified name of the MachineTypeService's GetJob
+	// RPC.
+	MachineTypeServiceGetJobProcedure = "/machinetype.v1alpha1.MachineTypeService/GetJob"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -58,6 +61,7 @@ var (
 	machineTypeServiceUpdateMachineTypeStatusMethodDescriptor = machineTypeServiceServiceDescriptor.Methods().ByName("UpdateMachineTypeStatus")
 	machineTypeServiceAddMachineGroupMethodDescriptor         = machineTypeServiceServiceDescriptor.Methods().ByName("AddMachineGroup")
 	machineTypeServiceRemoveMachineGroupMethodDescriptor      = machineTypeServiceServiceDescriptor.Methods().ByName("RemoveMachineGroup")
+	machineTypeServiceGetJobMethodDescriptor                  = machineTypeServiceServiceDescriptor.Methods().ByName("GetJob")
 )
 
 // MachineTypeServiceClient is a client for the machinetype.v1alpha1.MachineTypeService service.
@@ -67,6 +71,7 @@ type MachineTypeServiceClient interface {
 	UpdateMachineTypeStatus(context.Context, *connect.Request[v1alpha1.UpdateMachineTypeStatusRequest]) (*connect.Response[v1alpha1.UpdateMachineTypeStatusResponse], error)
 	AddMachineGroup(context.Context, *connect.Request[v1alpha1.AddMachineGroupRequest]) (*connect.Response[v1alpha1.AddMachineGroupResponse], error)
 	RemoveMachineGroup(context.Context, *connect.Request[v1alpha1.RemoveMachineGroupRequest]) (*connect.Response[v1alpha1.RemoveMachineGroupResponse], error)
+	GetJob(context.Context, *connect.Request[v1alpha1.GetJobRequest]) (*connect.Response[v1alpha1.GetJobResponse], error)
 }
 
 // NewMachineTypeServiceClient constructs a client for the machinetype.v1alpha1.MachineTypeService
@@ -109,6 +114,12 @@ func NewMachineTypeServiceClient(httpClient connect.HTTPClient, baseURL string, 
 			connect.WithSchema(machineTypeServiceRemoveMachineGroupMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		getJob: connect.NewClient[v1alpha1.GetJobRequest, v1alpha1.GetJobResponse](
+			httpClient,
+			baseURL+MachineTypeServiceGetJobProcedure,
+			connect.WithSchema(machineTypeServiceGetJobMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -119,6 +130,7 @@ type machineTypeServiceClient struct {
 	updateMachineTypeStatus *connect.Client[v1alpha1.UpdateMachineTypeStatusRequest, v1alpha1.UpdateMachineTypeStatusResponse]
 	addMachineGroup         *connect.Client[v1alpha1.AddMachineGroupRequest, v1alpha1.AddMachineGroupResponse]
 	removeMachineGroup      *connect.Client[v1alpha1.RemoveMachineGroupRequest, v1alpha1.RemoveMachineGroupResponse]
+	getJob                  *connect.Client[v1alpha1.GetJobRequest, v1alpha1.GetJobResponse]
 }
 
 // ListMachineTypes calls machinetype.v1alpha1.MachineTypeService.ListMachineTypes.
@@ -146,6 +158,11 @@ func (c *machineTypeServiceClient) RemoveMachineGroup(ctx context.Context, req *
 	return c.removeMachineGroup.CallUnary(ctx, req)
 }
 
+// GetJob calls machinetype.v1alpha1.MachineTypeService.GetJob.
+func (c *machineTypeServiceClient) GetJob(ctx context.Context, req *connect.Request[v1alpha1.GetJobRequest]) (*connect.Response[v1alpha1.GetJobResponse], error) {
+	return c.getJob.CallUnary(ctx, req)
+}
+
 // MachineTypeServiceHandler is an implementation of the machinetype.v1alpha1.MachineTypeService
 // service.
 type MachineTypeServiceHandler interface {
@@ -154,6 +171,7 @@ type MachineTypeServiceHandler interface {
 	UpdateMachineTypeStatus(context.Context, *connect.Request[v1alpha1.UpdateMachineTypeStatusRequest]) (*connect.Response[v1alpha1.UpdateMachineTypeStatusResponse], error)
 	AddMachineGroup(context.Context, *connect.Request[v1alpha1.AddMachineGroupRequest]) (*connect.Response[v1alpha1.AddMachineGroupResponse], error)
 	RemoveMachineGroup(context.Context, *connect.Request[v1alpha1.RemoveMachineGroupRequest]) (*connect.Response[v1alpha1.RemoveMachineGroupResponse], error)
+	GetJob(context.Context, *connect.Request[v1alpha1.GetJobRequest]) (*connect.Response[v1alpha1.GetJobResponse], error)
 }
 
 // NewMachineTypeServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -192,6 +210,12 @@ func NewMachineTypeServiceHandler(svc MachineTypeServiceHandler, opts ...connect
 		connect.WithSchema(machineTypeServiceRemoveMachineGroupMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	machineTypeServiceGetJobHandler := connect.NewUnaryHandler(
+		MachineTypeServiceGetJobProcedure,
+		svc.GetJob,
+		connect.WithSchema(machineTypeServiceGetJobMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/machinetype.v1alpha1.MachineTypeService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case MachineTypeServiceListMachineTypesProcedure:
@@ -204,6 +228,8 @@ func NewMachineTypeServiceHandler(svc MachineTypeServiceHandler, opts ...connect
 			machineTypeServiceAddMachineGroupHandler.ServeHTTP(w, r)
 		case MachineTypeServiceRemoveMachineGroupProcedure:
 			machineTypeServiceRemoveMachineGroupHandler.ServeHTTP(w, r)
+		case MachineTypeServiceGetJobProcedure:
+			machineTypeServiceGetJobHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -231,4 +257,8 @@ func (UnimplementedMachineTypeServiceHandler) AddMachineGroup(context.Context, *
 
 func (UnimplementedMachineTypeServiceHandler) RemoveMachineGroup(context.Context, *connect.Request[v1alpha1.RemoveMachineGroupRequest]) (*connect.Response[v1alpha1.RemoveMachineGroupResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("machinetype.v1alpha1.MachineTypeService.RemoveMachineGroup is not implemented"))
+}
+
+func (UnimplementedMachineTypeServiceHandler) GetJob(context.Context, *connect.Request[v1alpha1.GetJobRequest]) (*connect.Response[v1alpha1.GetJobResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("machinetype.v1alpha1.MachineTypeService.GetJob is not implemented"))
 }

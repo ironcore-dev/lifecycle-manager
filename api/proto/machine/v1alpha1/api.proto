@@ -100,6 +100,15 @@ message RemovePackageVersionResponse {
   common.v1alpha1.RequestResult result = 2;
 }
 
+message GetJobRequest {
+  string id = 1;
+}
+
+message GetJobResponse {
+  string job_type = 1;
+  Machine target = 2;
+}
+
 service MachineService {
   rpc ScanMachine(ScanMachineRequest) returns (ScanMachineResponse) {}
   rpc Install(InstallRequest) returns (InstallResponse) {}
@@ -108,4 +117,5 @@ service MachineService {
   rpc AddPackageVersion(AddPackageVersionRequest) returns (AddPackageVersionResponse) {}
   rpc SetPackageVersion(SetPackageVersionRequest) returns (SetPackageVersionResponse) {}
   rpc RemovePackageVersion(RemovePackageVersionRequest) returns (RemovePackageVersionResponse) {}
+  rpc GetJob(GetJobRequest) returns (GetJobResponse) {}
 }

@@ -9,15 +9,17 @@ const (
 )
 
 type Task[T LifecycleObject] struct {
-	Key    string
-	Type   JobType
-	Target T
+	Key        string
+	Type       JobType
+	Target     T
+	TargetType string
 }
 
-func NewTask[T LifecycleObject](key string, taskType JobType, target T) Task[T] {
+func NewTask[T LifecycleObject](key string, taskType JobType, target T, targetType string) Task[T] {
 	return Task[T]{
-		Key:    key,
-		Type:   taskType,
-		Target: target,
+		Key:        key,
+		Type:       taskType,
+		Target:     target,
+		TargetType: targetType,
 	}
 }

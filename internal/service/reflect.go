@@ -11,9 +11,11 @@ var Names = []string{
 	"machine.v1alpha1.MachineService.AddPackageVersion",
 	"machine.v1alpha1.MachineService.SetPackageVersion",
 	"machine.v1alpha1.MachineService.RemovePackageVersion",
+	"machine.v1alpha1.MachineService.GetJob",
 	"machinetype.v1alpha1.MachineTypeService.Scan",
 	"machinetype.v1alpha1.MachineTypeService.ListMachineTypes",
 	"machinetype.v1alpha1.MachineTypeService.UpdateMachineTypeStatus",
 	"machinetype.v1alpha1.MachineTypeService.AddMachineGroup",
 	"machinetype.v1alpha1.MachineTypeService.RemoveMachineGroup",
+	"machinetype.v1alpha1.MachineTypeService.GetJob",
 }

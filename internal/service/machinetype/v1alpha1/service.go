@@ -28,6 +28,8 @@ import (
 
 const (
 	AddMachineGroupFailureReason = "machine group already in the list"
+
+	targetTypeMachineType = "machinetype"
 )
 
 type MachineTypeService struct {
@@ -126,7 +128,7 @@ func (s *MachineTypeService) Scan(
 	}
 	key := uuidutil.UUIDFromObjectKey(types.NamespacedName{Name: req.Name, Namespace: namespace})
 	resp.Result = s.scheduler.Schedule(
-		scheduler.NewTask[*lifecyclev1alpha1.MachineType](key, scheduler.ScanJob, machineType))
+		scheduler.NewTask[*lifecyclev1alpha1.MachineType](key, scheduler.ScanJob, machineType, targetTypeMachineType))
 	return connect.NewResponse(resp), nil
 }
 
@@ -245,6 +247,23 @@ func (s *MachineTypeService) RemoveMachineGroup(
 	}
 	return connect.NewResponse(&machinetypev1alpha1.RemoveMachineGroupResponse{
 		Result: commonv1alpha1.RequestResult_REQUEST_RESULT_SUCCESS,
+	}), nil
+}
+
+func (s *MachineTypeService) GetJob(
+	ctx context.Context,
+	c *connect.Request[machinetypev1alpha1.GetJobRequest],
+) (*connect.Response[machinetypev1alpha1.GetJobResponse], error) {
+	log := logr.FromContextAsSlogLogger(ctx)
+	log.Info("request", "request_body", c.Any())
+	req := c.Msg
+	task, err := s.scheduler.GetActiveJob(req.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	}
+	return connect.NewResponse(&machinetypev1alpha1.GetJobResponse{
+		JobType: string(task.Type),
+		Target:  apiutil.MachineTypeToGrpcAPI(task.Target),
 	}), nil
 }
 

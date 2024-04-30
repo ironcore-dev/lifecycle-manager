@@ -54,6 +54,8 @@ const (
 	// MachineServiceRemovePackageVersionProcedure is the fully-qualified name of the MachineService's
 	// RemovePackageVersion RPC.
 	MachineServiceRemovePackageVersionProcedure = "/machine.v1alpha1.MachineService/RemovePackageVersion"
+	// MachineServiceGetJobProcedure is the fully-qualified name of the MachineService's GetJob RPC.
+	MachineServiceGetJobProcedure = "/machine.v1alpha1.MachineService/GetJob"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -66,6 +68,7 @@ var (
 	machineServiceAddPackageVersionMethodDescriptor    = machineServiceServiceDescriptor.Methods().ByName("AddPackageVersion")
 	machineServiceSetPackageVersionMethodDescriptor    = machineServiceServiceDescriptor.Methods().ByName("SetPackageVersion")
 	machineServiceRemovePackageVersionMethodDescriptor = machineServiceServiceDescriptor.Methods().ByName("RemovePackageVersion")
+	machineServiceGetJobMethodDescriptor               = machineServiceServiceDescriptor.Methods().ByName("GetJob")
 )
 
 // MachineServiceClient is a client for the machine.v1alpha1.MachineService service.
@@ -77,6 +80,7 @@ type MachineServiceClient interface {
 	AddPackageVersion(context.Context, *connect.Request[v1alpha1.AddPackageVersionRequest]) (*connect.Response[v1alpha1.AddPackageVersionResponse], error)
 	SetPackageVersion(context.Context, *connect.Request[v1alpha1.SetPackageVersionRequest]) (*connect.Response[v1alpha1.SetPackageVersionResponse], error)
 	RemovePackageVersion(context.Context, *connect.Request[v1alpha1.RemovePackageVersionRequest]) (*connect.Response[v1alpha1.RemovePackageVersionResponse], error)
+	GetJob(context.Context, *connect.Request[v1alpha1.GetJobRequest]) (*connect.Response[v1alpha1.GetJobResponse], error)
 }
 
 // NewMachineServiceClient constructs a client for the machine.v1alpha1.MachineService service. By
@@ -131,6 +135,12 @@ func NewMachineServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(machineServiceRemovePackageVersionMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		getJob: connect.NewClient[v1alpha1.GetJobRequest, v1alpha1.GetJobResponse](
+			httpClient,
+			baseURL+MachineServiceGetJobProcedure,
+			connect.WithSchema(machineServiceGetJobMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -143,6 +153,7 @@ type machineServiceClient struct {
 	addPackageVersion    *connect.Client[v1alpha1.AddPackageVersionRequest, v1alpha1.AddPackageVersionResponse]
 	setPackageVersion    *connect.Client[v1alpha1.SetPackageVersionRequest, v1alpha1.SetPackageVersionResponse]
 	removePackageVersion *connect.Client[v1alpha1.RemovePackageVersionRequest, v1alpha1.RemovePackageVersionResponse]
+	getJob               *connect.Client[v1alpha1.GetJobRequest, v1alpha1.GetJobResponse]
 }
 
 // ScanMachine calls machine.v1alpha1.MachineService.ScanMachine.
@@ -180,6 +191,11 @@ func (c *machineServiceClient) RemovePackageVersion(ctx context.Context, req *co
 	return c.removePackageVersion.CallUnary(ctx, req)
 }
 
+// GetJob calls machine.v1alpha1.MachineService.GetJob.
+func (c *machineServiceClient) GetJob(ctx context.Context, req *connect.Request[v1alpha1.GetJobRequest]) (*connect.Response[v1alpha1.GetJobResponse], error) {
+	return c.getJob.CallUnary(ctx, req)
+}
+
 // MachineServiceHandler is an implementation of the machine.v1alpha1.MachineService service.
 type MachineServiceHandler interface {
 	ScanMachine(context.Context, *connect.Request[v1alpha1.ScanMachineRequest]) (*connect.Response[v1alpha1.ScanMachineResponse], error)
@@ -189,6 +205,7 @@ type MachineServiceHandler interface {
 	AddPackageVersion(context.Context, *connect.Request[v1alpha1.AddPackageVersionRequest]) (*connect.Response[v1alpha1.AddPackageVersionResponse], error)
 	SetPackageVersion(context.Context, *connect.Request[v1alpha1.SetPackageVersionRequest]) (*connect.Response[v1alpha1.SetPackageVersionResponse], error)
 	RemovePackageVersion(context.Context, *connect.Request[v1alpha1.RemovePackageVersionRequest]) (*connect.Response[v1alpha1.RemovePackageVersionResponse], error)
+	GetJob(context.Context, *connect.Request[v1alpha1.GetJobRequest]) (*connect.Response[v1alpha1.GetJobResponse], error)
 }
 
 // NewMachineServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -239,6 +256,12 @@ func NewMachineServiceHandler(svc MachineServiceHandler, opts ...connect.Handler
 		connect.WithSchema(machineServiceRemovePackageVersionMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	machineServiceGetJobHandler := connect.NewUnaryHandler(
+		MachineServiceGetJobProcedure,
+		svc.GetJob,
+		connect.WithSchema(machineServiceGetJobMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/machine.v1alpha1.MachineService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case MachineServiceScanMachineProcedure:
@@ -255,6 +278,8 @@ func NewMachineServiceHandler(svc MachineServiceHandler, opts ...connect.Handler
 			machineServiceSetPackageVersionHandler.ServeHTTP(w, r)
 		case MachineServiceRemovePackageVersionProcedure:
 			machineServiceRemovePackageVersionHandler.ServeHTTP(w, r)
+		case MachineServiceGetJobProcedure:
+			machineServiceGetJobHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -290,4 +315,8 @@ func (UnimplementedMachineServiceHandler) SetPackageVersion(context.Context, *co
 
 func (UnimplementedMachineServiceHandler) RemovePackageVersion(context.Context, *connect.Request[v1alpha1.RemovePackageVersionRequest]) (*connect.Response[v1alpha1.RemovePackageVersionResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("machine.v1alpha1.MachineService.RemovePackageVersion is not implemented"))
+}
+
+func (UnimplementedMachineServiceHandler) GetJob(context.Context, *connect.Request[v1alpha1.GetJobRequest]) (*connect.Response[v1alpha1.GetJobResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("machine.v1alpha1.MachineService.GetJob is not implemented"))
 }

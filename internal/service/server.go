@@ -41,8 +41,8 @@ type Options struct {
 	Host string
 	Port int
 
-	Namespace string
-	// JobsConfig    string
+	Namespace     string
+	JobsConfig    string
 	Workers       uint64
 	Horizon       time.Duration
 	QueueCapacity uint64
@@ -107,7 +107,8 @@ func setupMachineService(opts Options) *machinesvcv1alpha1.MachineService {
 		opts.Log.With("scheduler", "Machine"), opts.Cfg, opts.Namespace,
 		scheduler.WithWorkerCount[*lifecyclev1alpha1.Machine](opts.Workers),
 		scheduler.WithActiveJobCache[*lifecyclev1alpha1.Machine](opts.Workers, opts.Horizon),
-		scheduler.WithQueueCapacity[*lifecyclev1alpha1.Machine](opts.QueueCapacity))
+		scheduler.WithQueueCapacity[*lifecyclev1alpha1.Machine](opts.QueueCapacity),
+		scheduler.WithJobConfig[*lifecyclev1alpha1.Machine](opts.JobsConfig))
 	machineService := machinesvcv1alpha1.NewService(opts.Cfg,
 		machinesvcv1alpha1.WithNamespace(opts.Namespace),
 		machinesvcv1alpha1.WithHorizon(opts.Horizon),
@@ -120,7 +121,8 @@ func setupMachineTypeService(opts Options) *machinetypesvcv1alpha1.MachineTypeSe
 		opts.Log.With("scheduler", "MachineType"), opts.Cfg, opts.Namespace,
 		scheduler.WithWorkerCount[*lifecyclev1alpha1.MachineType](opts.Workers),
 		scheduler.WithActiveJobCache[*lifecyclev1alpha1.MachineType](opts.Workers, opts.Horizon),
-		scheduler.WithQueueCapacity[*lifecyclev1alpha1.MachineType](opts.QueueCapacity))
+		scheduler.WithQueueCapacity[*lifecyclev1alpha1.MachineType](opts.QueueCapacity),
+		scheduler.WithJobConfig[*lifecyclev1alpha1.MachineType](opts.JobsConfig))
 	machinetypeService := machinetypesvcv1alpha1.NewService(opts.Cfg,
 		machinetypesvcv1alpha1.WithNamespace(opts.Namespace),
 		machinetypesvcv1alpha1.WithHorizon(opts.Horizon),

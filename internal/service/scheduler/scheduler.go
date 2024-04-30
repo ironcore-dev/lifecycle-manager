@@ -5,6 +5,7 @@ package scheduler
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"sync"
 	"time"
@@ -45,7 +46,8 @@ type Scheduler[T LifecycleObject] struct {
 	schedulerWaitGroup sync.WaitGroup
 	mu                 sync.Mutex
 
-	namespace string
+	namespace  string
+	jobsConfig string
 }
 
 // NewScheduler creates a new Scheduler instance with the given parameters.
@@ -94,6 +96,12 @@ func WithActiveJobCache[T LifecycleObject](capacity uint64, ttl time.Duration) O
 func WithQueueCapacity[T LifecycleObject](capacity uint64) Option[T] {
 	return func(scheduler *Scheduler[T]) {
 		scheduler.pendingTasks = NewFIFOQueue[T](capacity)
+	}
+}
+
+func WithJobConfig[T LifecycleObject](jobConfig string) Option[T] {
+	return func(scheduler *Scheduler[T]) {
+		scheduler.jobsConfig = jobConfig
 	}
 }
 
@@ -162,6 +170,14 @@ func (s *Scheduler[T]) Start(ctx context.Context) {
 	s.schedulerWaitGroup.Add(1)
 	go s.schedulingLoop(ctx)
 	s.schedulerWaitGroup.Wait()
+}
+
+func (s *Scheduler[T]) GetActiveJob(id string) (Task[T], error) {
+	item := s.activeJobs.Get(id)
+	if item == nil {
+		return Task[T]{}, fmt.Errorf("job with id %s not found", id)
+	}
+	return item.Value(), nil
 }
 
 // schedulingLoop is a method that runs as a Go routine and controls the main logic of the scheduler.

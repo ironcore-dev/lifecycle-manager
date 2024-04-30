@@ -93,3 +93,10 @@ func (c *MachineClient) RemovePackageVersion(
 ) (*connect.Response[machineapiv1alpha1.RemovePackageVersionResponse], error) {
 	return nil, nil
 }
+
+func (c *MachineClient) GetJob(
+	_ context.Context,
+	_ *connect.Request[machineapiv1alpha1.GetJobRequest],
+) (*connect.Response[machineapiv1alpha1.GetJobResponse], error) {
+	return nil, nil
+}
