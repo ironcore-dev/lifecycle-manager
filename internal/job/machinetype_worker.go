@@ -15,13 +15,13 @@ type MachineTypeLifecycleWorker struct {
 	machinetypev1alpha1connect.MachineTypeServiceClient
 	client.Client
 	log   *slog.Logger
-	jobId string
+	jobID string
 }
 
 func NewMachineTypeLifecycleWorker(opts Options) *MachineTypeLifecycleWorker {
 	return &MachineTypeLifecycleWorker{
 		log:    opts.Log,
-		jobId:  opts.JobId,
+		jobID:  opts.JobID,
 		Client: opts.KubeClient,
 	}
 }

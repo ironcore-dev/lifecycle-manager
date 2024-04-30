@@ -64,3 +64,10 @@ func (c *MachineTypeClient) RemoveMachineGroup(
 ) (*connect.Response[machinetypeapiv1alpha1.RemoveMachineGroupResponse], error) {
 	return nil, nil
 }
+
+func (c *MachineTypeClient) GetJob(
+	_ context.Context,
+	_ *connect.Request[machinetypeapiv1alpha1.GetJobRequest],
+) (*connect.Response[machinetypeapiv1alpha1.GetJobResponse], error) {
+	return nil, nil
+}

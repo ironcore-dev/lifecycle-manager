@@ -7,12 +7,13 @@
 package machinetypev1alpha1
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	v1alpha1 "github.com/ironcore-dev/lifecycle-manager/api/proto/common/v1alpha1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (

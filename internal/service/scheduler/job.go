@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	lifecycleJobIdLabel   = "lifecycle.ironcore.dev/job-id"
+	lifecycleJobIDLabel   = "lifecycle.ironcore.dev/job-id"
 	lifecycleJobTypeLabel = "lifecycle.ironcore.dev/job-type"
 )
 
@@ -48,7 +48,7 @@ func (s *Scheduler[T]) createJob(ctx context.Context, task Task[T]) error {
 			GenerateName: fmt.Sprintf("%s-", task.Key),
 			Namespace:    s.namespace,
 			Labels: map[string]string{
-				lifecycleJobIdLabel:   task.Key,
+				lifecycleJobIDLabel:   task.Key,
 				lifecycleJobTypeLabel: string(task.Type),
 			},
 		},
@@ -56,7 +56,7 @@ func (s *Scheduler[T]) createJob(ctx context.Context, task Task[T]) error {
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						lifecycleJobIdLabel:   task.Key,
+						lifecycleJobIDLabel:   task.Key,
 						lifecycleJobTypeLabel: string(task.Type),
 					},
 				},

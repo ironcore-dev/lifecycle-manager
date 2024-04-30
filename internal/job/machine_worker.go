@@ -21,13 +21,13 @@ type MachineLifecycleWorker struct {
 	machinev1alpha1connect.MachineServiceClient
 	client.Client
 	log   *slog.Logger
-	jobId string
+	jobID string
 }
 
 func NewMachineLifecycleWorker(opts Options) *MachineLifecycleWorker {
 	return &MachineLifecycleWorker{
 		log:    opts.Log,
-		jobId:  opts.JobId,
+		jobID:  opts.JobID,
 		Client: opts.KubeClient,
 	}
 }
@@ -43,7 +43,7 @@ func (w *MachineLifecycleWorker) Start(ctx context.Context) error {
 		updateMachineStatusResponse *connect.Response[machinev1alpha1.UpdateMachineStatusResponse]
 		err                         error
 	)
-	getJobResponse, err = w.GetJob(ctx, connect.NewRequest(&machinev1alpha1.GetJobRequest{Id: w.jobId}))
+	getJobResponse, err = w.GetJob(ctx, connect.NewRequest(&machinev1alpha1.GetJobRequest{Id: w.jobID}))
 	if err != nil {
 		w.log.Error("error getting job", "error", err)
 		return err

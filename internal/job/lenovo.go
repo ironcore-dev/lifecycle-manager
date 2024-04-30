@@ -14,7 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-const onecli = "/lenovo/onecli"
+// const onecli = "/lenovo/onecli"
 
 func (w *MachineLifecycleWorker) LenovoScanMachine(ctx context.Context, machine *machinev1alpha1.Machine) error {
 	oob := &oobv1alpha1.OOB{}

@@ -12,5 +12,5 @@ import (
 type Options struct {
 	KubeClient client.Client
 	Log        *slog.Logger
-	JobId      string
+	JobID      string
 }

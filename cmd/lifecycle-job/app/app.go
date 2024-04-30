@@ -62,7 +62,7 @@ type Options struct {
 	logFormat   string
 	lcmEndpoint string
 	targetType  string
-	jobId       string
+	jobID       string
 	dev         bool
 }
 
@@ -71,7 +71,7 @@ func (o *Options) addFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.logLevel, "log-level", "info", "logging level")
 	fs.StringVar(&o.logFormat, "log-format", "json", "logging format")
 	fs.StringVar(&o.lcmEndpoint, "lcm-endpoint", lcmEndpoint, "lcm endpoint")
-	fs.StringVar(&o.jobId, "job-id", "", "job id")
+	fs.StringVar(&o.jobID, "job-id", "", "job id")
 	fs.StringVar(&o.targetType, "target-type", "", "target type")
 	fs.BoolVar(&o.dev, "dev", false, "development mode")
 }
@@ -105,7 +105,7 @@ func Run(ctx context.Context, opts Options) error {
 	workerOpts := job.Options{
 		KubeClient: cl,
 		Log:        setupLogger(LogFormat(opts.logFormat), logLevelMapping[opts.logLevel], opts.dev),
-		JobId:      opts.jobId,
+		JobID:      opts.jobID,
 	}
 	switch opts.targetType {
 	case "machine":
